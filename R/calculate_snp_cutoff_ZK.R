@@ -2,6 +2,7 @@ library(tidyverse)
 library(ggplot2)
 library(parallel)
 library(patchwork)
+library(MASS)
 
 
 
@@ -77,7 +78,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
 
     if ((length(trans_snp_dist) >= 20) && (length(unrelated_snp_dist) >= 20)){
-      nb_fit <- MASS::fitdistr(x=unrelated_snp_dist, densfun = "negative binomial")
+      nb_fit <- fitdistr(x=unrelated_snp_dist, densfun = "negative binomial")
 
       llk <- function(params, x){
         k <- params[[1]]
@@ -136,7 +137,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
   #### Threshold considering time but not sites
   if(!anyNA(trans_time_dist)&(anyNA(trans_sites))){
     if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
-      nb_fit <- MASS::fitdistr(x=unrelated_snp_dist, densfun = "negative binomial")
+      nb_fit <- fitdistr(x=unrelated_snp_dist, densfun = "negative binomial")
 
       llk <- function(params, x, t){
         k <- params[[1]]
@@ -211,7 +212,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
   #### Threshold considering time and sites #####
   if(!anyNA(trans_time_dist)&(!anyNA(trans_sites))){
   if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
-    nb_fit <- MASS::fitdistr(x=unrelated_snp_dist, densfun = "negative binomial")
+    nb_fit <- fitdistr(x=unrelated_snp_dist, densfun = "negative binomial")
 
     llk <- function(params, x, t, s){
       k <- params[[1]]
