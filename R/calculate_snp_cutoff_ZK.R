@@ -94,16 +94,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                       method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf))
 
       snp_threshold <- qpois(upper.tail, lambda = result$par[[2]])
-    } else {
-      warning("Insufficient data points to fit distributions!")
-      results <- tibble(
-          snp_threshold=NA,
-          lambda=NA,
-          k=NA,
-          estimated_fp=NA
 
-      )
-    }
 
     if ((sum(unrelated_snp_dist<=snp_threshold)/length(unrelated_snp_dist)) > max_false_positive){
       warning(paste0("Inferred SNP threshold may have a false positive rate above ",
@@ -121,13 +112,28 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       snp_threshold=snp_threshold,
       lambda=result$par[[2]],
       k=result$par[[1]],
-      estimated_fp=estimated_fp
+      estimated_fp=estimated_fp,
+      method="base"
     )
+    } else {
+      warning("Insufficient data points to fit distributions!")
+      results <- tibble(
+        snp_threshold=NA,
+        lambda=NA,
+        k=NA,
+        estimated_fp=NA,
+        estimated_fn=NA,
+        method="failure"
+
+      )
+    }
 
     if(youden==TRUE){
       return(list("results" = results,"youden" = youden_results))
     }  else {return(results)
     }
+
+
   }
 
   #### Threshold considering time but not sites
@@ -170,15 +176,28 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                      max_false_positive, "!"))
     }
 
-    # Return results
+    # results
     results <- tibble(
         snp_threshold=snp_threshold,
         lambda=result$par[[2]],
         k=result$par[[1]],
         estimated_fp=sum(unrelated_snp_dist<=snp_threshold)/length(unrelated_snp_dist),
-        estimated_fn=1-ppois(snp_threshold, result$par[[2]])
+        method="time"
       )
 
+    } else {
+      warning("Insufficient data points to fit distributions!")
+      results <-
+        tibble(
+          snp_threshold=NA,
+          lambda=NA,
+          k=NA,
+          estimated_fp=NA,
+          method="failure"
+
+        )
+    }
+#return results
     if(youden==TRUE & threshold_range==TRUE){
       return(list("results" = results, "youden" = youden_results, "thresholds" = threshold_range_df))
     }
@@ -192,16 +211,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       return(results)
     }
 
-    } else {
-      warning("Insufficient data points to fit distributions!")
-      results <-
-        tibble(
-          snp_threshold=NA,
-          lambda=NA,
-          k=NA,
 
-        )
-    }
 
   }
 
@@ -246,15 +256,27 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                    max_false_positive, "!"))
   }
 
-  #returning results
+  # results
   results <-  tibble(
       snp_threshold=snp_threshold,
       lambda=result$par[[2]],
       k=result$par[[1]],
       estimated_fp=sum(unrelated_snp_dist<=snp_threshold)/length(unrelated_snp_dist),
-      estimated_fn=1-ppois(snp_threshold, result$par[[2]])
+      method="time+sites"
     )
+  } else {
+    warning("Insufficient data points to fit distributions!")
+    results <-
+      tibble(
+        snp_threshold=NA,
+        lambda=NA,
+        k=NA,
+        estimated_fp=NA,
+        method="failure"
 
+      )
+  }
+# returning results
   if(youden==TRUE & threshold_range==TRUE){
     return(list("results" = results, "youden" = youden_results, "thresholds" = threshold_range_df))
   }
@@ -267,16 +289,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
   if(youden==FALSE & threshold_range==FALSE){
     return(results)
   }
-  } else {
-    warning("Insufficient data points to fit distributions!")
-    results <-
-      tibble(
-        snp_threshold=NA,
-        lambda=NA,
-        k=NA
-
-      )
-  }}
+  }
 
 
 }
