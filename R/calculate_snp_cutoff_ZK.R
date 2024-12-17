@@ -50,9 +50,9 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
       youden_results <-
         tibble(
-          snp_threshold=youden_snp_threshold,
+          youden_snp_threshold=youden_snp_threshold,
           J=max(youden_index),
-          estimated_fp=sum(unrelated_snp_dist<=youden_snp_threshold)/length(unrelated_snp_dist)
+          youden_estimated_fp=sum(unrelated_snp_dist<=youden_snp_threshold)/length(unrelated_snp_dist)
         )
 
 
