@@ -29,7 +29,7 @@ mixture_snp_cutoff(
 
 \item{threshold_range}{whether to produce a dataset of threshold considering a range of times (from 0.5 to 10 years)}
 
-\item{max_time}{the maximum time utilised to calculate SNP thresholds, only applicable when time differences are provided}
+\item{max_time}{the maximum time(in days) utilised to calculate SNP thresholds, only applicable when time differences are provided}
 }
 \value{
 SNP threshold, mutation rate, proportion related, estimated false positive and negative rate estimations

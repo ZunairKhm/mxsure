@@ -26,7 +26,7 @@ log_sum_exp <- function(log_a, log_b) {
 #' @param trans_sites list of sites considered for each SNP distance in mixed data set
 #' @param youden whether to produce SNP thresholds using the Youden method
 #' @param threshold_range whether to produce a dataset of threshold considering a range of times (from 0.5 to 10 years)
-#' @param max_time the maximum time utilised to calculate SNP thresholds, only applicable when time differences are provided
+#' @param max_time the maximum time(in days) utilised to calculate SNP thresholds, only applicable when time differences are provided
 #'
 #' @return SNP threshold, mutation rate, proportion related, estimated false positive and negative rate estimations
 #'

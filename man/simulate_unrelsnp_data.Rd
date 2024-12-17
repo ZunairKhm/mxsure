@@ -20,5 +20,5 @@ unrelated SNP distance dataset
 Simulate unrelaed SNP distance dataset
 }
 \examples{
-y <- simulate_unrelsnp_data
+y <- simulate_unrelsnp_data()
 }

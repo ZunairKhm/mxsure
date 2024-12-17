@@ -15,7 +15,6 @@ Depends:
 Imports: 
     ggplot2,
     MASS,
-    parallel,
     patchwork
 URL: https://github.com/ZunairKhm/mixturesnpcutoff
 BugReports: https://github.com/ZunairKhm/mixturesnpcutoff/issues

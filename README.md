@@ -43,8 +43,6 @@ x <- simulate_mixsnp_data(0.00179*4, 0.8, 500)
 y <- simulate_unrelsnp_data()
 
 z<- mixture_snp_cutoff(x$snp_dist, y, x$time_dist)
-#> Warning in densfun(x, parm[1], parm[2], ...): NaNs produced
-#> Warning in densfun(x, parm[1], parm[2], ...): NaNs produced
 ```
 
 mixture_snp_cutoff will produce a mutation rate in SNPs/day or
