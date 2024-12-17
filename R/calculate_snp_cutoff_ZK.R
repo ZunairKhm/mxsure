@@ -1,10 +1,6 @@
 library(tidyverse)
 library(ggplot2)
-library(parallel)
 library(patchwork)
-library(MASS)
-
-
 
 #### Log Sum Exp ####
 
@@ -78,7 +74,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
 
     if ((length(trans_snp_dist) >= 20) && (length(unrelated_snp_dist) >= 20)){
-      nb_fit <- fitdistr(x=unrelated_snp_dist, densfun = "negative binomial")
+      nb_fit <- MASS::fitdistr(x=unrelated_snp_dist, densfun = "negative binomial")
 
       llk <- function(params, x){
         k <- params[[1]]
@@ -137,7 +133,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
   #### Threshold considering time but not sites
   if(!anyNA(trans_time_dist)&(anyNA(trans_sites))){
     if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
-      nb_fit <- fitdistr(x=unrelated_snp_dist, densfun = "negative binomial")
+      nb_fit <- MASS::fitdistr(x=unrelated_snp_dist, densfun = "negative binomial")
 
       llk <- function(params, x, t){
         k <- params[[1]]
@@ -212,7 +208,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
   #### Threshold considering time and sites #####
   if(!anyNA(trans_time_dist)&(!anyNA(trans_sites))){
   if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
-    nb_fit <- fitdistr(x=unrelated_snp_dist, densfun = "negative binomial")
+    nb_fit <- MASS::fitdistr(x=unrelated_snp_dist, densfun = "negative binomial")
 
     llk <- function(params, x, t, s){
       k <- params[[1]]
@@ -326,6 +322,7 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist,unrelated_snp_dist, trans_time_
 #'
 #' @param SNPs list of SNP distances from a mixed transmission data set
 #' @param Time list of time differences between samples from each SNP distance in the mixed data set (in days)
+#' @param lambda mutation rate to plot in the graph (calculated with mixture_snp_cutoff)
 #' @param sites list of sites considered for each SNP distance in mixed data set
 #' @param snp_threshold a threshold to apply to the mixed data set for considering related data (calculated with mixture_snp_cutoff)
 #'
@@ -366,3 +363,55 @@ snp_hist <- function(trans_snp_dist, unrelated_snp_dist=NULL, snp_threshold=NULL
   scale_x_continuous(limits = limits)+
   geom_histogram(binwidth = 1)+
   geom_vline(xintercept=snp_threshold+0.5, color="red")
+
+#' Simulate Mixed related SNP distance dataset
+#'
+#' @param lambda mutation rate input (SNPs per day)
+#' @param k proportion of mixed dataset that is linked
+#' @param nbmu mean of the negative binomial distribution underlying the unrelated SNP distances
+#' @param error_param chance that each SNP is missed
+#'
+#' @return SNP distance dataset with a mixture of related and unrelated pairs with time differences
+#' @export
+#'
+#' @examples
+#' #simulates dataset with an E. coli profile
+#' x <- simulate_mixsnp_data(lambda=0.00179*4, 0.5, 500, error_param=NA)
+simulate_mixsnp_data <- function(lambda, k,nbmu=500, error_param=NA){
+  mix_snp_dist <- map_dfr(1:1000, ~{
+
+    tt <- rexp(1, rate = 0.02) #time distribution
+    if (runif(1)<k){
+      dd <- rpois(n = 1, lambda = tt*lambda)
+      rr <- "Related"
+    } else {
+      dd <- rnbinom(1, mu = nbmu, size = 1)
+      rr <- "Unrelated"
+    }
+    if (!is.na(error_param)){
+      dd <- rbinom(1, dd, 1-error_param) #error param is chance each SNP difference is missed
+    }
+    return(
+      tibble(snp_dist=dd, time_dist=tt, relation=rr)
+    )
+
+  })
+}
+
+#' Simulate unrelaed SNP distance dataset
+#'
+#' @param nbmu mean of the underlying negative binomial distribution
+#' @param nbsize size parameter of the underlying negative binmial distribution (not the size of the simulated dataset)
+#' @param n size/length of the simulated dataset
+#'
+#' @return unrelated SNP distance dataset
+#' @export
+#'
+#' @examples
+#' y <- simulate_unrelsnp_data()
+simulate_unrelsnp_data <- function(nbmu=500, nbsize=1, n=1000){
+  rnbinom(n, mu=nbmu, size=nbsize)
+}
+
+
+
