@@ -384,6 +384,7 @@ snp_hist <- function(trans_snp_dist, unrelated_snp_dist=NULL, snp_threshold=NULL
 #' @param k proportion of mixed dataset that is linked
 #' @param nbmu mean of the negative binomial distribution underlying the unrelated SNP distances
 #' @param error_param chance that each SNP is missed
+#' @param n size of dataset to simulate
 #'
 #' @return SNP distance dataset with a mixture of related and unrelated pairs with time differences
 #' @export
