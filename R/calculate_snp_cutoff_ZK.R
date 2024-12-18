@@ -337,7 +337,7 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist,unrelated_snp_dist, trans_time_
 #' @param SNPs list of SNP distances from a mixed transmission data set
 #' @param Time list of time differences between samples from each SNP distance in the mixed data set (in days)
 #' @param lambda mutation rate to plot in the graph (calculated with mixture_snp_cutoff)
-#' @param sites list of sites considered for each SNP distance in mixed data set
+#' @param sites list of sites considered for each SNP distance in mixed data set; adjusts lambda to be in SNPs/day if provided
 #' @param snp_threshold a threshold to apply to the mixed data set for considering related data (calculated with mixture_snp_cutoff)
 #'
 #' @return a plot of SNP distance over time using ggplot
@@ -357,7 +357,7 @@ snp_over_time <- function(SNPs, Time, lambda, sites=NA, snp_threshold){
     geom_abline(intercept=0, slope = lambda)+
     geom_abline(intercept=snp_threshold, slope=0, linetype="dashed", alpha=0.75)+
     geom_label(x=labelx, y=labely,
-               label = paste0(round(lambda*365,digits = 4), " SNPs per year"), size=5)
+               label = paste0(round(lambda*365.25,digits = 4), " SNPs per year"), size=5)
 }
 
 #' SNP distace histogram
