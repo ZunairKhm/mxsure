@@ -391,8 +391,8 @@ snp_hist <- function(trans_snp_dist, unrelated_snp_dist=NULL, snp_threshold=NULL
 #' @examples
 #' #simulates dataset with an E. coli profile
 #' x <- simulate_mixsnp_data(lambda=0.00179*4, 0.5, 500, error_param=NA)
-simulate_mixsnp_data <- function(lambda, k,nbmu=500, error_param=NA){
-  mix_snp_dist <- map_dfr(1:1000, ~{
+simulate_mixsnp_data <- function(lambda, k,nbmu=500, error_param=NA, n=1000){
+  mix_snp_dist <- map_dfr(1:n, ~{
 
     tt <- rexp(1, rate = 0.02) #time distribution
     if (runif(1)<k){
