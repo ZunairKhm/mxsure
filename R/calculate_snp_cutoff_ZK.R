@@ -32,7 +32,7 @@ log_sum_exp <- function(log_a, log_b) {
 #'
 #' @export
 mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
-                               youden=FALSE,threshold_range=FALSE, max_time= NA, upper.tail=0.95, max_false_positive=0.05, trace=NULL){
+                               youden=FALSE,threshold_range=FALSE, max_time= NA, upper.tail=0.95, max_false_positive=0.05, trace=FALSE){
 
   #### Youden Cutoffs ####
   if(youden==TRUE){
@@ -314,7 +314,7 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist,unrelated_snp_dist, trans_time_
 
   mix_data <- tibble(snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
 
-  bootstrapresults <- pmap_dfr(list(1:sample_n), ~{
+  bootstrapresults <- map_dfr(1:sample_n, ~{
     x <- slice_sample(mix_data, n= sample_size, replace = TRUE)
     y <- mixture_snp_cutoff(x$snp_dist,unrelated_snp_dist, x$time_dist, x$sites)
     y[1:4]
