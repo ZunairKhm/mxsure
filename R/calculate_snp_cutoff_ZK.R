@@ -32,7 +32,7 @@ log_sum_exp <- function(log_a, log_b) {
 #'
 #' @export
 mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
-                               youden=FALSE,threshold_range=FALSE, max_time= NA, upper.tail=0.95, max_false_positive=0.05){
+                               youden=FALSE,threshold_range=FALSE, max_time= NA, upper.tail=0.95, max_false_positive=0.05, trace=NULL){
 
   #### Youden Cutoffs ####
   if(youden==TRUE){
@@ -91,7 +91,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
       start_params <- c(0.5, 1) # Initial guesses
       result <- optim(par = start_params, fn = llk, x = trans_snp_dist,
-                      method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf))
+                      method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
 
       snp_threshold <- qpois(upper.tail, lambda = result$par[[2]])
 
@@ -156,7 +156,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
       start_params <- c(0.5, 1) # Initial guesses
       result <- optim(par = start_params, fn = llk, x = trans_snp_dist, t=trans_time_dist,
-                      method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf))
+                      method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
 
       if (is.na(max_time)) {
         max_time <- 2*max(trans_time_dist)
@@ -235,7 +235,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
     start_params <- c(0.5, 1) # Initial guesses
     result <- optim(par = start_params, fn = llk, x = trans_snp_dist, t=trans_time_dist, s=trans_sites,
-                    method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf))
+                    method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
 
     if (is.na(max_time)) {
       max_time <- 2*max(trans_time_dist)
