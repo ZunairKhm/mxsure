@@ -17,4 +17,4 @@ snp_hist <- function(trans_snp_dist, unrelated_snp_dist=NULL, snp_threshold=NULL
   scale_x_continuous(limits = limits)+
   geom_histogram(binwidth = 1)+
   geom_vline(xintercept=snp_threshold+0.5, color="red")+
-  labs(x=SNP Distances, y=count)
+  labs(x="SNP Distances", y="count")
