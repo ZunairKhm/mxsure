@@ -8,7 +8,7 @@
 
 This package implements a mixture distribution approach to estimating
 mutation rates and SNP thresholds for paired metagenomic data. It also
-provides some plotting functions and a simulation functions.
+provides some plotting functions and simulation functions.
 
 ## Installation
 
