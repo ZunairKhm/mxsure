@@ -21,7 +21,7 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist,unrelated_snp_dist, trans_time_
     x <- slice_sample(mix_data, n= sample_size, replace = TRUE)
     y <- mixture_snp_cutoff(x$snp_dist,unrelated_snp_dist, x$time_dist, x$sites)
     y[1:4]
-  },.progress=TRUE)
+  },.progress=TRUE, seed=TRUE)
 
   if(!anyNA(bootstrapresults)){
     p <- diptest::dip.test(bootstrapresults$lambda)
