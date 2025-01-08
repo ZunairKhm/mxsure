@@ -229,7 +229,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                                                                       log = TRUE))}))
       }
 
-      start_params <- c(0.5, 1) # Initial guesses
+      start_params <- c(0.5, 0.001) # Initial guesses
       result <- optim(par = start_params, fn = llk, x = trans_snp_dist, t=trans_time_dist, s=trans_sites,
                       method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
 

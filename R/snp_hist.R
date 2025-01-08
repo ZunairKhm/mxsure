@@ -12,9 +12,10 @@ library(ggplot2)
 #' @return a histogram plot of snp distances using ggplot
 #'
 #' @export
-snp_hist <- function(trans_snp_dist, unrelated_snp_dist=NULL, snp_threshold=NULL, limits=c(NA,100))
+snp_hist <- function(trans_snp_dist, unrelated_snp_dist=NULL, snp_threshold=NULL, limits=c(NA,100), title="SNP Distance Histogram")
   ggplot(data=data.frame(x=append(trans_snp_dist, unrelated_snp_dist)), aes(x))+
   scale_x_continuous(limits = limits)+
   geom_histogram(binwidth = 1)+
-  geom_vline(xintercept=snp_threshold+0.5, color="red")+
-  labs(x="SNP Distances", y="count")
+  geom_vline(xintercept=snp_threshold+0.5, color="red3", linetype="dashed")+
+  labs(title = title, x="SNP Distances", y="Count")+
+  theme_minimal()
