@@ -15,17 +15,21 @@
 mixture_snp_cutoff_ci <- function(trans_snp_dist,unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
                                   sample_size=length(trans_snp_dist), sample_n=1000, confidence_level=0.95){
   if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
-#confusion
+
   mix_data <- tibble(snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
 
   bootstrapresults <- furrr::future_map_dfr(1:sample_n, ~{
     x <- slice_sample(mix_data, n= sample_size, replace = TRUE)
-    y <- plyr::try_default(mixture_snp_cutoff(x$snp_dist,unrelated_snp_dist, x$time_dist, x$sites),
+    y <- plyr::try_default(
+      suppressWarnings(
+        mixture_snp_cutoff(
+          x$snp_dist,unrelated_snp_dist, x$time_dist, x$sites
+          ), classes = "warning"),
                            data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA))
    y[1:4]
-  },.progress=TRUE, seed=TRUE)
+  },.progress=TRUE,.options = furrr::furrr_options(seed = TRUE))
 
-  #bootstrapresults <- bootstrapresults[complete.cases(bootstrapresults), ]
+  bootstrapresults <- bootstrapresults[complete.cases(bootstrapresults), ]
 
   if(!anyNA(bootstrapresults)){
     p <- diptest::dip.test(bootstrapresults$lambda)
@@ -42,7 +46,7 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist,unrelated_snp_dist, trans_time_
 
   ci <- bind_rows(lowerres, upperres)
   res <- list(confidence_intervals=ci, raw_results=bootstrapresults, dip_pvalue=dip_pvalue)
-  return(res)
+  # return(res)
   } else {
     warning("Insufficient data points to fit distributions!")
 
