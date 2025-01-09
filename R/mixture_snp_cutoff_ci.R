@@ -15,7 +15,7 @@
 mixture_snp_cutoff_ci <- function(trans_snp_dist,unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
                                   sample_size=length(trans_snp_dist), sample_n=1000, confidence_level=0.95){
   if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
-
+#confusion
   mix_data <- tibble(snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
 
   bootstrapresults <- furrr::future_map_dfr(1:sample_n, ~{
