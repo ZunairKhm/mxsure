@@ -25,6 +25,10 @@ log_sum_exp <- function(log_a, log_b) {
 #' @param youden whether to produce SNP thresholds using the Youden method
 #' @param threshold_range whether to produce a dataset of threshold considering a range of times (from 0.5 to 10 years)
 #' @param max_time the maximum time(in days) utilised to calculate SNP thresholds, only applicable when time differences are provided
+#' @param upper.tail percentile to calculate SNP thresholds
+#' @param max_false_positive if the false positive rate from calculated threshold is higher than this value a warning is produced
+#' @param trace trace parameter to pass to optim
+#' @param start_params initial parametrs for optim
 #'
 #' @importFrom stats optim pnbinom qpois rnbinom
 #' @importFrom dplyr filter
@@ -33,7 +37,7 @@ log_sum_exp <- function(log_a, log_b) {
 #'
 #' @export
 mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
-                               youden=FALSE,threshold_range=FALSE, max_time= NA, upper.tail=0.95, max_false_positive=0.05, trace=FALSE){
+                               youden=FALSE,threshold_range=FALSE, max_time= NA, upper.tail=0.95, max_false_positive=0.05, trace=FALSE, start_params= c(0.5, 0.01)){
 
   #### Youden Cutoffs ####
   if(youden==TRUE){
@@ -90,7 +94,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                                                           log = TRUE))}))
       }
 
-      start_params <- c(0.5, 1) # Initial guesses
+
       result <- optim(par = start_params, fn = llk, x = trans_snp_dist,
                       method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
 
@@ -155,7 +159,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                                                               log = TRUE))}))
       }
 
-      start_params <- c(0.5, 0.001) # Initial guesses
+
       result <- optim(par = start_params, fn = llk, x = trans_snp_dist, t=trans_time_dist,
                       method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
 
@@ -232,7 +236,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                                                                       log = TRUE))}))
       }
 
-      start_params <- c(0.727, 0.00177) # Initial guesses
+
       result <- optim(par = start_params, fn = llk, x = trans_snp_dist, t=trans_time_dist, s=trans_sites,
                       method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
 
