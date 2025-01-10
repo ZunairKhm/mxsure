@@ -26,6 +26,9 @@ log_sum_exp <- function(log_a, log_b) {
 #' @param threshold_range whether to produce a dataset of threshold considering a range of times (from 0.5 to 10 years)
 #' @param max_time the maximum time(in days) utilised to calculate SNP thresholds, only applicable when time differences are provided
 #'
+#' @importFrom stats optim pnbinom qpois rnbinom
+#' @importFrom dplyr filter
+#'
 #' @return SNP threshold, mutation rate, proportion related, estimated false positive and negative rate estimations
 #'
 #' @export

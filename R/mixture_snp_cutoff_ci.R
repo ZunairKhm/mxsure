@@ -9,6 +9,9 @@
 #' @param sample_size size of each bootstrap sample
 #' @param sample_n number of bootstrap sampling to conduct
 #'
+#' @importFrom furrr future_map_dfr furrr_options
+#' @importFrom diptest dip.test
+#'
 #' @return Confidence intervals
 #'
 #' @export

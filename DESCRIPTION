@@ -13,8 +13,12 @@ RoxygenNote: 7.3.2
 Depends: 
     tidyverse
 Imports: 
+    diptest,
+    dplyr,
+    furrr,
     ggplot2,
     MASS,
-    patchwork
+    purrr,
+    stats
 URL: https://github.com/ZunairKhm/mixturesnpcutoff
 BugReports: https://github.com/ZunairKhm/mixturesnpcutoff/issues
