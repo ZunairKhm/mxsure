@@ -15,7 +15,7 @@ library(ggplot2)
 #' @return a plot of SNP distance over time using ggplot
 #'
 #' @export
-snp_time_hex <- function(SNPs, Time, lambda, sites=NA, snp_threshold, title="SNPs over Time", jitter=TRUE){
+snp_time_hex <- function(SNPs, Time, lambda, sites=NA, snp_threshold, title="SNP-Time Hexagonal Heatmap", jitter=TRUE){
   data <- data.frame(SNPs, Time)
   if(jitter==TRUE){
     data$SNPs <- abs(jitter(SNPs))
@@ -29,9 +29,12 @@ snp_time_hex <- function(SNPs, Time, lambda, sites=NA, snp_threshold, title="SNP
     scale_x_continuous(limits = c(0, NA), expand = c(0.01,0.01))+
     geom_hex(#binwidth=c(1,1)
                )+
+    scale_fill_continuous(#limits=c(0,25)
+                          )+
     geom_abline(intercept=0, slope = lambda)+
     geom_abline(intercept=snp_threshold, slope=0, linetype="dashed", alpha=0.75)+
     geom_label(x=labelx, y=labely,
                label = paste0(round(lambda*365.25,digits = 4), " SNPs per year"), size=5)+
-    labs(title=title)
+    labs(title=title)+
+    theme_minimal()
 }
