@@ -14,7 +14,8 @@ mixture_snp_cutoff(
   max_time = NA,
   upper.tail = 0.95,
   max_false_positive = 0.05,
-  trace = FALSE
+  trace = FALSE,
+  start_params = c(0.5, 0.01)
 )
 }
 \arguments{
@@ -31,6 +32,14 @@ mixture_snp_cutoff(
 \item{threshold_range}{whether to produce a dataset of threshold considering a range of times (from 0.5 to 10 years)}
 
 \item{max_time}{the maximum time(in days) utilised to calculate SNP thresholds, only applicable when time differences are provided}
+
+\item{upper.tail}{percentile to calculate SNP thresholds}
+
+\item{max_false_positive}{if the false positive rate from calculated threshold is higher than this value a warning is produced}
+
+\item{trace}{trace parameter to pass to optim}
+
+\item{start_params}{initial parametrs for optim}
 }
 \value{
 SNP threshold, mutation rate, proportion related, estimated false positive and negative rate estimations
