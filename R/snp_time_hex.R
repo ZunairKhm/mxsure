@@ -15,19 +15,20 @@ library(ggplot2)
 #' @return a plot of SNP distance over time using ggplot
 #'
 #' @export
-snp_over_time <- function(SNPs, Time, lambda, sites=NA, snp_threshold, title="SNPs over Time", jitter=TRUE){
+snp_time_hex <- function(SNPs, Time, lambda, sites=NA, snp_threshold, title="SNPs over Time", jitter=TRUE){
   data <- data.frame(SNPs, Time)
   if(jitter==TRUE){
-  data$SNPs <- abs(jitter(SNPs))
-  data$Time <- abs(jitter(Time))
+    data$SNPs <- abs(jitter(SNPs))
+    data$Time <- abs(jitter(Time))
   }
   if(!is.na(mean(sites, na.rm=TRUE))){lambda <- (lambda*mean(sites))/1000000}
   labely <- 0.8*max(data$SNPs[data$SNPs<=snp_threshold])
   labelx <- 0.7*max(data$Time[data$SNPs<=snp_threshold])
-  ggplot(filter(data,SNPs<=snp_threshold), aes(x=Time, y=SNPs))+
+  ggplot(data, aes(x=Time, y=SNPs))+
     scale_y_continuous(limits = c(0, snp_threshold+1), expand = c(0.01,0.01))+
     scale_x_continuous(limits = c(0, NA), expand = c(0.01,0.01))+
-    geom_point()+
+    geom_hex(#binwidth=c(1,1)
+               )+
     geom_abline(intercept=0, slope = lambda)+
     geom_abline(intercept=snp_threshold, slope=0, linetype="dashed", alpha=0.75)+
     geom_label(x=labelx, y=labely,
