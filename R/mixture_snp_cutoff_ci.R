@@ -8,6 +8,7 @@
 #' @param trans_sites list of sites considered for each SNP distance in mixed data set
 #' @param sample_size size of each bootstrap sample
 #' @param sample_n number of bootstrap sampling to conduct
+#' @param start_params initial parametrs for optim, if NA (as default) will try 3 different start parameters and produce the highest likelyhood result. Specifying the start parameters minimises computing time.
 #'
 #' @importFrom furrr future_map_dfr furrr_options
 #'
@@ -15,8 +16,15 @@
 #'
 #' @export
 mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
-                                  sample_size=length(trans_snp_dist), sample_n=1000, confidence_level=0.95){
-  if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
+                                  sample_size=length(trans_snp_dist), sample_n=1000, confidence_level=0.95, start_params=NA){
+  if (sample_n==0){
+    lowerres <- data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA)
+    upperres <- data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA)
+
+    ci <- bind_rows(lowerres, upperres)
+    res <- list(confidence_intervals=ci, raw_results=NA)
+  }
+  else if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
 
   mix_data <- tibble(snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
 
@@ -27,7 +35,7 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
     z <- plyr::try_default( #suppresses warnings and errors from mixture_snp_cutoffs
       suppressWarnings(
         mixture_snp_cutoff(
-          x$snp_dist,y, x$time_dist, x$sites
+          x$snp_dist,y, x$time_dist, x$sites, start_params = start_params
           ), classes = "warning"),
                            data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA))
    z[1:4]

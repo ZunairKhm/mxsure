@@ -28,7 +28,7 @@ log_sum_exp <- function(log_a, log_b) {
 #' @param upper.tail percentile to calculate SNP thresholds
 #' @param max_false_positive if the false positive rate from calculated threshold is higher than this value a warning is produced
 #' @param trace trace parameter to pass to optim
-#' @param start_params initial parametrs for optim
+#' @param start_params initial parametrs for optim, if NA (as default) will try 3 different start parameters and produce the highest likelyhood result
 #'
 #' @importFrom stats optim pnbinom qpois rnbinom
 #' @importFrom dplyr filter
