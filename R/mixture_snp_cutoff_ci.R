@@ -14,7 +14,7 @@
 #' @return Confidence intervals
 #'
 #' @export
-mixture_snp_cutoff_ci <- function(trans_snp_dist,unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
+mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
                                   sample_size=length(trans_snp_dist), sample_n=1000, confidence_level=0.95){
   if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
 
@@ -23,7 +23,7 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist,unrelated_snp_dist, trans_time_
   #bootstrapping both close and distant data sets allowing for parallelisationg
   bootstrapresults <- furrr::future_map_dfr(1:sample_n, ~{
     x <- slice_sample(mix_data, n= sample_size, replace = TRUE)
-    y <- slice_sample(unrelated_snp_dist, n=length(unrelated_snp_dist), replace=TRUE)
+    y <- sample(unrelated_snp_dist, size=length(unrelated_snp_dist), replace=TRUE)
     z <- plyr::try_default( #suppresses warnings and errors from mixture_snp_cutoffs
       suppressWarnings(
         mixture_snp_cutoff(

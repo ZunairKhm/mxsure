@@ -37,7 +37,7 @@ log_sum_exp <- function(log_a, log_b) {
 #'
 #' @export
 mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
-                               youden=FALSE,threshold_range=FALSE, max_time= NA, upper.tail=0.95, max_false_positive=0.05, trace=FALSE, start_params= c(0.5, 0.01)){
+                               youden=FALSE,threshold_range=FALSE, max_time= NA, upper.tail=0.95, max_false_positive=0.05, trace=FALSE, start_params= NA){
 
   #### Youden Cutoffs ####
   if(youden==TRUE){
@@ -236,9 +236,23 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                                                                       log = TRUE))}))
       }
 
+      if(anyNA(start_params)){
+        result_attempts <- list(
+          result1 = optim(par = c(0.25,0.0001), fn = llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
+                          method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace)),
+          result2 = optim(par = c(0.75,0.005), fn = llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
+                          method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace)),
+          result3 = optim(par = c(0.5, 0.001), fn = llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
+                          method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
+        )
 
-      result <- optim(par = start_params, fn = llk, x = trans_snp_dist, t=trans_time_dist, s=trans_sites,
+        # Extract the best result
+        result <- result_attempts[[which.min(sapply(result_attempts, `[[`, "value"))]]
+      }
+      else{
+        result <- optim(par = start_params, fn = llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
                       method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
+      }
 
       if (is.na(max_time)) {
         max_time <- 2*max(trans_time_dist)
