@@ -79,7 +79,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
 
     if ((length(trans_snp_dist) >= 20) && (length(unrelated_snp_dist) >= 20)){
-      nb_fit <- MASS::fitdistr(x=unrelated_snp_dist, densfun = "negative binomial")
+      nb_fit <- suppressWarnings(MASS::fitdistr(x=unrelated_snp_dist, densfun = "negative binomial"))
 
       llk <- function(params, x){
         k <- params[[1]]
@@ -95,8 +95,23 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       }
 
 
-      result <- optim(par = start_params, fn = llk, x = trans_snp_dist,
-                      method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
+      if(anyNA(start_params)){
+        result_attempts <- list(
+          result1 = optim(par = c(0.25,0.0001), fn = llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
+                          method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace)),
+          result2 = optim(par = c(0.75,0.005), fn = llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
+                          method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace)),
+          result3 = optim(par = c(0.5, 0.001), fn = llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
+                          method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
+        )
+
+        # Extract the best result
+        result <- result_attempts[[which.min(sapply(result_attempts, `[[`, "value"))]]
+      }
+      else{
+        result <- optim(par = start_params, fn = llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
+                        method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
+      }
 
       snp_threshold <- qpois(upper.tail, lambda = result$par[[2]])
 
@@ -144,7 +159,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
   #### Threshold considering time but not sites
   if(!anyNA(trans_time_dist)&(anyNA(trans_sites))){
     if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
-      nb_fit <- MASS::fitdistr(x=unrelated_snp_dist, densfun = "negative binomial")
+      nb_fit <- suppressWarnings(MASS::fitdistr(x=unrelated_snp_dist, densfun = "negative binomial"))
 
       llk <- function(params, x, t){
         k <- params[[1]]
@@ -160,8 +175,23 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       }
 
 
-      result <- optim(par = start_params, fn = llk, x = trans_snp_dist, t=trans_time_dist,
-                      method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
+      if(anyNA(start_params)){
+        result_attempts <- list(
+          result1 = optim(par = c(0.25,0.0001), fn = llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
+                          method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace)),
+          result2 = optim(par = c(0.75,0.005), fn = llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
+                          method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace)),
+          result3 = optim(par = c(0.5, 0.001), fn = llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
+                          method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
+        )
+
+        # Extract the best result
+        result <- result_attempts[[which.min(sapply(result_attempts, `[[`, "value"))]]
+      }
+      else{
+        result <- optim(par = start_params, fn = llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
+                        method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
+      }
 
       if (is.na(max_time)) {
         max_time <- 2*max(trans_time_dist)
@@ -221,7 +251,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
   #### Threshold considering time and sites #####
   if(!anyNA(trans_time_dist)&(!anyNA(trans_sites))){
     if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
-      nb_fit <- MASS::fitdistr(x=unrelated_snp_dist, densfun = "negative binomial")
+      nb_fit <- suppressWarnings(MASS::fitdistr(x=unrelated_snp_dist, densfun = "negative binomial"))
 
       llk <- function(params, x, t, s){
         k <- params[[1]]
@@ -238,20 +268,35 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
       if(anyNA(start_params)){
         result_attempts <- list(
-          result1 = optim(par = c(0.25,0.0001), fn = llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
-                          method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace)),
-          result2 = optim(par = c(0.75,0.005), fn = llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
-                          method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace)),
-          result3 = optim(par = c(0.5, 0.001), fn = llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
-                          method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
+          nlminb1 = nlminb(start=c(0.25,0.0001), objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
+                           lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace)),
+          nlminb2 = nlminb(start=c(0.75,0.005), objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
+                           lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace)),
+          nlminb3 = nlminb(start=c(0.5, 0.001), objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
+                           lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
         )
 
+        # Function to extract the appropriate field
+        extract_likelihood <- function(result) {
+          if (!is.null(result$value)) {
+            return(result$value) # optim results
+          } else if (!is.null(result$objective)) {
+            return(result$objective) # nlminb results
+          } else {
+            return(Inf) # Fallback if neither field exists
+          }
+        }
+
         # Extract the best result
-        result <- result_attempts[[which.min(sapply(result_attempts, `[[`, "value"))]]
+        likelihoods <- sapply(result_attempts, extract_likelihood)
+        best_result_index <- which.min(likelihoods)
+        best_result_name <- names(result_attempts)[best_result_index]
+        result <- result_attempts[[best_result_index]]
       }
       else{
-        result <- optim(par = start_params, fn = llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
-                      method = "L-BFGS-B", lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
+        result <- nlminb(start=start_params, objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
+               lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
+        best_result_name <- "input param nlminb"
       }
 
       if (is.na(max_time)) {
@@ -280,6 +325,8 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         k=result$par[[1]],
         estimated_fp=sum(unrelated_snp_dist<=snp_threshold)/length(unrelated_snp_dist),
         method="time+sites"
+        ,
+        parameter_comb=best_result_name
       )
     } else {
       warning("Insufficient data points to fit distributions!")
@@ -289,7 +336,8 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
           lambda=NA,
           k=NA,
           estimated_fp=NA,
-          method="failure"
+          method="failure",
+          parameter_comb=NA
 
         )
       threshold_range_df <- NA
