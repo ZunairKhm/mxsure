@@ -15,7 +15,7 @@ mixture_snp_cutoff(
   upper.tail = 0.95,
   max_false_positive = 0.05,
   trace = FALSE,
-  start_params = c(0.5, 0.01)
+  start_params = NA
 )
 }
 \arguments{
@@ -39,7 +39,7 @@ mixture_snp_cutoff(
 
 \item{trace}{trace parameter to pass to optim}
 
-\item{start_params}{initial parametrs for optim}
+\item{start_params}{initial parametrs for optim, if NA (as default) will try 3 different start parameters and produce the highest likelyhood result}
 }
 \value{
 SNP threshold, mutation rate, proportion related, estimated false positive and negative rate estimations

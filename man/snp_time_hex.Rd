@@ -10,8 +10,9 @@ snp_time_hex(
   lambda,
   sites = NA,
   snp_threshold,
-  title = "SNPs over Time",
-  jitter = TRUE
+  title = "SNP-Time Hexagonal Heatmap",
+  jitter = TRUE,
+  scale_limits = NULL
 )
 }
 \arguments{

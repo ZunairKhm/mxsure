@@ -9,7 +9,8 @@ snp_hist(
   unrelated_snp_dist = NULL,
   snp_threshold = NULL,
   limits = c(NA, 100),
-  title = "SNP Distance Histogram"
+  title = "SNP Distance Histogram",
+  separate_colour = FALSE
 )
 }
 \arguments{

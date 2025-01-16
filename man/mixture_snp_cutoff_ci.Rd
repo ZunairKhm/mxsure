@@ -11,7 +11,8 @@ mixture_snp_cutoff_ci(
   trans_sites = NA,
   sample_size = length(trans_snp_dist),
   sample_n = 1000,
-  confidence_level = 0.95
+  confidence_level = 0.95,
+  start_params = NA
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ mixture_snp_cutoff_ci(
 \item{sample_size}{size of each bootstrap sample}
 
 \item{sample_n}{number of bootstrap sampling to conduct}
+
+\item{start_params}{initial parametrs for optim, if NA (as default) will try 3 different start parameters and produce the highest likelyhood result. Specifying the start parameters minimises computing time.}
 }
 \value{
 Confidence intervals

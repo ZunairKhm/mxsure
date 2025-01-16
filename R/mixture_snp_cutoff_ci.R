@@ -28,6 +28,14 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
 
   mix_data <- tibble(snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
 
+  if (anyNA(start_params)){
+  test_result <- suppressWarnings(
+      mixture_snp_cutoff(
+        mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites, start_params = NA
+      ), classes = "warning")
+  start_params <- c(test_result[3], test_result[2])
+  }
+
   #bootstrapping both close and distant data sets allowing for parallelisationg
   bootstrapresults <- furrr::future_map_dfr(1:sample_n, ~{
     x <- slice_sample(mix_data, n= sample_size, replace = TRUE)
