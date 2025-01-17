@@ -27,8 +27,10 @@ negllk <- function(k, lambda, x, t, s, nbfitmu, nbfitsize){
 #' @param trans_time_dist list of time differences between samples from each SNP distance in the mixed data set (in days)
 #' @param trans_sites list of sites considered for each SNP distance in mixed data set
 #' @param resolution resolution of plot (main computation limitation)
-#' @param lambda_limits bounds of lambda axis
+#' @param lambda_limits bounds of lambda axis (plots on a log10 scale)
 #' @param k_limits bounds of k axis
+#' @param bins number of bins to pass to ggplot contour function
+#' @param title title to pass to ggplot title
 #'
 #' @return ggplot contour map of likelyhood space
 #' @export
@@ -56,9 +58,9 @@ mixture_likelyhood_contour <- function(trans_snp_dist, unrelated_snp_dist, trans
 
     # Compute likelihood using the negllk function (assuming it is defined elsewhere)
     negllk(k_val, lambda_val,
-           x = testdistances_same$`filtered SNP distance`,
-           t = testdistances_same$time_diff,
-           s = testdistances_same$`sites considered`,
+           x = trans_snp_dist,
+           t = trans_time_dist,
+           s = trans_sites,
            nbfitmu = nb_fit$estimate["mu"],
            nbfitsize = nb_fit$estimate["size"])
   })
@@ -66,7 +68,8 @@ mixture_likelyhood_contour <- function(trans_snp_dist, unrelated_snp_dist, trans
   # Plot the results using ggplot
   ggplot(data, aes(y = k, x = lambda, z = likelyhood)) +
     scale_x_continuous(limits=lambda_limits, expand=c(0,0), transform = "log",
-                       breaks = signif(10^(seq(log10(lambda_limits[1]),log10(lambda_limits[2]), length.out = 9)),1))+
+                       breaks = signif(10^(seq(log10(lambda_limits[1]),log10(lambda_limits[2]), length.out = 5)),1),
+                       labels = scales::trans_format("log10", scales::math_format(10^.x)))+
     scale_y_continuous(limits=k_limits, expand=c(0,0))+
     geom_contour_filled(bins=bins) +
     geom_contour(colour="black", bins=bins)+

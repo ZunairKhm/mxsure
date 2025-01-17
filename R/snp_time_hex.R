@@ -15,7 +15,8 @@ library(ggplot2)
 #' @return a plot of SNP distance over time using ggplot
 #'
 #' @export
-snp_time_hex <- function(SNPs, Time, lambda, sites=NA, snp_threshold, title="SNP-Time Hexagonal Heatmap", jitter=TRUE, scale_limits=NULL){
+snp_time_hex <- function(SNPs, Time, lambda, sites=NA, snp_threshold,
+                         title="SNP-Time Hexagonal Heatmap", jitter=TRUE, scale_limits=NULL){
   data <- data.frame(SNPs, Time)
   if(jitter==TRUE){
     data$SNPs <- abs(jitter(SNPs))
