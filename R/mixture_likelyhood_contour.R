@@ -36,6 +36,7 @@ negllk <- function(k, lambda, x, t, s, nbfitmu, nbfitsize){
 #' @export
 #'
 #' @examples
+#'
 mixture_likelyhood_contour <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, trans_sites,
                                        resolution=100, lambda_limits=NA, k_limits=NA, bins=NULL, title="Mixture Likelihood Contour Plot"){
   if(anyNA(lambda_limits)){

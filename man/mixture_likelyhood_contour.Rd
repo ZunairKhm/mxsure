@@ -27,9 +27,13 @@ mixture_likelyhood_contour(
 
 \item{resolution}{resolution of plot (main computation limitation)}
 
-\item{lambda_limits}{bounds of lambda axis}
+\item{lambda_limits}{bounds of lambda axis (plots on a log10 scale)}
 
 \item{k_limits}{bounds of k axis}
+
+\item{bins}{number of bins to pass to ggplot contour function}
+
+\item{title}{title to pass to ggplot title}
 }
 \value{
 ggplot contour map of likelyhood space
