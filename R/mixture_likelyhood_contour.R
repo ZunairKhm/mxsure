@@ -73,7 +73,10 @@ mixture_likelyhood_contour <- function(trans_snp_dist, unrelated_snp_dist, trans
                        labels = scales::trans_format("log10", scales::math_format(10^.x)))+
     scale_y_continuous(limits=k_limits, expand=c(0,0))+
     geom_contour_filled(bins=bins) +
-    geom_contour(colour="black", bins=bins)+
-    labs(title = title)+
+    #geom_contour(colour="black", bins=bins)+
+    geomtextpath::geom_textcontour(bins=bins, size = 2.5, padding = unit(0.05, "in"))+
+    labs(title = title,
+         x="Rate",
+         y="Proportion Related")+
     theme(legend.position="none")
 }
