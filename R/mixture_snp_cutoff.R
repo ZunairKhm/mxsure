@@ -181,11 +181,11 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
       if(anyNA(start_params)){
         result_attempts <- list(
-          nlminb1 = nlminb(start=c(0.25,0.0001), objective=llk, x = trans_snp_dist, t = trans_time_dist,
+          nlminb1 = nlminb(start=c(0.5,0.0001), objective=llk, x = trans_snp_dist, t = trans_time_dist,
                            lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace)),
-          nlminb2 = nlminb(start=c(0.75,0.005), objective=llk, x = trans_snp_dist, t = trans_time_dist,
+          nlminb2 = nlminb(start=c(0.5,0.001), objective=llk, x = trans_snp_dist, t = trans_time_dist,
                            lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace)),
-          nlminb3 = nlminb(start=c(0.5, 0.001), objective=llk, x = trans_snp_dist, t = trans_time_dist,
+          nlminb3 = nlminb(start=c(0.5, 0.01), objective=llk, x = trans_snp_dist, t = trans_time_dist,
                            lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
         )
 
@@ -276,11 +276,11 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
       if(anyNA(start_params)){
         result_attempts <- list(
-          nlminb1 = nlminb(start=c(0.25,0.0001), objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
+          nlminb1 = nlminb(start=c(0.5,0.0001), objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
                            lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace)),
-          nlminb2 = nlminb(start=c(0.75,0.005), objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
+          nlminb2 = nlminb(start=c(0.5,0.001), objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
                            lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace)),
-          nlminb3 = nlminb(start=c(0.5, 0.001), objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
+          nlminb3 = nlminb(start=c(0.5, 0.01), objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
                            lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
         )
 

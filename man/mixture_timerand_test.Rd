@@ -14,7 +14,6 @@ mixture_timerand_test(
   confidence_level = 0.95,
   start_params = NA,
   ci_data = NA,
-  raw = FALSE,
   title = NULL
 )
 }
@@ -37,9 +36,9 @@ mixture_timerand_test(
 
 \item{ci_data}{optional input for previously calculated CI data (mixture_snp_cutoff_ci) for computational efficiency}
 
-\item{raw}{option to output raw results instead of ggplot}
-
 \item{title}{titel for ggplot}
+
+\item{raw}{option to output raw results instead of ggplot}
 }
 \value{
 ggplot comparing point estimates and confidence levels between normal data and time randomised data

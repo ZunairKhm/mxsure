@@ -38,12 +38,9 @@ negllk <- function(k, lambda, x, t, s, nbfitmu, nbfitsize){
 #' @examples
 #'
 mixture_likelyhood_contour <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, trans_sites,
-                                       resolution=100, lambda_limits=NA, k_limits=NA, bins=NULL, title="Mixture Likelihood Contour Plot"){
-  if(anyNA(lambda_limits)){
-    temp_res <- mixture_snp_cutoff(trans_snp_dist, unrelated_snp_dist, trans_time_dist, trans_sites)
-    lambda_limits <- c(temp_res$lambda*0.1,temp_res$lambda*10)
-    k_limits <- c(max(c (temp_res$k-0.1, 0)),min(c(temp_res$k+0.1,1)))
-  }
+                                       resolution=100, lambda_limits=c(0.0001, 1), k_limits=c(0.2,0.99), estimate=NA, low_ci=NA, high_ci=NA,
+                                       bins=NULL, title="Mixture Likelihood Contour Plot"){
+
   nb_fit <- suppressWarnings( MASS::fitdistr(x=unrelated_snp_dist, densfun = "negative binomial"
   ))
   lambda <- exp(seq(log(lambda_limits[1]),log(lambda_limits[2]), length.out = resolution))
@@ -75,6 +72,10 @@ mixture_likelyhood_contour <- function(trans_snp_dist, unrelated_snp_dist, trans
     geom_contour_filled(bins=bins) +
     #geom_contour(colour="black", bins=bins)+
     geomtextpath::geom_textcontour(bins=bins, size = 2.5, padding = unit(0.05, "in"))+
+    annotate("point",x=estimate[1], y=estimate[2],shape=4, color="red3")+
+    annotate("rect", xmin = low_ci[1], ymin = low_ci[2],
+             xmax = high_ci[1], ymax = high_ci[2],
+             fill = NA, color = "red3", linetype = "dashed", size = 0.5)+
     labs(title = title,
          x="Rate",
          y="Proportion Related")+

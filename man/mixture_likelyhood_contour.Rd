@@ -10,8 +10,11 @@ mixture_likelyhood_contour(
   trans_time_dist,
   trans_sites,
   resolution = 100,
-  lambda_limits = NA,
-  k_limits = NA,
+  lambda_limits = c(1e-04, 1),
+  k_limits = c(0.2, 0.99),
+  estimate = NA,
+  low_ci = NA,
+  high_ci = NA,
   bins = NULL,
   title = "Mixture Likelihood Contour Plot"
 )
