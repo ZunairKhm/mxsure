@@ -10,17 +10,16 @@
 #' @export
 #'
 #' @examples
-#' #simulates dataset with an E. coli profile
-#' x <- simulate_mixsnp_data(lambda=0.00179*4, 0.5, 500, error_param=NA)
-simulate_mixsnp_data <- function(lambda, k,nbmu=500, error_param=NA, n=1000){
+simulate_mixsnp_data <- function(lambda, k,unrelmu=100*365.25, unrelsd=30*365.25, error_param=NA, n=1000){
   mix_snp_dist <- map_dfr(1:n, ~{
-    
-    tt <- rexp(1, rate = 0.02) #time distribution
+
+    tt <- rexp(1, rate = 0.02) #time distribution for sample time different
+    td <- abs(rnorm(1, mean=unrelmu, sd=unrelsd)) #time distribution for unrelated evo time
     if (runif(1)<k){
       dd <- rpois(n = 1, lambda = tt*lambda)
       rr <- "Related"
     } else {
-      dd <- rnbinom(1, mu = nbmu, size = 1)
+      dd <- rpois(1, lambda = td*lambda)
       rr <- "Unrelated"
     }
     if (!is.na(error_param)){
@@ -29,6 +28,6 @@ simulate_mixsnp_data <- function(lambda, k,nbmu=500, error_param=NA, n=1000){
     return(
       tibble(snp_dist=dd, time_dist=tt, relation=rr)
     )
-    
+
   })
 }
