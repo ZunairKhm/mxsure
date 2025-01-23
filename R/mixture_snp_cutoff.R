@@ -200,14 +200,14 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       }
 
       if (is.na(max_time)) {
-        max_time <- 2*max(trans_time_dist)
+        max_time <- max(trans_time_dist)
       }
 
-      snp_threshold <- qpois(0.95, lambda=result$par[[2]]*max_time) # qpois(1-max_false_positive, lambda=result$par[[2]]*max_time) #result$par[[2]]*quantile(trans_time_dist, 0.75))
+      snp_threshold <- qpois(upper.tail, lambda=result$par[[2]]*max_time) # qpois(1-max_false_positive, lambda=result$par[[2]]*max_time) #result$par[[2]]*quantile(trans_time_dist, 0.75))
       if(threshold_range==TRUE & !is.na(snp_threshold)){
         threshold_range_df <- data.frame(years=seq(0.5, 10, 0.5), threshold=NA, estimated_fp=NA, prop_pos=NA)
         #snp_threshold$thresholdexpected <- map(snp_threshold$years, ~{result$par[[2]]*365.25*.x*(max(trans_sites)/1000000)})
-        threshold_range_df$threshold <- modify(threshold_range_df$years, ~{qpois(0.95, lambda=result$par[[2]]*365.25*.x)})
+        threshold_range_df$threshold <- modify(threshold_range_df$years, ~{qpois(upper.tail, lambda=result$par[[2]]*365.25*.x)})
         threshold_range_df$estimated_fp <-modify(threshold_range_df$threshold, ~{sum(unrelated_snp_dist<=.x)/length(unrelated_snp_dist)})
         threshold_range_df$prop_pos <-modify(threshold_range_df$threshold, ~{sum(trans_snp_dist<=.x)/length(trans_snp_dist)})
       }
@@ -295,15 +295,15 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       }
 
       if (is.na(max_time)) {
-        max_time <- 2*max(trans_time_dist)
+        max_time <- max(trans_time_dist)
       }
 
-      snp_threshold <- qpois(0.95, lambda=result$par[[2]]*max_time*(mean(trans_sites)/1000000))
+      snp_threshold <- qpois(upper.tail, lambda=result$par[[2]]*max_time*(mean(trans_sites)/1000000))
 
       if(threshold_range==TRUE & !is.na(snp_threshold)){
         threshold_range_df <- data.frame(years=seq(0.5, 10, 0.5), threshold=NA, estimated_fp=NA, prop_pos=NA)
         #snp_threshold$thresholdexpected <- map(snp_threshold$years, ~{result$par[[2]]*365.25*.x*(max(trans_sites)/1000000)})
-        threshold_range_df$threshold <- modify(threshold_range_df$years, ~{qpois(0.95, lambda=result$par[[2]]*365.25*.x*(mean(trans_sites)/1000000))})
+        threshold_range_df$threshold <- modify(threshold_range_df$years, ~{qpois(upper.tail, lambda=result$par[[2]]*365.25*.x*(mean(trans_sites)/1000000))})
         threshold_range_df$estimated_fp <-modify(threshold_range_df$threshold, ~{sum(unrelated_snp_dist<=.x)/length(unrelated_snp_dist)})
         threshold_range_df$prop_pos <-modify(threshold_range_df$threshold, ~{sum(trans_snp_dist<=.x)/length(trans_snp_dist)})
       }
