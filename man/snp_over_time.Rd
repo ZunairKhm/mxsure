@@ -11,7 +11,9 @@ snp_over_time(
   sites = NA,
   snp_threshold,
   title = "SNPs over Time",
-  jitter = TRUE
+  jitter = TRUE,
+  p_value = NA,
+  ci = NA
 )
 }
 \arguments{
@@ -28,6 +30,10 @@ snp_over_time(
 \item{title}{title for graph}
 
 \item{jitter}{jitter data (keeps data above 0 SNPs and 0 time)}
+
+\item{p_value}{optional input to display time randomised p value from mixture_timerand_test}
+
+\item{ci}{optional input to display CIs of mutation rate}
 }
 \value{
 a plot of SNP distance over time using ggplot

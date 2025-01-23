@@ -4,26 +4,34 @@
 \alias{simulate_mixsnp_data}
 \title{Simulate Mixed related SNP distance dataset}
 \usage{
-simulate_mixsnp_data(lambda, k, nbmu = 500, error_param = NA, n = 1000)
+simulate_mixsnp_data(
+  lambda,
+  k,
+  unrelmu = 100,
+  unrelsd = NA,
+  error_param = NA,
+  n = 100,
+  reltimelimit = c(1)
+)
 }
 \arguments{
 \item{lambda}{mutation rate input (SNPs per day)}
 
 \item{k}{proportion of mixed dataset that is linked}
 
-\item{nbmu}{mean of the negative binomial distribution underlying the unrelated SNP distances}
+\item{unrelmu}{mean of normal distribution for SNP distances for unrelated pairs in years}
+
+\item{unrelsd}{sd of normal distribution for SNP distances for unrelated pairs in years}
 
 \item{error_param}{chance that each SNP is missed}
 
 \item{n}{size of dataset to simulate}
+
+\item{reltimelimit}{maximum time allowed between samples (calculates a rate for an exponential distribution to model this time difference as)}
 }
 \value{
 SNP distance dataset with a mixture of related and unrelated pairs with time differences
 }
 \description{
 Simulate Mixed related SNP distance dataset
-}
-\examples{
-#simulates dataset with an E. coli profile
-x <- simulate_mixsnp_data(lambda=0.00179*4, 0.5, 500, error_param=NA)
 }
