@@ -12,7 +12,7 @@ library(ggplot2)
 #' @return a histogram plot of snp distances using ggplot
 #'
 #' @export
-snp_hist <- function(trans_snp_dist, unrelated_snp_dist=NULL, snp_threshold=NULL, limits=c(NA,100), title="SNP Distance Histogram"){
+snp_hist <- function(trans_snp_dist, unrelated_snp_dist=NULL, snp_threshold=NULL, limits=c(NA,100), title="SNP Distance Histogram", scales="fixed"){
     # Combine the datasets into a data frame
     data <- data.frame(
       SNP_Distance = c(unrelated_snp_dist, trans_snp_dist),
@@ -25,7 +25,8 @@ snp_hist <- function(trans_snp_dist, unrelated_snp_dist=NULL, snp_threshold=NULL
       scale_x_continuous(limits = limits) +
       geom_histogram(binwidth = 1, position = "identity") +
       geom_vline(xintercept = snp_threshold + 0.5, color = "red3", alpha = 0.7, linetype = "dashed") +
-      facet_wrap(~Dataset, ncol=1) +
+      facet_wrap(~Dataset, ncol=1, scales=scales
+                 ) +
       labs(
         title = title,
         x = "SNP Distances",
