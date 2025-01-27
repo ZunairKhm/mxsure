@@ -66,11 +66,11 @@ mixture_timerand_test <- function(trans_snp_dist, unrelated_snp_dist, trans_time
   timerand_ci <- list(confidence_intervals=timerand_ci, raw_results=timerand_point_ests)
 
   comparison <- tibble(
-    "method"=c("Normal", "Time Randomised"),
-    "5%"=c("normal" = normal_ci$confidence_intervals$lambda[1], "time_randomised" = timerand_ci$confidence_intervals$lambda[1], use.names=FALSE),
-    "point_est"=c("normal" = normal_point_est$lambda, "time_randomised" = NA, use.names=FALSE),
-    "95%"=c("normal" = normal_ci$confidence_intervals$lambda[2], "time_randomised" = timerand_ci$confidence_intervals$lambda[2], use.names=FALSE)
-  )
+  method = c("Normal", "Time Randomised"),
+  `5%` = c(normal_ci$confidence_intervals$lambda[1], timerand_ci$confidence_intervals$lambda[1]),
+  point_est = c(normal_point_est$lambda, NA),
+  `95%` = c(normal_ci$confidence_intervals$lambda[2], timerand_ci$confidence_intervals$lambda[2])
+)
 
   p_value <- (sum(timerand_point_ests$lambda>=normal_point_est$lambda)+1)/
               (length(timerand_point_ests$lambda)+1)
