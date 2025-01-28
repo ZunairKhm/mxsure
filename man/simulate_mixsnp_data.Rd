@@ -7,11 +7,11 @@
 simulate_mixsnp_data(
   lambda,
   k,
-  unrelmu = 100,
-  unrelsd = NA,
+  unrel_shape = 100,
+  unrel_rate = 1,
   error_param = NA,
   n = 100,
-  reltimelimit = c(1)
+  rel_timelimit = 1
 )
 }
 \arguments{
@@ -19,15 +19,15 @@ simulate_mixsnp_data(
 
 \item{k}{proportion of mixed dataset that is linked}
 
-\item{unrelmu}{mean of normal distribution for SNP distances for unrelated pairs in years}
+\item{unrel_shape}{shape of gamma distribution for time of evolution for unrelated pairs in years}
 
-\item{unrelsd}{sd of normal distribution for SNP distances for unrelated pairs in years}
+\item{unrel_rate}{rate of gamma distribution for time of evolution unrelated pairs in years}
 
 \item{error_param}{chance that each SNP is missed}
 
 \item{n}{size of dataset to simulate}
 
-\item{reltimelimit}{maximum time allowed between samples (calculates a rate for an exponential distribution to model this time difference as)}
+\item{rel_timelimit}{maximum time allowed between samples in years (calculates time difference from uniform dist.)}
 }
 \value{
 SNP distance dataset with a mixture of related and unrelated pairs with time differences
