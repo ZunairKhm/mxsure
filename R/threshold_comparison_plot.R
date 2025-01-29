@@ -67,7 +67,7 @@ threshold_comparison_plot <- function(trans_snp_dist, unrelated_snp_dist, snp_th
 
   ggplot(data, aes(x = p, y = method, fill = dataset)) +
     geom_bar(stat = "identity", position = "dodge", width=0.9) +
-    scale_fill_manual(values = c( "red3", "darkseagreen")) +
+    scale_fill_manual(values = c(  "darkseagreen", "red3")) +
     scale_x_continuous(limits=c(0,1), expand = c(0,0))+
     geom_vline(xintercept=k_est, linetype="solid", colour="grey20", alpha=0.6)+
     geom_text(aes(label = if (labels) label else NA, x = 0.5),
