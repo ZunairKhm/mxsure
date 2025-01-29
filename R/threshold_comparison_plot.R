@@ -1,3 +1,22 @@
+#' Threshold Comparison Plot
+#'
+#' @param trans_snp_dist list of SNP distances from a mixed transmission data set
+#' @param unrelated_snp_dist list of SNP distances from an unrelated data set
+#' @param snp_thresholds list of SNP thresholds to consider
+#' @param method_names list of names associated with each SNP threshold
+#' @param identity whether to include an identity threshold as well
+#' @param percent_dist_mixed percent distances from a mixed transmission data set, needed if identity thresholds are considered
+#' @param percent_dist_distant percent distances from a distant transmission data set, needed if identity thresholds are considered
+#' @param identity_thresh identity threshold to use
+#' @param k_est proportion related line to plot
+#' @param title title of plot
+#' @param labels whether to include labels on the plot
+#' @param dataset_names names of the mixed/distant datasets
+#'
+#' @return plot comparing proportion of data under each threshold
+#' @export
+#'
+#' @examples
 threshold_comparison_plot <- function(trans_snp_dist, unrelated_snp_dist, snp_thresholds, method_names,
                                  identity=FALSE, percent_dist_mixed, percent_dist_distant, identity_thresh=99.99,
                                  k_est=NULL, title=NULL,labels=TRUE, dataset_names=c("Mixed", "Distant")) {
