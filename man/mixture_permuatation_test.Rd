@@ -28,6 +28,10 @@ mixture_permuatation_test(
 
 \item{unrelated_snp_dist}{list of SNP distances from an unrelated data set}
 
+\item{unrelated_time_dist}{list of time distances from an unrelated data set}
+
+\item{unrelated_sites}{list of sites considered for each SNP distance in a distant data set}
+
 \item{sample_size}{size of each bootstrap sample}
 
 \item{sample_n}{number of bootstrap sampling to conduct}
@@ -39,11 +43,9 @@ mixture_permuatation_test(
 \item{ci_data}{optional input for previously calculated CI data (mixture_snp_cutoff_ci) for computational efficiency}
 
 \item{title}{title for ggplot}
-
-\item{raw}{option to output raw results instead of ggplot}
 }
 \value{
-ggplot comparing point estimates and confidence levels between normal data and time randomised data
+data and plot comparing normal results to mixed/distant permuted results
 }
 \description{
 Related/Unrelated permutation test for mixture distribution mutation rate estimation
