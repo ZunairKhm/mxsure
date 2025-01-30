@@ -6,11 +6,10 @@
 #' @param trans_sites list of sites considered for each SNP distance in mixed data set
 #' @param sample_size size of each bootstrap sample
 #' @param sample_n number of bootstrap sampling to conduct
-#' @param start_params initial parameters for optim, if NA (as default) will try 3 different start parameters and produce the highest likelyhood result. Specifying the start parameters minimises computing time.
+#' @param start_params initial parameters for optim, if NA (as default) will try 3 different start parameters and produce the highest likelihood result. Specifying the start parameters minimises computing time.
 #' @param ci_data optional input for previously calculated CI data (mixture_snp_cutoff_ci) for computational efficiency
-#' @param raw option to output raw results instead of ggplot
 #' @param confidence_level confidence level for CIs
-#' @param title titel for ggplot
+#' @param title title for ggplot
 #'
 #' @return ggplot comparing point estimates and confidence levels between normal data and time randomised data
 #' @export
@@ -18,7 +17,7 @@
 #' @examples
 mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
                                   sample_size=length(trans_snp_dist), sample_n=500, permutations=3, confidence_level=0.95,
-                                  start_params=NA, ci_data=NA, raw=FALSE, title=NULL){
+                                  start_params=NA, ci_data=NA,  raw=FALSE, title=NULL){
   #unadjusted result
   normal_data <- tibble(snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
   normal_result <- mixture_snp_cutoff(normal_data$snp_dist,unrelated_snp_dist, normal_data$time_dist,normal_data$sites)

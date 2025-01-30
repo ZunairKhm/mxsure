@@ -8,16 +8,20 @@
 #' @param sample_n number of bootstrap sampling to conduct
 #' @param start_params initial parameters for optim, if NA (as default) will try 3 different start parameters and produce the highest likelyhood result. Specifying the start parameters minimises computing time.
 #' @param ci_data optional input for previously calculated CI data (mixture_snp_cutoff_ci) for computational efficiency
-#' @param raw option to output raw results instead of ggplot
 #' @param confidence_level confidence level for CIs
-#' @param title titel for ggplot
+#' @param title title for ggplot
+#' @param within_individual whether to permute time data within each individual
+#' @param subjectA_id subject id for within individual permutation
+#' @param subjectB_id subject id for within individual permutation
 #'
 #' @return ggplot comparing point estimates and confidence levels between normal data and time randomised data
 #' @export
 #'
 #' @examples
 mixture_timerand_test <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
-                  sample_size=length(trans_snp_dist), sample_n=500, confidence_level=0.95, start_params=NA, ci_data=NA, title=NULL){
+                                  within_individual=FALSE, subjectA_id=NA, subjectB_id=NA,
+                                  sample_size=length(trans_snp_dist), sample_n=500, confidence_level=0.95,
+                                  start_params=NA, ci_data=NA, title=NULL){
 
   if ((length(trans_snp_dist) < 30) | (length(unrelated_snp_dist) < 30)){
     warning("Insufficient data points to fit distributions!")
@@ -44,7 +48,18 @@ mixture_timerand_test <- function(trans_snp_dist, unrelated_snp_dist, trans_time
   }
 
   timerand_point_ests <- furrr::future_map_dfr(1:sample_n, ~{
-    x <- tibble(snp_dist=trans_snp_dist, time_dist=sample(trans_time_dist, length(trans_time_dist)), sites=trans_sites)
+    if(within_individual){
+      if(all(subjectA_id==subjectB_id)){
+        x <- tibble(subject_id= subjectA_id, snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
+        x <- x|>
+          group_by(subject_id)|>
+          mutate(time_dist=sample(time_dist, length(time_dist)))|>
+          ungroup()
+      } else{ warning("subject ID's do not match")}
+    }else {
+      x <- tibble(snp_dist=trans_snp_dist, time_dist=sample(trans_time_dist, length(trans_time_dist)), sites=trans_sites)
+    }
+
     y <- unrelated_snp_dist
     z <- plyr::try_default( #suppresses warnings and errors from mixture_snp_cutoffs
       suppressWarnings(
