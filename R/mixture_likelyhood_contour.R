@@ -38,7 +38,7 @@ negllk <- function(k, lambda, x, t, s, nbfitmu, nbfitsize){
 #' @examples
 #'
 mixture_likelyhood_contour <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, trans_sites,
-                                       resolution=100, lambda_limits=c(0.0001, 1), k_limits=c(0.2,0.99), estimate=NA, low_ci=NA, high_ci=NA,
+                                       resolution=100, lambda_limits=c(0.0001, 1), k_limits=c(0.2,0.99), estimate=NULL, low_ci=NULL, high_ci=NULL,
                                        bins=NULL, title="Mixture Likelihood Contour Plot"){
 
   nb_fit <- suppressWarnings( MASS::fitdistr(x=unrelated_snp_dist, densfun = "negative binomial"
@@ -75,7 +75,7 @@ mixture_likelyhood_contour <- function(trans_snp_dist, unrelated_snp_dist, trans
     annotate("point",x=estimate[1], y=estimate[2],shape=4, color="red3")+
     annotate("rect", xmin = low_ci[1], ymin = low_ci[2],
              xmax = high_ci[1], ymax = high_ci[2],
-             fill = NA, color = "red3", linetype = "dashed", size = 0.5)+
+             fill = NA, color = "red3", linetype = "dotted", size = 0.5)+
     labs(title = title,
          x="Rate",
          y="Proportion Related")+
