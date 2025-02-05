@@ -19,6 +19,7 @@
 #'
 #' @examples
 mixture_timerand_test <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
+                                  under_thresh=FALSE, snp_threshold=NA,
                                   within_individual=FALSE, subjectA_id=NA, subjectB_id=NA,
                                   sample_size=length(trans_snp_dist), sample_n=500, confidence_level=0.95,
                                   start_params=NA, ci_data=NA, title=NULL){
@@ -48,9 +49,21 @@ mixture_timerand_test <- function(trans_snp_dist, unrelated_snp_dist, trans_time
   }
 
   timerand_point_ests <- furrr::future_map_dfr(1:sample_n, ~{
+    if(under_thresh){
+      if(is.na(snp_threshold)){
+        snp_threshold <- normal_point_est$snp_threshold
+      }
+      x <- tibble(snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
+      under_thresh_idx <- which(x$snp_dist <= snp_threshold)
+
+      x <- x |>
+        mutate(time_dist = replace(time_dist, under_thresh_idx, sample(time_dist[under_thresh_idx])))
+
+    }
+
     if(within_individual){
       if(all(subjectA_id==subjectB_id)){
-        x <- tibble(subject_id= subjectA_id, snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
+        x <- tibble(subject_id= subjectA_id, snp_dist=trans_snp_dist, time_dist=sample(trans_time_dist), sites=trans_sites)
         x <- x|>
           group_by(subject_id)|>
           mutate(time_dist=sample(time_dist, length(time_dist)))|>
