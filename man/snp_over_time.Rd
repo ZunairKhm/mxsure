@@ -13,7 +13,8 @@ snp_over_time(
   title = "SNPs over Time",
   jitter = TRUE,
   p_value = NA,
-  ci = NA
+  ci = NA,
+  time_limits = c(0, NA)
 )
 }
 \arguments{

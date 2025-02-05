@@ -9,6 +9,11 @@ mixture_timerand_test(
   unrelated_snp_dist,
   trans_time_dist = NA,
   trans_sites = NA,
+  under_thresh = FALSE,
+  snp_threshold = NA,
+  within_individual = FALSE,
+  subjectA_id = NA,
+  subjectB_id = NA,
   sample_size = length(trans_snp_dist),
   sample_n = 500,
   confidence_level = 0.95,
@@ -26,6 +31,12 @@ mixture_timerand_test(
 
 \item{trans_sites}{list of sites considered for each SNP distance in mixed data set}
 
+\item{within_individual}{whether to permute time data within each individual}
+
+\item{subjectA_id}{subject id for within individual permutation}
+
+\item{subjectB_id}{subject id for within individual permutation}
+
 \item{sample_size}{size of each bootstrap sample}
 
 \item{sample_n}{number of bootstrap sampling to conduct}
@@ -36,9 +47,7 @@ mixture_timerand_test(
 
 \item{ci_data}{optional input for previously calculated CI data (mixture_snp_cutoff_ci) for computational efficiency}
 
-\item{title}{titel for ggplot}
-
-\item{raw}{option to output raw results instead of ggplot}
+\item{title}{title for ggplot}
 }
 \value{
 ggplot comparing point estimates and confidence levels between normal data and time randomised data

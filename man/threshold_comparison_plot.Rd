@@ -34,7 +34,7 @@ threshold_comparison_plot(
 
 \item{percent_dist_distant}{percent distances from a distant transmission data set, needed if identity thresholds are considered}
 
-\item{identity_thresh}{identity threshold to use}
+\item{identity_thresh}{identity threshold to use (as percentage)}
 
 \item{k_est}{proportion related line to plot}
 

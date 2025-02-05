@@ -34,13 +34,11 @@ mixture_timerand_ci(
 
 \item{confidence_level}{confidence level for CIs}
 
-\item{start_params}{initial parameters for optim, if NA (as default) will try 3 different start parameters and produce the highest likelyhood result. Specifying the start parameters minimises computing time.}
+\item{start_params}{initial parameters for optim, if NA (as default) will try 3 different start parameters and produce the highest likelihood result. Specifying the start parameters minimises computing time.}
 
 \item{ci_data}{optional input for previously calculated CI data (mixture_snp_cutoff_ci) for computational efficiency}
 
-\item{raw}{option to output raw results instead of ggplot}
-
-\item{title}{titel for ggplot}
+\item{title}{title for ggplot}
 }
 \value{
 ggplot comparing point estimates and confidence levels between normal data and time randomised data
