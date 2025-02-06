@@ -42,8 +42,8 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
   #### Youden Cutoffs ####
   if(youden==TRUE){
     if ((length(trans_snp_dist) >= 10) && (length(unrelated_snp_dist) >= 10)){
-
-      youden_index <- map_dbl(trans_snp_dist, ~{
+      range <- 1:500
+      youden_index <- map_dbl(range, ~{
         tp <- sum(trans_snp_dist <= .x)
         tn <- sum(unrelated_snp_dist > .x)
         fn <- sum(trans_snp_dist > .x)
@@ -51,7 +51,8 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
         return(tp/(tp+fn) + tn/(tn+fp) - 1)
       })
-      youden_snp_threshold <- trans_snp_dist[which.max(youden_index)]
+
+      youden_snp_threshold <- range[which.max(youden_index)]
 
       youden_results <-
         tibble(
