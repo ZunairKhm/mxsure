@@ -51,7 +51,7 @@ mixture_timerand_test <- function(trans_snp_dist, unrelated_snp_dist, trans_time
   timerand_point_ests <- furrr::future_map_dfr(1:sample_n, ~{
     if(under_thresh){
       if(is.na(snp_threshold)){
-        snp_threshold <- normal_point_est$snp_threshold
+        snp_threshold <- normal_point_est[1]
       }
       x <- tibble(snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
       under_thresh_idx <- which(x$snp_dist <= snp_threshold)
