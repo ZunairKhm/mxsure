@@ -41,6 +41,13 @@ mixture_snp_cutoff_trunc <- function(trans_snp_dist, unrelated_snp_dist, trans_t
                                youden=FALSE,threshold_range=FALSE, max_time= NA,
                                upper.tail=0.95, max_false_positive=0.05, trace=FALSE, start_params= NA){
 
+  x <- tibble(trans_snp_dist, trans_time_dist, trans_sites)
+  x <- filter(x, trans_snp_dist<truncation_point)
+  trans_snp_dist <- x$trans_snp_dist
+  trans_time_dist <- x$trans_time_dist
+  trans_sites <- x$trans_sites
+  unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
+
   #### Youden Cutoffs ####
   if(youden==TRUE){
     if ((length(trans_snp_dist) >= 10) && (length(unrelated_snp_dist) >= 10)){
@@ -78,12 +85,7 @@ mixture_snp_cutoff_trunc <- function(trans_snp_dist, unrelated_snp_dist, trans_t
   #### Threshold considering time and sites #####
   if(!anyNA(trans_time_dist)&(!anyNA(trans_sites))){
     if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
-      x <- tibble(trans_snp_dist, trans_time_dist, trans_sites)
-      x <- filter(x, trans_snp_dist<truncation_point)
-      trans_snp_dist <- x$trans_snp_dist
-      trans_time_dist <- x$trans_time_dist
-      trans_sites <- x$trans_sites
-      unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
+
 
       nb_fit <- suppressWarnings(MASS::fitdistr(x=unrelated_snp_dist, densfun = "negative binomial"))
 
