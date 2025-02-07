@@ -12,10 +12,10 @@
 #' @export
 #'
 #' @examples
-simulate_mixsnp_data <- function(lambda, k, unrel_shape=100, unrel_rate=1, error_param=NA, n=100, rel_timelimit=1){
+simulate_mixsnp_data <- function(lambda, k, unrel_shape=100, unrel_rate=1, error_param=NA, n=100, rel_timelimit=1, rel_timemin=0){
   mix_snp_dist <- map_dfr(1:n, ~{
 
-    tt <- runif(1, 0, rel_timelimit*365) #rexp(1, rate = -log(1-0.99)/(reltimelimit*365.25)) #time distribution for sample time different
+    tt <- runif(1, rel_timemin*365.25, rel_timelimit*365.25) #rexp(1, rate = -log(1-0.99)/(reltimelimit*365.25)) #time distribution for sample time different
     td <- rgamma(1, unrel_shape, unrel_rate)*365.25 #abs(rnorm(1, mean=unrelmu*365.25, sd = ifelse(anyNA(unrelsd),unrelmu*365.25, unrelsd*365.25))) #time distribution for unrelated evo time
     if (runif(1) <k) {
       dd <- rpois(n = 1, lambda = tt*lambda)
@@ -33,3 +33,6 @@ simulate_mixsnp_data <- function(lambda, k, unrel_shape=100, unrel_rate=1, error
 
   })
 }
+
+
+

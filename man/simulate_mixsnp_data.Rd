@@ -11,7 +11,8 @@ simulate_mixsnp_data(
   unrel_rate = 1,
   error_param = NA,
   n = 100,
-  rel_timelimit = 1
+  rel_timelimit = 1,
+  rel_timemin = 0
 )
 }
 \arguments{
