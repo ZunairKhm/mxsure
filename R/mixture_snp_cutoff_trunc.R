@@ -41,6 +41,7 @@ mixture_snp_cutoff_trunc <- function(trans_snp_dist, unrelated_snp_dist, trans_t
                                youden=FALSE,threshold_range=FALSE, max_time= NA,
                                upper.tail=0.95, max_false_positive=0.05, trace=FALSE, start_params= NA){
 
+  unrelated_snp_dist_orig <- unrelated_snp_dist
   x <- tibble(trans_snp_dist, trans_time_dist, trans_sites)
   x <- filter(x, trans_snp_dist<truncation_point)
   trans_snp_dist <- x$trans_snp_dist
@@ -87,7 +88,23 @@ mixture_snp_cutoff_trunc <- function(trans_snp_dist, unrelated_snp_dist, trans_t
     if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
 
 
-      nb_fit <- suppressWarnings(MASS::fitdistr(x=unrelated_snp_dist, densfun = "negative binomial"))
+      nb_fit <- suppressWarnings(MASS::fitdistr(x=unrelated_snp_dist_orig, densfun = "negative binomial"))
+      # nbllk <- function(params, x){
+      #   mu <- params[[1]]
+      #   size <- params[[2]]
+      #   -sum(pmap_dbl(list(x)), ~{dnbinom(x = ..1,
+                                    #         size = size,
+                                    #         mu = mu,
+                                    #         log = TRUE)
+                                    # -pnbinom(truncation_point,
+                                    #         size = size,
+                                    #         mu = mu,
+                                    #         log = TRUE)
+      #   })
+      # }
+      # nb_fit <- nlminb(start(c(250, 1)), objective=nbllk, x=unrelated_snp_dist,
+      #                  lower=c(0, 0), upper=c(Inf, Inf), control=list(trace=trace))
+
 
       llk <- function(params, x, t, s){
         k <- params[[1]]
