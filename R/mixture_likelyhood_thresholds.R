@@ -1,3 +1,15 @@
+#' Mixture Likelyhood Thresholds
+#'
+#' @param trans_snp_dist list of SNP distances from a mixed transmission data set
+#' @param unrelated_snp_dist list of SNP distances from an unrelated data set
+#' @param trans_time_dist list of time differences between samples from each SNP distance in the mixed data set (in days)
+#' @param trans_sites list of sites considered for each SNP distance in mixed data set
+#' @param year_range range of years to calculate thresholds over
+#'
+#' @return Threshold corresponding to the highest SNP distance where it is more likely to be related than unrelated
+#' @export
+#'
+#' @examples
 mixture_likelyhood_thresholds <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, trans_sites, year_range=c(seq(0.5, 10, 0.5))){
   if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
   nb_fit <- suppressWarnings(MASS::fitdistr(x=unrelated_snp_dist, densfun = "negative binomial"))
