@@ -16,7 +16,7 @@ simulate_mixsnp_data <- function(lambda, k, unrel_shape=100, unrel_rate=1, error
   mix_snp_dist <- map_dfr(1:n, ~{
 
     tt <- runif(1, rel_timemin*365.25, rel_timelimit*365.25) #rexp(1, rate = -log(1-0.99)/(reltimelimit*365.25)) #time distribution for sample time different
-    td <- rgamma(1, unrel_shape, unrel_rate)*365.25 #abs(rnorm(1, mean=unrelmu*365.25, sd = ifelse(anyNA(unrelsd),unrelmu*365.25, unrelsd*365.25))) #time distribution for unrelated evo time
+    td <- rgamma(1, unrel_shape,rate= unrel_rate)*365.25 #abs(rnorm(1, mean=unrelmu*365.25, sd = ifelse(anyNA(unrelsd),unrelmu*365.25, unrelsd*365.25))) #time distribution for unrelated evo time
     if (runif(1) <k) {
       dd <- rpois(n = 1, lambda = tt*lambda)
       rr <- "Related"
