@@ -37,8 +37,8 @@ snp_over_time <- function(SNPs, Time, lambda, sites=NA, snp_threshold, title="SN
     ci[1] <- (ci[1]*mean(sites))/1000000
     ci[2] <- (ci[2]*mean(sites))/1000000
     predictive_intervals <- predictive_intervals|>
-      mutate(low_ci=qpois(0.025, Time*ci[1]),
-             high_ci=qpois(0.975, Time*ci[2]))
+      mutate(low_ci=qpois(0.025, Time*lambda),
+             high_ci=qpois(0.975, Time*lambda))
   }
 
 
