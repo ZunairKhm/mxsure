@@ -31,8 +31,8 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
   if (anyNA(start_params)){
   test_result <- suppressWarnings(
       mixture_snp_cutoff(
-        mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites, start_params = NA
-      ), classes = "warning")
+        mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites, start_params = NA)
+      , classes = "warning")
   start_params <- c(test_result[3], test_result[2])
   }
 
@@ -44,8 +44,8 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
       suppressWarnings(
         mixture_snp_cutoff(
           x$snp_dist,y, x$time_dist, x$sites, start_params = start_params
-          ), classes = "warning"),
-                           data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA))
+          ), classes = "warning"
+                           ),data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA))
    z[1:4]
   },.progress=TRUE, .options = furrr::furrr_options(seed = TRUE))
 
