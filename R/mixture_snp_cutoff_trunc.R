@@ -88,22 +88,23 @@ mixture_snp_cutoff_trunc <- function(trans_snp_dist, unrelated_snp_dist, trans_t
     if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
 
 
-      nb_fit <- suppressWarnings(MASS::fitdistr(x=unrelated_snp_dist_orig, densfun = "negative binomial"))
-      # nbllk <- function(params, x){
-      #   mu <- params[[1]]
-      #   size <- params[[2]]
-      #   -sum(pmap_dbl(list(x)), ~{dnbinom(x = ..1,
-                                    #         size = size,
-                                    #         mu = mu,
-                                    #         log = TRUE)
-                                    # -pnbinom(truncation_point,
-                                    #         size = size,
-                                    #         mu = mu,
-                                    #         log = TRUE)
-      #   })
-      # }
-      # nb_fit <- nlminb(start(c(250, 1)), objective=nbllk, x=unrelated_snp_dist,
-      #                  lower=c(0, 0), upper=c(Inf, Inf), control=list(trace=trace))
+      # nb_fit <- suppressWarnings(MASS::fitdistr(x=unrelated_snp_dist_orig, densfun = "negative binomial"))
+      nbllk <- function(params, x){
+        mu <- params[[1]]
+        size <- params[[2]]
+        -sum(map_dbl(x, ~dnbinom(x = .x,
+              size = size,
+              mu = mu,
+              log = TRUE)
+      -pnbinom(truncation_point,
+              size = size,
+              mu = mu,
+              log = TRUE)
+        ))
+      }
+      nb_fit <- nlminb(start=c(250, 1), objective=nbllk, x=unrelated_snp_dist,
+                       lower=c(0, 0), upper=c(Inf, Inf), control=list(trace=trace))
+      #return(list(nb_fit, nb_fit2))
 
 
       llk <- function(params, x, t, s){
@@ -117,12 +118,12 @@ mixture_snp_cutoff_trunc <- function(trans_snp_dist, unrelated_snp_dist, trans_t
                                                            lambda =  lambda*..2*(..3/1000000),
                                                            log = TRUE ),
                                                    log(1-k) + dnbinom(x = ..1,
-                                                                      size = nb_fit$estimate['size'],
-                                                                      mu = nb_fit$estimate['mu'],
+                                                                      size = nb_fit$par[2],
+                                                                      mu = nb_fit$par[1],
                                                                       log = TRUE)-
                                                      pnbinom(truncation_point,
-                                                             size = nb_fit$estimate['size'],
-                                                             mu = nb_fit$estimate['mu'],
+                                                             size = nb_fit$par[2],
+                                                             mu = nb_fit$par[1],
                                                              log = TRUE))}))
       }
 
