@@ -19,9 +19,9 @@
 #' @examples
 mixture_permuatation_test <- function(trans_snp_dist, trans_time_dist=NA, trans_sites=NA,
                                       unrelated_snp_dist, unrelated_time_dist=NA, unrelated_sites=NA,
-                                  sample_size=length(trans_snp_dist), sample_n=500, confidence_level=0.95, start_params=NA, ci_data=NA, title=NULL){
+                                  percent_permute=1, sample_n=500, confidence_level=0.95, start_params=NA, ci_data=NA, title=NULL){
 
-  if ((length(trans_snp_dist) < 30) | (length(unrelated_snp_dist) < 30)){
+  if ((length(trans_snp_dist) < 30) | (length(unrelated_snp_dist) < 30 | sample_n==0)){
     warning("Insufficient data points to fit distributions!")
     return(
       list(
@@ -48,14 +48,17 @@ mixture_permuatation_test <- function(trans_snp_dist, trans_time_dist=NA, trans_
   }
 
   perm_point_ests <- furrr::future_map_dfr(1:sample_n, ~{
-    comb <- rbind(
-      tibble(snp_dist=unrel_data$snp_dist, time_dist=unrel_data$time_dist, sites=unrel_data$sites),
-      tibble(snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
-    )
+
+    num_swap_rel <- round(nrow(normal_data) * percent_permute)
+    num_swap_unrel <- round(nrow(unrel_data) * percent_permute)
+
+    rel_shuffle <- slice_sample(normal_data, n=num_swap_rel)
+    unrel_shuffle <- slice_sample(unrel_data, n=num_swap_unrel)
+    comb <- rbind(rel_shuffle, unrel_shuffle)
     comb <- slice_sample(comb, n = nrow(comb))
 
-    close_perm <- comb[1:length(trans_snp_dist), ]
-    distant_perm <- comb[seq(length(trans_snp_dist)+1,nrow(comb)), ]
+    close_perm <- comb[1:num_swap_rel, ]
+    distant_perm <- comb[(num_swap_rel+1):(nrow(comb)), ]
 
     z <- plyr::try_default( #suppresses warnings and errors from mixture_snp_cutoffs
       suppressWarnings(
@@ -74,8 +77,9 @@ mixture_permuatation_test <- function(trans_snp_dist, trans_time_dist=NA, trans_
   perm_ci <- bind_rows(lowerres, upperres)
   perm_ci <- list(confidence_intervals=perm_ci, raw_results=perm_point_ests)
 
+
   comparison <- tibble(
-    method = c("Normal", "Time Randomised"),
+    method = factor(c("Normal", "Mixture Permuted"),levels = c("Normal", "Mixture Permuted")),
     `5%` = c(normal_ci$confidence_intervals$lambda[1], perm_ci$confidence_intervals$lambda[1]),
     point_est = c(normal_point_est$lambda, NA),
     `95%` = c(normal_ci$confidence_intervals$lambda[2], perm_ci$confidence_intervals$lambda[2])
@@ -95,7 +99,7 @@ mixture_permuatation_test <- function(trans_snp_dist, trans_time_dist=NA, trans_
   plot <-  ggplot(final_result$comparison, aes(x = method, y = point_est)) +
     geom_errorbar(aes(ymin = `5%`, ymax = `95%`), width = 0.2, color = "black") +
     geom_point(data=tibble("point_est"=final_result$normal_ci$raw_results$lambda, "method"="Normal"),color="grey50",size=1, alpha=0.3)+
-    geom_point(data=tibble("point_est"=final_result$perm_ci$raw_results$lambda, "method"="Time Randomised"),color="grey50",size=1, alpha=0.3)+
+    geom_point(data=tibble("point_est"=final_result$perm_ci$raw_results$lambda, "method"="Mixture Permuted"),color="grey50",size=1, alpha=0.3)+
     geom_point(y=final_result$normal_point_est$lambda, x="Normal", size = 2, color = "red3") +  # Point estimate
     annotate("label", label=paste0("p=",format(round(final_result$p_value, 4), nsmall = 4)), x=Inf, y=Inf, vjust=1, hjust=1)+
     labs(title=title,
@@ -103,14 +107,40 @@ mixture_permuatation_test <- function(trans_snp_dist, trans_time_dist=NA, trans_
          y = "Rate") +
     theme_minimal()
 
-  final_result <- list(
-    comparison=comparison,
-    p_value=p_value,
-    normal_point_est=normal_point_est,
-    normal_ci=normal_ci,
-    perm_ci=perm_ci,
-    plot=plot
-  )
+
+    comparison2 <- tibble(
+      method = factor(c("Normal", "Mixture Permuted"),levels = c("Normal", "Mixture Permuted")),
+      `5%` = c(normal_ci$confidence_intervals$k[1], perm_ci$confidence_intervals$k[1]),
+      point_est = c(normal_point_est$k, NA),
+      `95%` = c(normal_ci$confidence_intervals$k[2], perm_ci$confidence_intervals$k[2])
+    )
+
+    p_value2 <- (sum(perm_point_ests$k>=normal_point_est$k)+1)/
+      (length(perm_point_ests$k)+1)
+
+    plot2 <-  ggplot(comparison2, aes(x = method, y = point_est)) +
+      geom_errorbar(aes(ymin = `5%`, ymax = `95%`), width = 0.2, color = "black") +
+      geom_point(data=tibble("point_est"=final_result$normal_ci$raw_results$k, "method"="Normal"),color="grey50",size=1, alpha=0.3)+
+      geom_point(data=tibble("point_est"=final_result$perm_ci$raw_results$k, "method"="Mixture Permuted"),color="grey50",size=1, alpha=0.3)+
+      geom_point(y=final_result$normal_point_est$k, x="Normal", size = 2, color = "red3") +  # Point estimate
+      annotate("label", label=paste0("p=",format(round(p_value2, 4), nsmall = 4)), x=Inf, y=Inf, vjust=1, hjust=1)+
+      labs(title=title,
+           x = "Method",
+           y = "k") +
+      theme_minimal()
+
+    final_result <- list(
+      comparison_lambda=comparison,
+      comparison_k=comparison2,
+      p_value_lambda=p_value,
+      p_value_k=p_value2,
+      normal_point_est=normal_point_est,
+      normal_ci=normal_ci,
+      perm_ci=perm_ci,
+      plot_lambda=plot,
+      plot_k=plot2
+    )
+
 
   return(final_result)
 
