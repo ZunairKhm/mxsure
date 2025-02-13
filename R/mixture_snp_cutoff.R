@@ -176,19 +176,29 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                                            log(1-k) + dnbinom(x = .x,
                                                               size = nb_fit$estimate['size'],
                                                               mu = nb_fit$estimate['mu'],
-                                                              log = TRUE))}))
-      }
+                                                              log = TRUE))#+
+                                # dbeta(k, 0.6, 0.294, log = TRUE)+
+                                # dgamma(log10(lambda)+4.5, 6.1, 1.85, log = TRUE)
+      }))
 
-
+}
       if(anyNA(start_params)){
-        result_attempts <- list(
-          nlminb1 = nlminb(start=c(0.5,0.0001), objective=llk, x = trans_snp_dist, t = trans_time_dist,
-                           lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace)),
-          nlminb2 = nlminb(start=c(0.5,0.001), objective=llk, x = trans_snp_dist, t = trans_time_dist,
-                           lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace)),
-          nlminb3 = nlminb(start=c(0.5, 0.01), objective=llk, x = trans_snp_dist, t = trans_time_dist,
-                           lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
-        )
+        # Define parameter grid
+        start_vals <- expand.grid(k = c(0.001, 0.25, 0.5, 0.75), lambda = c(0.0001, 0.001, 0.01))
+
+        # Run nlminb for each combination
+        result_attempts <- map2(start_vals$k, start_vals$lambda, ~ nlminb(
+          start = c(.x, .y),
+          objective = llk,
+          x = trans_snp_dist,
+          t = trans_time_dist,
+          lower = c(1e-10, 1e-10),
+          upper = c(1-1e-10, Inf),
+          control = list(trace = trace)
+        ))
+
+        # Optionally, name the list elements
+        names(result_attempts) <- paste0("nlminb", seq_along(result_attempts))
 
         # Extract the best result
         result <- result_attempts[[which.min(sapply(result_attempts, `[[`, "objective"))]]
@@ -272,18 +282,30 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                                                    log(1-k) + dnbinom(x = ..1,
                                                                       size = nb_fit$estimate['size'],
                                                                       mu = nb_fit$estimate['mu'],
-                                                                      log = TRUE))}))
+                                                                      log = TRUE))#+
+                                        # dbeta(k, 0.6, 0.294, log = TRUE)+
+                                        # dgamma(log10(lambda)+4.5, 6.1, 1.85, log = TRUE)
+          }))
       }
 
       if(anyNA(start_params)){
-        result_attempts <- list(
-          nlminb1 = nlminb(start=c(0.5,0.0001), objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
-                           lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace)),
-          nlminb2 = nlminb(start=c(0.5,0.001), objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
-                           lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace)),
-          nlminb3 = nlminb(start=c(0.5, 0.01), objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
-                           lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
-        )
+        # Define parameter grid
+        start_vals <- expand.grid(k = c(0.001, 0.25, 0.5, 0.75), lambda = c(0.0001, 0.001, 0.01))
+
+        # Run nlminb for each combination
+        result_attempts <- map2(start_vals$k, start_vals$lambda, ~ nlminb(
+          start = c(.x, .y),
+          objective = llk,
+          x = trans_snp_dist,
+          t = trans_time_dist,
+          s = trans_sites,
+          lower = c(1e-10, 1e-10),
+          upper = c(1-1e-10, Inf),
+          control = list(trace = trace)
+        ))
+
+        # Optionally, name the list elements
+        names(result_attempts) <- paste0("nlminb", seq_along(result_attempts))
 
         #finds best result
         result <- result_attempts[[which.min(sapply(result_attempts, `[[`, "objective"))]]
