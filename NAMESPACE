@@ -2,7 +2,8 @@
 
 export(mixture_likelyhood_contour)
 export(mixture_likelyhood_thresholds)
-export(mixture_permuatation_test)
+export(mixture_permutation_ci)
+export(mixture_permutation_test)
 export(mixture_snp_cutoff)
 export(mixture_snp_cutoff_NB)
 export(mixture_snp_cutoff_ci)
