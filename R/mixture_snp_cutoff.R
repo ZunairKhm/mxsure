@@ -184,7 +184,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 }
       if(anyNA(start_params)){
         # Define parameter grid
-        start_vals <- expand.grid(k = c(0.001, 0.25, 0.5, 0.75), lambda = c(0.0001, 0.001, 0.01))
+        start_vals <- expand.grid(k = c(0.25, 0.5, 0.75), lambda = c(0.0001, 0.001, 0.01))
 
         # Run nlminb for each combination
         result_attempts <- map2(start_vals$k, start_vals$lambda, ~ nlminb(
@@ -290,7 +290,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
       if(anyNA(start_params)){
         # Define parameter grid
-        start_vals <- expand.grid(k = c(0.001, 0.25, 0.5, 0.75), lambda = c(0.0001, 0.001, 0.01))
+        start_vals <- expand.grid(k = c(0.01, 0.25, 0.5, 0.75), lambda = c(0.0001, 0.001, 0.01))
 
         # Run nlminb for each combination
         result_attempts <- map2(start_vals$k, start_vals$lambda, ~ nlminb(

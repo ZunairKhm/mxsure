@@ -39,6 +39,7 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
   # time rand loop
   rawtimerand <- normal_ci$raw_results |>
     mutate(method = "Normal")
+
   for(i in 1:permutations){
   timerand_data <- tibble(snp_dist=trans_snp_dist, time_dist=sample(trans_time_dist, length(trans_time_dist)), sites=trans_sites)
   timerand_result <- mixture_snp_cutoff(timerand_data$snp_dist,unrelated_snp_dist, timerand_data$time_dist,timerand_data$sites)
