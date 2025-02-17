@@ -4,7 +4,6 @@
 #' @param unrelated_snp_dist list of SNP distances from an unrelated data set
 #' @param trans_time_dist list of time differences between samples from each SNP distance in the mixed data set (in days)
 #' @param trans_sites list of sites considered for each SNP distance in mixed data set
-#' @param sample_size size of each bootstrap sample
 #' @param sample_n number of bootstrap sampling to conduct
 #' @param start_params initial parameters for optim, if NA (as default) will try 3 different start parameters and produce the highest likelyhood result. Specifying the start parameters minimises computing time.
 #' @param ci_data optional input for previously calculated CI data (mixture_snp_cutoff_ci) for computational efficiency
@@ -12,12 +11,13 @@
 #' @param title title for ggplot
 #' @param unrelated_time_dist list of time distances from an unrelated data set
 #' @param unrelated_sites list of sites considered for each SNP distance in a distant data set
+#' @param percent_permute proportion of mixed sample to permute
 #'
 #' @return data and plot comparing normal results to mixed/distant permuted results
 #' @export
 #'
 #' @examples
-mixture_permuatation_test <- function(trans_snp_dist, trans_time_dist=NA, trans_sites=NA,
+mixture_permutation_test <- function(trans_snp_dist, trans_time_dist=NA, trans_sites=NA,
                                       unrelated_snp_dist, unrelated_time_dist=NA, unrelated_sites=NA,
                                   percent_permute=1, sample_n=500, confidence_level=0.95, start_params=NA, ci_data=NA, title=NULL){
 
@@ -41,7 +41,7 @@ mixture_permuatation_test <- function(trans_snp_dist, trans_time_dist=NA, trans_
 
   if(anyNA(ci_data)){
     normal_ci <- mixture_snp_cutoff_ci(normal_data$snp_dist,unrelated_snp_dist, normal_data$time_dist,normal_data$sites,
-                                       sample_size=sample_size, sample_n=sample_n, confidence_level=confidence_level,
+                                      sample_n=sample_n, confidence_level=confidence_level,
                                        start_params = c(normal_point_est[3], normal_point_est[2]))
   } else{
     normal_ci <- ci_data
@@ -52,18 +52,28 @@ mixture_permuatation_test <- function(trans_snp_dist, trans_time_dist=NA, trans_
     num_swap_rel <- round(nrow(normal_data) * percent_permute)
     num_swap_unrel <- round(nrow(unrel_data) * percent_permute)
 
-    rel_shuffle <- slice_sample(normal_data, n=num_swap_rel)
-    unrel_shuffle <- slice_sample(unrel_data, n=num_swap_unrel)
-    comb <- rbind(rel_shuffle, unrel_shuffle)
-    comb <- slice_sample(comb, n = nrow(comb))
+    rel_shuffle <- slice_sample(normal_data, n=nrow(normal_data))
+    unrel_shuffle <- slice_sample(unrel_data, n=nrow(unrel_data))
 
-    close_perm <- comb[1:num_swap_rel, ]
-    distant_perm <- comb[(num_swap_rel+1):(nrow(comb)), ]
+    # comb <- rbind(rel_shuffle[1:num_swap_rel,], unrel_shuffle[1:num_swap_unrel,])
+    # comb <- slice_sample(comb, n = nrow(comb))
+    #
+    # close_perm <- rbind(comb[1:num_swap_rel, ], rel_shuffle[(num_swap_rel+1):(nrow(rel_shuffle)+1),]) #always includes an NA row to ensure if percent permute is 100% it doesnt add the last column
+    # close_perm <- close_perm[complete.cases(close_perm$snp_dist),] #gets rid of NA row
+    #
+    # distant_perm <- rbind(comb[(num_swap_rel+1):(nrow(comb)), ], unrel_shuffle[(num_swap_unrel+1):(nrow(unrel_shuffle)+1),])
+    # distant_perm <- distant_perm[complete.cases(distant_perm$snp_dist),]
+
+    close_perm <- rbind(unrel_shuffle[1:num_swap_rel, ], rel_shuffle[(num_swap_rel+1):(nrow(rel_shuffle)+1),])
+    close_perm <- close_perm[complete.cases(close_perm$snp_dist),] #gets rid of NA row
+
+    distant_perm <- rbind(rel_shuffle[1:num_swap_rel, ], unrel_shuffle[(num_swap_rel+1):(nrow(unrel_shuffle)+1),])
+    distant_perm <- distant_perm[complete.cases(distant_perm$snp_dist),]
 
     z <- plyr::try_default( #suppresses warnings and errors from mixture_snp_cutoffs
       suppressWarnings(
         mixture_snp_cutoff(
-          close_perm$snp_dist,distant_perm$snp_dist, close_perm$time_dist, close_perm$sites, start_params = c(normal_point_est[3], normal_point_est[2])
+          close_perm$snp_dist, distant_perm$snp_dist, close_perm$time_dist, close_perm$sites, start_params = c(normal_point_est[3], normal_point_est[2])
         ), classes = "warning"),
       data.frame(snp_threshold=NA,k=NA,k=NA,estimated_fp=NA))
     z[1:4]
