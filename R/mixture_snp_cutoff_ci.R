@@ -16,6 +16,7 @@
 #'
 #' @export
 mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
+                                  sample_individual=FALSE, subjectA_id=NA,
                                   sample_size=length(trans_snp_dist), sample_n=1000, confidence_level=0.95, start_params=NA){
   if (sample_n==0){
     lowerres <- data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA)
@@ -36,11 +37,18 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
   start_params <- c(test_result[3], test_result[2])
   }
 
-  #bootstrapping both close and distant data sets allowing for parallelisationg
+  #bootstrapping both close and distant data sets allowing for parallelisating
   bootstrapresults <- furrr::future_map_dfr(1:sample_n, ~{
-    x <- slice_sample(mix_data, n= sample_size, replace = TRUE)
+
+    if(sample_individual){
+      x_ids <- sample(unique(subjectA_id), size=n_distinct(subjectA_id), replace = TRUE)
+      mix_data <-  cbind(mix_data, subjectA_id)
+      x <- map_dfr(x_ids, ~mix_data[mix_data$subjectA_id==.x, ,drop=FALSE])
+    }else {
+      x <- slice_sample(mix_data, n= sample_size, replace = TRUE)}
+
     y <- sample(unrelated_snp_dist, size=length(unrelated_snp_dist), replace=TRUE)
-    z <- plyr::try_default( #suppresses warnings and errors from mixture_snp_cutoffs
+    z <- plyr::try_default( #suppresses warnings and errors from mixture_snp_cutoffs9
       suppressWarnings(
         mixture_snp_cutoff(
           x$snp_dist,y, x$time_dist, x$sites, start_params = start_params

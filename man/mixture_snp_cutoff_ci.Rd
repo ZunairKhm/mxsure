@@ -9,6 +9,8 @@ mixture_snp_cutoff_ci(
   unrelated_snp_dist,
   trans_time_dist = NA,
   trans_sites = NA,
+  sample_individual = FALSE,
+  subjectA_id = NA,
   sample_size = length(trans_snp_dist),
   sample_n = 1000,
   confidence_level = 0.95,
