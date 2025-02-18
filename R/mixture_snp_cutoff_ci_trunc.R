@@ -16,7 +16,7 @@
 #'
 #' @export
 mixture_snp_cutoff_ci_trunc <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
-                                  sample_size=length(trans_snp_dist), sample_n=1000, confidence_level=0.95, start_params=NA){
+                                  sample_size=length(trans_snp_dist),truncation=500, sample_n=1000, confidence_level=0.95, start_params=NA){
   if (sample_n==0){
     lowerres <- data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA)
     upperres <- data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA)
@@ -31,13 +31,13 @@ mixture_snp_cutoff_ci_trunc <- function(trans_snp_dist, unrelated_snp_dist, tran
   if (anyNA(start_params)){
   test_result <- suppressWarnings(
       mixture_snp_cutoff_trunc(
-        mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites,truncation_point=500, start_params = NA
+        mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites,truncation_point=truncation, start_params = NA
       ), classes = "warning")
   start_params <- c(test_result[3], test_result[2])
   }
 
-  mix_data <- filter(mix_data, snp_dist<500)
-  unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<500]
+  mix_data <- filter(mix_data, snp_dist<truncation)
+  unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation]
 
   #bootstrapping both close and distant data sets allowing for parallelisationg
   bootstrapresults <- furrr::future_map_dfr(1:sample_n, ~{
@@ -46,7 +46,7 @@ mixture_snp_cutoff_ci_trunc <- function(trans_snp_dist, unrelated_snp_dist, tran
     z <- plyr::try_default( #suppresses warnings and errors from mixture_snp_cutoffs
       suppressWarnings(
         mixture_snp_cutoff_trunc(
-          x$snp_dist,y, x$time_dist, x$sites, truncation_point=500, start_params = start_params
+          x$snp_dist,y, x$time_dist, x$sites, truncation_point=truncation, start_params = start_params
           ), classes = "warning"),
                            data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA))
    z[1:4]

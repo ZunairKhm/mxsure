@@ -10,6 +10,7 @@ mixture_snp_cutoff_ci_trunc(
   trans_time_dist = NA,
   trans_sites = NA,
   sample_size = length(trans_snp_dist),
+  truncation = 500,
   sample_n = 1000,
   confidence_level = 0.95,
   start_params = NA
