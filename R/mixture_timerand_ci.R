@@ -17,6 +17,7 @@
 #' @examples
 mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
                                   sample_size=length(trans_snp_dist), sample_n=500, permutations=3, confidence_level=0.95,
+                                  within_individual=FALSE, subjectA_id, subjectB_id,
                                   start_params=NA, ci_data=NA,  raw=FALSE, title=NULL){
   #unadjusted result
   normal_data <- tibble(snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
@@ -41,6 +42,19 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
     mutate(method = "Normal")
 
   for(i in 1:permutations){
+    if(within_individual){
+      if(all(subjectA_id==subjectB_id)){
+        timerand_data <- tibble(subject_id= subjectA_id, snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
+        timerand_data <- timerand_data|>
+          group_by(subject_id)|>
+          mutate(time_dist=sample(time_dist, length(time_dist)))|>
+          ungroup()
+      } else{ warning("subject ID's do not match")}
+    }else {
+      timerand_data <- tibble(snp_dist=trans_snp_dist, time_dist=sample(trans_time_dist, length(trans_time_dist)), sites=trans_sites)
+    }
+
+
   timerand_data <- tibble(snp_dist=trans_snp_dist, time_dist=sample(trans_time_dist, length(trans_time_dist)), sites=trans_sites)
   timerand_result <- mixture_snp_cutoff(timerand_data$snp_dist,unrelated_snp_dist, timerand_data$time_dist,timerand_data$sites)
   timerand_ci <- mixture_snp_cutoff_ci(timerand_data$snp_dist,unrelated_snp_dist, timerand_data$time_dist,timerand_data$sites,
@@ -58,8 +72,6 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
   rawtimerand <- bind_rows(rawtimerand,
                            timerand_ci$raw_results %>% mutate(method = paste0("Time Randomisation ", i)))
   }
-
-
 
     plot <- ggplot(result, aes(x = method, y = point_est)) +
       geom_hline(yintercept = result$point_est[1], color="grey60")+
