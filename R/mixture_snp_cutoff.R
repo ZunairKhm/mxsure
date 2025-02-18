@@ -37,7 +37,9 @@ log_sum_exp <- function(log_a, log_b) {
 #'
 #' @export
 mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
-                               youden=FALSE,threshold_range=FALSE, max_time= NA, upper.tail=0.95, max_false_positive=0.05, trace=FALSE, start_params= NA){
+                               youden=FALSE,threshold_range=FALSE,
+                               prior_lambda=c(1.06, 0.44), prior_k=c(1.60, 1.25),
+                               max_time= NA, upper.tail=0.95, max_false_positive=0.05, trace=FALSE, start_params= NA){
 
   #### Youden Cutoffs ####
   if(youden==TRUE){
@@ -99,11 +101,11 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       if(anyNA(start_params)){
         result_attempts <- list(
           nlminb1 = nlminb(start=c(0.25,0.0001), objective=llk, x = trans_snp_dist,
-                           lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace)),
+                           lower = c(0, 1e-10), upper = c(1-1e-10, Inf), control = list(trace = trace)),
           nlminb2 = nlminb(start=c(0.75,0.005), objective=llk, x = trans_snp_dist,
-                           lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace)),
+                           lower = c(0, 1e-10), upper = c(1-1e-10, Inf), control = list(trace = trace)),
           nlminb3 = nlminb(start=c(0.5, 0.001), objective=llk, x = trans_snp_dist,
-                           lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
+                           lower = c(0, 1e-10), upper = c(1-1e-10, Inf), control = list(trace = trace))
         )
 
         # Extract the best result
@@ -176,9 +178,9 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                                            log(1-k) + dnbinom(x = .x,
                                                               size = nb_fit$estimate['size'],
                                                               mu = nb_fit$estimate['mu'],
-                                                              log = TRUE))#+
-                                # dbeta(k, 0.6, 0.294, log = TRUE)+
-                                # dgamma(log10(lambda)+4.5, 6.1, 1.85, log = TRUE)
+                                                              log = TRUE))+
+                                ifelse(!anyNA(prior_k),  dbeta(k, prior_k[1], prior_k[2], log = TRUE), 0)+
+                                ifelse(!anyNA(prior_lambda), dgamma(lambda, prior_lambda[1], prior_lambda[2], log = TRUE),0)
       }))
 
 }
@@ -282,9 +284,9 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                                                    log(1-k) + dnbinom(x = ..1,
                                                                       size = nb_fit$estimate['size'],
                                                                       mu = nb_fit$estimate['mu'],
-                                                                      log = TRUE))#+
-                                        # dbeta(k, 0.6, 0.294, log = TRUE)+
-                                        # dgamma(log10(lambda)+4.5, 6.1, 1.85, log = TRUE)
+                                                                      log = TRUE))+
+                                        ifelse(!anyNA(prior_k),  dbeta(k, prior_k[1], prior_k[2], log = TRUE), 0)+
+                                        ifelse(!anyNA(prior_lambda), dgamma(lambda, prior_lambda[1], prior_lambda[2], log = TRUE),0)
           }))
       }
 
@@ -300,7 +302,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
           t = trans_time_dist,
           s = trans_sites,
           lower = c(1e-10, 1e-10),
-          upper = c(1-1e-10, Inf),
+          upper = c(1-1e-5, Inf),
           control = list(trace = trace)
         ))
 

@@ -11,6 +11,8 @@ mixture_snp_cutoff(
   trans_sites = NA,
   youden = FALSE,
   threshold_range = FALSE,
+  prior_lambda = c(1.06, 0.44),
+  prior_k = c(1.6, 1.25),
   max_time = NA,
   upper.tail = 0.95,
   max_false_positive = 0.05,
