@@ -13,7 +13,7 @@ RoxygenNote: 7.3.2
 Depends: 
     tidyverse
 Imports: 
-    diptest,
+    fitdistrplus,
     dplyr,
     furrr,
     ggplot2,
