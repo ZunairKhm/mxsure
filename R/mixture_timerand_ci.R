@@ -62,7 +62,7 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
                                        start_params = c(normal_result[3], normal_result[2]))
   # Append results to 'result'
   result <- bind_rows(result, tibble(
-    method = paste0("Time Randomisation ", i),
+    method = paste0("TR ", i),
     `5%` = timerand_ci$confidence_intervals$lambda[1],
     point_est = timerand_result$lambda,
     `95%` = timerand_ci$confidence_intervals$lambda[2]
@@ -70,7 +70,7 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
 
   # Append raw results with a method column
   rawtimerand <- bind_rows(rawtimerand,
-                           timerand_ci$raw_results %>% mutate(method = paste0("Time Randomisation ", i)))
+                           timerand_ci$raw_results %>% mutate(method = paste0("TR ", i)))
   }
 
     plot <- ggplot(result, aes(x = method, y = point_est)) +
@@ -81,7 +81,7 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
       scale_y_continuous(#transform = "log10"
                          )+
       labs(title=title,
-           x = "Method",
+           x = NA,
            y = "Rate") +
       theme_minimal()
 
