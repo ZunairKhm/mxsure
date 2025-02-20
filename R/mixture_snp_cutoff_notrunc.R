@@ -13,17 +13,8 @@ log_sum_exp <- function(log_a, log_b) {
   return(log_a + log(1 + exp(log_b - log_a)))
 }
 
-dtruncnbinom <<- function(x, mu, size){
-  dnbinom(x = x, size = size, mu = mu) / pnbinom(truncation_point, size = size, mu = mu)
-}
-ptruncnbinom <<- function(q, mu, size){
-  pnbinom(q = q, size = size, mu = mu) / pnbinom(truncation_point, size = size, mu = mu)
-}
-qtruncnbinom <<- function(p, mu, size){
-  qnbinom(p = p*(pnbinom(truncation_point, size=size, mu=mu)), size = size, mu = mu)
-}
 
-#' Mixture SNP Cutoff
+#' Mixture SNP Cutoff without truncation
 #'
 #' Estimates evolutionary rates from a mixed transmission dataset and an unrelated data set with a mixed probability distribution approach.Uses these rates to produce a threshold of SNP distances to be considered linked or not.
 #'
@@ -33,43 +24,22 @@ qtruncnbinom <<- function(p, mu, size){
 #' @param trans_sites list of sites considered for each SNP distance in mixed data set
 #' @param youden whether to produce SNP thresholds using the Youden method
 #' @param threshold_range whether to produce a dataset of threshold considering a range of times (from 0.5 to 10 years)
-#' @param max_time the maximum time(in days) utilised to calculate SNP thresholds, only applicable when time differences are provided, if not provided will utilise maximum of supplied times
+#' @param max_time the maximum time(in days) utilised to calculate SNP thresholds, only applicable when time differences are provided
 #' @param upper.tail percentile to calculate SNP thresholds
 #' @param max_false_positive if the false positive rate from calculated threshold is higher than this value a warning is produced
-#' @param trace trace parameter to pass to nlminb
-#' @param start_params initial parametrs for nlminb, if NA (as default) will try a range of different start parameters and produce the highest likelyhood result
-#' @param truncation_point a SNP distance limit for the data, if set to NA will estimate as if there is no limit
-#' @param prior_lambda parameters for a gamma prior distribution for rate estimation, if set to "default" will use default parameters
-#' @param prior_k parameters for a beta prior distribution for related proportion estimation, if set to "default" will use default parameters
-#' @param lambda_bounds bounds of rate estimation
-#' @param k_bounds bounds of related proportion estimation
+#' @param trace trace parameter to pass to optim
+#' @param start_params initial parametrs for optim, if NA (as default) will try 3 different start parameters and produce the highest likelyhood result
 #'
 #' @importFrom stats optim pnbinom qpois rnbinom
 #' @importFrom dplyr filter
-#' @importFrom fitdistrplus fitdist
 #'
 #' @return SNP threshold, mutation rate, proportion related, estimated false positive and negative rate estimations
 #'
 #' @export
-mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
-                                  truncation_point=NA,
-                               youden=FALSE,threshold_range=FALSE, max_time= NA,
+mixture_snp_cutoff_notrunc <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
+                               youden=FALSE,threshold_range=FALSE,
                                prior_lambda=NA, prior_k=NA, lambda_bounds=c(1e-4, 1), k_bounds=c(0,1),
-                               upper.tail=0.95, max_false_positive=0.05, trace=FALSE, start_params= NA){
-
-  #truncating data
-  if(is.na(truncation_point)){
-    truncation_point <- Inf
-  }
-  unrelated_snp_dist_orig <- unrelated_snp_dist
-  x <- tibble(trans_snp_dist, trans_time_dist, trans_sites)
-  x <- filter(x, trans_snp_dist<truncation_point)
-  trans_snp_dist <- x$trans_snp_dist
-  trans_time_dist <- x$trans_time_dist
-  trans_sites <- x$trans_sites
-  unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
-
-  #setting priors
+                               max_time= NA, upper.tail=0.95, max_false_positive=0.05, trace=FALSE, start_params= NA){
   if(length(prior_lambda)==1){
     if(is.element(prior_lambda, "default")){
       prior_lambda <- c(1.06, 0.44)
@@ -82,8 +52,8 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
   #### Youden Cutoffs ####
   if(youden==TRUE){
     if ((length(trans_snp_dist) >= 10) && (length(unrelated_snp_dist) >= 10)){
-
-      youden_index <- map_dbl(trans_snp_dist, ~{
+      range <- 1:500
+      youden_index <- map_dbl(range, ~{
         tp <- sum(trans_snp_dist <= .x)
         tn <- sum(unrelated_snp_dist > .x)
         fn <- sum(trans_snp_dist > .x)
@@ -91,7 +61,8 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
         return(tp/(tp+fn) + tn/(tn+fp) - 1)
       })
-      youden_snp_threshold <- trans_snp_dist[which.max(youden_index)]
+
+      youden_snp_threshold <- range[which.max(youden_index)]
 
       youden_results <-
         tibble(
@@ -113,50 +84,25 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
     }
   }
 
+
   #### threshold without time or sites considered ####
   if((anyNA(trans_time_dist) & anyNA(trans_sites))){
     warning("No time data inputted, rate will still be estimated but consider whether this is appropriate")
 
     if ((length(trans_snp_dist) >= 20) && (length(unrelated_snp_dist) >= 20)){
-      #distant data fitting
-      # nb_fit <- suppressWarnings(MASS::fitdistr(x=unrelated_snp_dist_orig, densfun = "negative binomial"))
-      nbllk <- function(params, x){
-        mu <- params[[1]]
-        size <- params[[2]]
-        -sum(map_dbl(x, ~dnbinom(x = .x,
-                                 size = size,
-                                 mu = mu,
-                                 log = TRUE)
-                     -pnbinom(truncation_point,
-                              size = size,
-                              mu = mu,
-                              log = TRUE)
-        ))
-      }
-      nb_fit <- nlminb(start=c(250, 1), objective=nbllk, x=unrelated_snp_dist,
-                       lower=c(0, 0), upper=c(Inf, Inf), control=list(trace=trace))
-      #return(list(nb_fit, nb_fit2))
+      nb_fit <- suppressWarnings(MASS::fitdistr(x=unrelated_snp_dist, densfun = "negative binomial"))
 
-      #mixed data fitting
       llk <- function(params, x){
         k <- params[[1]]
         lambda <- params[[2]]
 
-        -sum(pmap_dbl(list(x), ~ {log_sum_exp(log(k) + dpois(x = ..1,
-                                                                  lambda =  lambda, #gives rate esimate per day
-                                                                  log = TRUE) -
-                                                     ppois(truncation_point,
-                                                           lambda =  lambda,
-                                                           log = TRUE ),
-                                                   log(1-k) + dnbinom(x = ..1,
-                                                                      size = nb_fit$estimate["size"],
-                                                                      mu = nb_fit$estimate["mu"],
-                                                                      log = TRUE)-
-                                                     pnbinom(truncation_point,
-                                                             size = nb_fit$estimate["size"],
-                                                             mu = nb_fit$estimate["mu"],
-                                                             log = TRUE))
-        }))
+        -sum(map_dbl(x, ~ {log_sum_exp(log(k) + dpois(x = .x,
+                                                      lambda =  lambda,
+                                                      log = TRUE),
+                                       log(1-k) + dnbinom(x = .x,
+                                                          size = nb_fit$estimate['size'],
+                                                          mu = nb_fit$estimate['mu'],
+                                                          log = TRUE))}))
       }
 
 
@@ -235,50 +181,24 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
   #### Threshold considering time but not sites
   if(!anyNA(trans_time_dist)&(anyNA(trans_sites))){
     if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
+      nb_fit <- suppressWarnings(MASS::fitdistr(x=unrelated_snp_dist, densfun = "negative binomial"))
 
-      #distant data fitting
-      # nb_fit <- suppressWarnings(MASS::fitdistr(x=unrelated_snp_dist_orig, densfun = "negative binomial"))
-      nbllk <- function(params, x){
-        mu <- params[[1]]
-        size <- params[[2]]
-        -sum(map_dbl(x, ~dnbinom(x = .x,
-                                 size = size,
-                                 mu = mu,
-                                 log = TRUE)
-                     -pnbinom(truncation_point,
-                              size = size,
-                              mu = mu,
-                              log = TRUE)
-        ))
-      }
-      nb_fit <- nlminb(start=c(250, 1), objective=nbllk, x=unrelated_snp_dist,
-                       lower=c(0, 0), upper=c(Inf, Inf), control=list(trace=trace))
-      #return(list(nb_fit, nb_fit2))
-
-      #mixed data fitting
       llk <- function(params, x, t){
         k <- params[[1]]
         lambda <- params[[2]]
 
-        -sum(pmap_dbl(list(x, t), ~ {log_sum_exp(log(k) + dpois(x = ..1,
-                                                                  lambda =  lambda*..2, #gives rate esimate per day
-                                                                  log = TRUE) -
-                                                     ppois(truncation_point,
-                                                           lambda =  lambda*..2,
-                                                           log = TRUE ),
-                                                   log(1-k) + dnbinom(x = ..1,
-                                                                      size = nb_fit$estimate["size"],
-                                                                      mu = nb_fit$estimate["mu"],
-                                                                      log = TRUE)-
-                                                     pnbinom(truncation_point,
-                                                             size = nb_fit$estimate["size"],
-                                                             mu = nb_fit$estimate["mu"],
-                                                             log = TRUE))+
-                                        ifelse(!anyNA(prior_k),  dbeta(k, prior_k[1], prior_k[2], log = TRUE), 0)+
-                                        ifelse(!anyNA(prior_lambda), dgamma(lambda, prior_lambda[1], prior_lambda[2], log = TRUE),0)
-          }))
-      }
+        -sum(map2_dbl(x, t, ~ {log_sum_exp(log(k) + dpois(x = .x,
+                                                          lambda =  lambda*.y,
+                                                          log = TRUE),
+                                           log(1-k) + dnbinom(x = .x,
+                                                              size = nb_fit$estimate['size'],
+                                                              mu = nb_fit$estimate['mu'],
+                                                              log = TRUE))+
+                                ifelse(!anyNA(prior_k),  dbeta(k, prior_k[1], prior_k[2], log = TRUE), 0)+
+                                ifelse(!anyNA(prior_lambda), dgamma(lambda, prior_lambda[1], prior_lambda[2], log = TRUE),0)
+      }))
 
+}
       if(anyNA(start_params)){
         # Define parameter grid
         start_vals <- expand.grid(k = c(0.25, 0.5, 0.75), lambda = c(0.0001, 0.001, 0.01))
@@ -367,37 +287,21 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
   #### Threshold considering time and sites #####
   if(!anyNA(trans_time_dist)&(!anyNA(trans_sites))){
     if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
+      nb_fit <- suppressWarnings(MASS::fitdistr(x=unrelated_snp_dist, densfun = "negative binomial"))
 
-      # distant dataset fitting
-      m <- mean(unrelated_snp_dist)
-      v <- var(unrelated_snp_dist)
-      size <- if (v > m) {
-        m^2/(v - m)
-      }else{100}
-
-      nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size))
-
-      #mied dataset fitting
       llk <- function(params, x, t, s){
         k <- params[[1]]
         lambda <- params[[2]]
 
         -sum(pmap_dbl(list(x, t,s), ~ {log_sum_exp(log(k) + dpois(x = ..1,
                                                                   lambda =  lambda*..2*(..3/1000000), #gives rate esimate per day time per million bp
-                                                                  log = TRUE) -
-                                                     ppois(truncation_point,
-                                                           lambda =  lambda*..2*(..3/1000000),
-                                                           log = TRUE ),
+                                                                  log = TRUE),
                                                    log(1-k) + dnbinom(x = ..1,
-                                                                      size = nb_fit$estimate["size"],
-                                                                      mu = nb_fit$estimate["mu"],
-                                                                      log = TRUE)-
-                                                     pnbinom(truncation_point,
-                                                             size = nb_fit$estimate["size"],
-                                                             mu = nb_fit$estimate["mu"],
-                                                             log = TRUE))+
-                                      ifelse(!anyNA(prior_k),  dbeta(k, prior_k[1], prior_k[2], log = TRUE), 0)+
-                                      ifelse(!anyNA(prior_lambda), dgamma(lambda, prior_lambda[1], prior_lambda[2], log = TRUE),0)
+                                                                      size = nb_fit$estimate['size'],
+                                                                      mu = nb_fit$estimate['mu'],
+                                                                      log = TRUE))+
+                                        ifelse(!anyNA(prior_k),  dbeta(k, prior_k[1], prior_k[2], log = TRUE), 0)+
+                                        ifelse(!anyNA(prior_lambda), dgamma(lambda, prior_lambda[1], prior_lambda[2], log = TRUE),0)
           }))
       }
 
@@ -426,7 +330,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       }
       else{
         result <- nlminb(start=start_params, objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
-                         lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
+               lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
         best_result_name <- "input param nlminb"
       }
 
@@ -447,6 +351,14 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       if ((sum(unrelated_snp_dist<=snp_threshold)/length(unrelated_snp_dist)) > max_false_positive){
         warning(paste0("Inferred SNP threshold may have a false positive rate above ",
                        max_false_positive, "!"))
+      }
+
+      if(result$par[[2]]==lambda_bounds[1] | result$par[[2]]==lambda_bounds[1] ){
+        warning("Rate estimate is at bounds. Either this is an error, this method cannot estimate the mutation rate with the inputted data, or the bounds need to be changed")
+      }
+
+      if(result$par[[1]]==k_bounds[1] | result$par[[2]]==k_bounds[1] ){
+        warning("Related proportion estimate is at bounds. Either this is an error, this method cannot estimate the related proportion with the inputted data, or the bounds need to be changed")
       }
 
       # results

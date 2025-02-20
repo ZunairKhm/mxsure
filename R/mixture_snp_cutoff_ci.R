@@ -9,6 +9,8 @@
 #' @param sample_size size of each bootstrap sample
 #' @param sample_n number of bootstrap sampling to conduct
 #' @param start_params initial parametrs for optim, if NA (as default) will try 3 different start parameters and produce the highest likelyhood result. Specifying the start parameters minimises computing time.
+#' @param truncation_point a SNP distance limit for the data, if set to NA will estimate as if there is no limit
+#' @param confidence_level confidence level to produce confidence intervals
 #'
 #' @importFrom furrr future_map_dfr furrr_options
 #'
@@ -16,8 +18,12 @@
 #'
 #' @export
 mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
-                                  sample_individual=FALSE, subjectA_id=NA,
-                                  sample_size=length(trans_snp_dist), sample_n=1000, confidence_level=0.95, start_params=NA){
+                                  sample_size=length(trans_snp_dist),truncation_point=NA, sample_n=1000, confidence_level=0.95, start_params=NA){
+
+  if(is.na(truncation_point)){
+    truncation_point <- Inf
+  }
+
   if (sample_n==0){
     lowerres <- data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA)
     upperres <- data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA)
@@ -31,29 +37,25 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
 
   if (anyNA(start_params)){
   test_result <- suppressWarnings(
-      mixture_snp_cutoff(
-        mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites, start_params = NA)
-      , classes = "warning")
+      mixture_snp_cutoff_trunc(
+        mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites,truncation_point=truncation_point, start_params = NA
+      ), classes = "warning")
   start_params <- c(test_result[3], test_result[2])
   }
 
-  #bootstrapping both close and distant data sets allowing for parallelisating
+  mix_data <- filter(mix_data, snp_dist<truncation_point)
+  unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
+
+  #bootstrapping both close and distant data sets allowing for parallelisationg
   bootstrapresults <- furrr::future_map_dfr(1:sample_n, ~{
-
-    if(sample_individual){
-      x_ids <- sample(unique(subjectA_id), size=n_distinct(subjectA_id), replace = TRUE)
-      mix_data <-  cbind(mix_data, subjectA_id)
-      x <- map_dfr(x_ids, ~mix_data[mix_data$subjectA_id==.x, ,drop=FALSE])
-    }else {
-      x <- slice_sample(mix_data, n= sample_size, replace = TRUE)}
-
+    x <- slice_sample(mix_data, n= sample_size, replace = TRUE)
     y <- sample(unrelated_snp_dist, size=length(unrelated_snp_dist), replace=TRUE)
-    z <- plyr::try_default( #suppresses warnings and errors from mixture_snp_cutoffs9
+    z <- plyr::try_default( #suppresses warnings and errors from mixture_snp_cutoffs
       suppressWarnings(
-        mixture_snp_cutoff(
-          x$snp_dist,y, x$time_dist, x$sites, start_params = start_params
-          ), classes = "warning"
-                           ),data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA))
+        mixture_snp_cutoff_trunc(
+          x$snp_dist,y, x$time_dist, x$sites, truncation_point=truncation_point, start_params = start_params
+          ), classes = "warning"),
+                           data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA))
    z[1:4]
   },.progress=TRUE, .options = furrr::furrr_options(seed = TRUE))
 

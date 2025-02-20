@@ -9,11 +9,14 @@ mixture_snp_cutoff(
   unrelated_snp_dist,
   trans_time_dist = NA,
   trans_sites = NA,
+  truncation_point = NA,
   youden = FALSE,
   threshold_range = FALSE,
-  prior_lambda = c(1.06, 0.44),
-  prior_k = c(1.6, 1.25),
   max_time = NA,
+  prior_lambda = NA,
+  prior_k = NA,
+  lambda_bounds = c(1e-04, 1),
+  k_bounds = c(0, 1),
   upper.tail = 0.95,
   max_false_positive = 0.05,
   trace = FALSE,
@@ -29,19 +32,29 @@ mixture_snp_cutoff(
 
 \item{trans_sites}{list of sites considered for each SNP distance in mixed data set}
 
+\item{truncation_point}{a SNP distance limit for the data, if set to NA will estimate as if there is no limit}
+
 \item{youden}{whether to produce SNP thresholds using the Youden method}
 
 \item{threshold_range}{whether to produce a dataset of threshold considering a range of times (from 0.5 to 10 years)}
 
-\item{max_time}{the maximum time(in days) utilised to calculate SNP thresholds, only applicable when time differences are provided}
+\item{max_time}{the maximum time(in days) utilised to calculate SNP thresholds, only applicable when time differences are provided, if not provided will utilise maximum of supplied times}
+
+\item{prior_lambda}{parameters for a gamma prior distribution for rate estimation, if set to "default" will use default parameters}
+
+\item{prior_k}{parameters for a beta prior distribution for related proportion estimation, if set to "default" will use default parameters}
+
+\item{lambda_bounds}{bounds of rate estimation}
+
+\item{k_bounds}{bounds of related proportion estimation}
 
 \item{upper.tail}{percentile to calculate SNP thresholds}
 
 \item{max_false_positive}{if the false positive rate from calculated threshold is higher than this value a warning is produced}
 
-\item{trace}{trace parameter to pass to optim}
+\item{trace}{trace parameter to pass to nlminb}
 
-\item{start_params}{initial parametrs for optim, if NA (as default) will try 3 different start parameters and produce the highest likelyhood result}
+\item{start_params}{initial parametrs for nlminb, if NA (as default) will try a range of different start parameters and produce the highest likelyhood result}
 }
 \value{
 SNP threshold, mutation rate, proportion related, estimated false positive and negative rate estimations
