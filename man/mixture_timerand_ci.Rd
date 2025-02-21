@@ -9,6 +9,7 @@ mixture_timerand_ci(
   unrelated_snp_dist,
   trans_time_dist = NA,
   trans_sites = NA,
+  truncation_point = NA,
   sample_size = length(trans_snp_dist),
   sample_n = 500,
   permutations = 3,
