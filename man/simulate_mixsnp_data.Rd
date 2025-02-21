@@ -12,13 +12,14 @@ simulate_mixsnp_data(
   error_param = NA,
   n = 100,
   rel_timelimit = 1,
-  rel_timemin = 0
+  rel_timemin = 0,
+  truncation_point = NA
 )
 }
 \arguments{
 \item{lambda}{mutation rate input (SNPs per day)}
 
-\item{k}{proportion of mixed dataset that is linked}
+\item{k}{proportion of mixed dataset that is linked, set to 0 to produce a distant dataset}
 
 \item{unrel_shape}{shape of gamma distribution for time of evolution for unrelated pairs in years}
 
@@ -29,6 +30,10 @@ simulate_mixsnp_data(
 \item{n}{size of dataset to simulate}
 
 \item{rel_timelimit}{maximum time allowed between samples in years (calculates time difference from uniform dist.)}
+
+\item{rel_timemin}{minimum time allowed between samples in years}
+
+\item{truncation_point}{maximum allowed SNP distances}
 }
 \value{
 SNP distance dataset with a mixture of related and unrelated pairs with time differences
