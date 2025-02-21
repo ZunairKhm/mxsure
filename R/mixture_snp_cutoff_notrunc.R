@@ -1,19 +1,3 @@
-library(tidyverse)
-
-#### Log Sum Exp ####
-
-log_sum_exp <- function(log_a, log_b) {
-  # Ensure log_a is the max
-  if (log_a < log_b) {
-    tmp <- log_a
-    log_a <- log_b
-    log_b <- tmp
-  }
-  # Return the sum in log space
-  return(log_a + log(1 + exp(log_b - log_a)))
-}
-
-
 #' Mixture SNP Cutoff without truncation
 #'
 #' Estimates evolutionary rates from a mixed transmission dataset and an unrelated data set with a mixed probability distribution approach.Uses these rates to produce a threshold of SNP distances to be considered linked or not.
