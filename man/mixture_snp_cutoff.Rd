@@ -9,7 +9,7 @@ mixture_snp_cutoff(
   unrelated_snp_dist,
   trans_time_dist = NA,
   trans_sites = NA,
-  truncation_point = NA,
+  truncation_point = 2000,
   youden = FALSE,
   threshold_range = FALSE,
   max_time = NA,
@@ -32,7 +32,7 @@ mixture_snp_cutoff(
 
 \item{trans_sites}{list of sites considered for each SNP distance in mixed data set}
 
-\item{truncation_point}{a SNP distance limit for the data, if set to NA will estimate as if there is no limit}
+\item{truncation_point}{a SNP distance limit for the data, if set to NA will estimate as if there is no limit. Will be faster with a lower truncation point.}
 
 \item{youden}{whether to produce SNP thresholds using the Youden method}
 

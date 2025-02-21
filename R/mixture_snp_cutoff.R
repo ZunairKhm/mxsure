@@ -13,15 +13,7 @@ log_sum_exp <- function(log_a, log_b) {
   return(log_a + log(1 + exp(log_b - log_a)))
 }
 
-dtruncnbinom <<- function(x, mu, size){
-  dnbinom(x = x, size = size, mu = mu) / pnbinom(truncation_point, size = size, mu = mu)
-}
-ptruncnbinom <<- function(q, mu, size){
-  pnbinom(q = q, size = size, mu = mu) / pnbinom(truncation_point, size = size, mu = mu)
-}
-qtruncnbinom <<- function(p, mu, size){
-  qnbinom(p = p*(pnbinom(truncation_point, size=size, mu=mu)), size = size, mu = mu)
-}
+
 
 #' Mixture SNP Cutoff
 #'
@@ -38,7 +30,7 @@ qtruncnbinom <<- function(p, mu, size){
 #' @param max_false_positive if the false positive rate from calculated threshold is higher than this value a warning is produced
 #' @param trace trace parameter to pass to nlminb
 #' @param start_params initial parametrs for nlminb, if NA (as default) will try a range of different start parameters and produce the highest likelyhood result
-#' @param truncation_point a SNP distance limit for the data, if set to NA will estimate as if there is no limit
+#' @param truncation_point a SNP distance limit for the data, if set to NA will estimate as if there is no limit. Will be faster with a lower truncation point.
 #' @param prior_lambda parameters for a gamma prior distribution for rate estimation, if set to "default" will use default parameters
 #' @param prior_k parameters for a beta prior distribution for related proportion estimation, if set to "default" will use default parameters
 #' @param lambda_bounds bounds of rate estimation
@@ -52,10 +44,22 @@ qtruncnbinom <<- function(p, mu, size){
 #'
 #' @export
 mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
-                                  truncation_point=NA,
+                                  truncation_point=2000,
                                youden=FALSE,threshold_range=FALSE, max_time= NA,
                                prior_lambda=NA, prior_k=NA, lambda_bounds=c(1e-4, 1), k_bounds=c(0,1),
                                upper.tail=0.95, max_false_positive=0.05, trace=FALSE, start_params= NA){
+
+  #defining distribution functions for the truncated negative binomial distr
+  dtruncnbinom <<- function(x, mu, size){
+    dnbinom(x = x, size = size, mu = mu) / pnbinom(truncation_point, size = size, mu = mu)
+  }
+  ptruncnbinom <<- function(q, mu, size){
+    pnbinom(q = q, size = size, mu = mu) / pnbinom(truncation_point, size = size, mu = mu)
+  }
+  qtruncnbinom <<- function(p, mu, size){
+    qnbinom(p = p*(pnbinom(truncation_point, size=size, mu=mu)), size = size, mu = mu)
+  }
+
 
   #truncating data
   if(is.na(truncation_point)){
@@ -119,23 +123,14 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
     if ((length(trans_snp_dist) >= 20) && (length(unrelated_snp_dist) >= 20)){
       #distant data fitting
-      # nb_fit <- suppressWarnings(MASS::fitdistr(x=unrelated_snp_dist_orig, densfun = "negative binomial"))
-      nbllk <- function(params, x){
-        mu <- params[[1]]
-        size <- params[[2]]
-        -sum(map_dbl(x, ~dnbinom(x = .x,
-                                 size = size,
-                                 mu = mu,
-                                 log = TRUE)
-                     -pnbinom(truncation_point,
-                              size = size,
-                              mu = mu,
-                              log = TRUE)
-        ))
-      }
-      nb_fit <- nlminb(start=c(250, 1), objective=nbllk, x=unrelated_snp_dist,
-                       lower=c(0, 0), upper=c(Inf, Inf), control=list(trace=trace))
-      #return(list(nb_fit, nb_fit2))
+      # distant dataset fitting
+      m <- mean(unrelated_snp_dist)
+      v <- var(unrelated_snp_dist)
+      size <- if (v > m) {
+        m^2/(v - m)
+      }else{100}
+
+      nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size))
 
       #mixed data fitting
       llk <- function(params, x){
@@ -236,24 +231,15 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
   if(!anyNA(trans_time_dist)&(anyNA(trans_sites))){
     if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
 
-      #distant data fitting
-      # nb_fit <- suppressWarnings(MASS::fitdistr(x=unrelated_snp_dist_orig, densfun = "negative binomial"))
-      nbllk <- function(params, x){
-        mu <- params[[1]]
-        size <- params[[2]]
-        -sum(map_dbl(x, ~dnbinom(x = .x,
-                                 size = size,
-                                 mu = mu,
-                                 log = TRUE)
-                     -pnbinom(truncation_point,
-                              size = size,
-                              mu = mu,
-                              log = TRUE)
-        ))
-      }
-      nb_fit <- nlminb(start=c(250, 1), objective=nbllk, x=unrelated_snp_dist,
-                       lower=c(0, 0), upper=c(Inf, Inf), control=list(trace=trace))
-      #return(list(nb_fit, nb_fit2))
+      # distant dataset fitting
+      m <- mean(unrelated_snp_dist)
+      v <- var(unrelated_snp_dist)
+      size <- if (v > m) {
+        m^2/(v - m)
+      }else{100}
+
+      nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size))
+
 
       #mixed data fitting
       llk <- function(params, x, t){
@@ -377,7 +363,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
       nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size))
 
-      #mied dataset fitting
+      #mixed dataset fitting
       llk <- function(params, x, t, s){
         k <- params[[1]]
         lambda <- params[[2]]
@@ -488,5 +474,8 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
     }
   }
 
+  rm(ptruncnbinom, envir = .GlobalEnv)
+  rm(dtruncnbinom, envir = .GlobalEnv)
+  rm(qtruncnbinom, envir = .GlobalEnv)
 
 }
