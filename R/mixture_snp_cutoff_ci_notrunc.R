@@ -15,7 +15,7 @@
 #' @return Confidence intervals
 #'
 #' @export
-mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
+mixture_snp_cutoff_ci_notrunc <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
                                   sample_individual=FALSE, subjectA_id=NA,
                                   prior_lambda=NA, prior_k=NA,
                                   sample_size=length(trans_snp_dist), sample_n=1000, confidence_level=0.95, start_params=NA){
@@ -32,7 +32,7 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
 
   if (anyNA(start_params)){
   test_result <- suppressWarnings(
-      mixture_snp_cutoff(
+      mixture_snp_cutoff_notrunc(
         mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites, start_params = NA)
       , classes = "warning")
   start_params <- c(test_result[3], test_result[2])
@@ -51,7 +51,7 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
     y <- sample(unrelated_snp_dist, size=length(unrelated_snp_dist), replace=TRUE)
     z <- plyr::try_default( #suppresses warnings and errors from mixture_snp_cutoffs9
       suppressWarnings(
-        mixture_snp_cutoff(
+        mixture_snp_cutoff_notrunc(
           x$snp_dist,y, x$time_dist, x$sites, start_params = start_params,
           prior_lambda=prior_lambda, prior_k=prior_k
           ), classes = "warning"
