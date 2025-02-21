@@ -37,7 +37,7 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
 
   if (anyNA(start_params)){
   test_result <- suppressWarnings(
-      mixture_snp_cutoff_trunc(
+      mixture_snp_cutoff(
         mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites,truncation_point=truncation_point, start_params = NA
       ), classes = "warning")
   start_params <- c(test_result[3], test_result[2])
@@ -52,7 +52,7 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
     y <- sample(unrelated_snp_dist, size=length(unrelated_snp_dist), replace=TRUE)
     z <- plyr::try_default( #suppresses warnings and errors from mixture_snp_cutoffs
       suppressWarnings(
-        mixture_snp_cutoff_trunc(
+        mixture_snp_cutoff(
           x$snp_dist,y, x$time_dist, x$sites, truncation_point=truncation_point, start_params = start_params
           ), classes = "warning"),
                            data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA))
