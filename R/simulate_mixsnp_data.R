@@ -8,7 +8,7 @@
 #' @param unrel_shape shape of gamma distribution for time of evolution for unrelated pairs in years
 #' @param rel_timelimit maximum time allowed between samples in years (calculates time difference from uniform dist.)
 #' @param rel_timemin minimum time allowed between samples in years
-#' @param truncation_point maximum allowed SNP distances
+#' @param truncation_point maximum allowed SNP distances, if set too low can cause all SNP distances to be 0
 #'
 #' @return SNP distance dataset with a mixture of related and unrelated pairs with time differences
 #' @export
