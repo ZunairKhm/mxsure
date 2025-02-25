@@ -20,24 +20,30 @@ simulate_mixsnp_data <- function(lambda, k, unrel_shape=100, unrel_rate=1, error
     if(is.na(truncation_point)){
       truncation_point <- Inf
     }
-
-    tt <- runif(1, rel_timemin*365.25, rel_timelimit*365.25) #rexp(1, rate = -log(1-0.99)/(reltimelimit*365.25)) #time distribution for sample time different
-    td <- rgamma(1, unrel_shape,rate= unrel_rate)*365.25 #abs(rnorm(1, mean=unrelmu*365.25, sd = ifelse(anyNA(unrelsd),unrelmu*365.25, unrelsd*365.25))) #time distribution for unrelated evo time
+    tt <- runif(1, rel_timemin*365.25, rel_timelimit*365.25)
+    td <- rgamma(1, unrel_shape,rate= unrel_rate)*365.25
     if (runif(1) <k) {
-      dd <- qpois(runif(1)*ppois(truncation_point, tt*lambda), tt*lambda) #rpois(n = 1, lambda = tt*lambda)
+      truncation_correction <- ifelse(ppois(truncation_point, tt*lambda)!=0, ppois(truncation_point, tt*lambda), NA)
+      dd <- qpois(runif(1)*truncation_correction, tt*lambda)
       rr <- "Related"
     } else {
-      dd <- qpois(runif(1)*ppois(truncation_point, td*lambda), td*lambda) #rpois(1, lambda = td*lambda)
+      truncation_correction <- ifelse(ppois(truncation_point, td*lambda)!=0, ppois(truncation_point, td*lambda), NA)
+      dd <- qpois(runif(1)*truncation_correction, td*lambda)
       rr <- "Unrelated"
     }
     if (!is.na(error_param)){
       dd <- rbinom(1, dd, 1-error_param) #error param is chance each SNP difference is missed
     }
-    return(
-      tibble(snp_dist=dd, time_dist=tt, relation=rr)
-    )
-
+    return(tibble(snp_dist=dd, time_dist=tt, relation=rr))
   })
+
+  mix_snp_dist <-  na.omit(mix_snp_dist)
+    if(nrow(mix_snp_dist)==0){
+      warning("No data could be simulated due to the cumulative density at the truncation point for all simulated evolution times being 0")
+    } else if(nrow(mix_snp_dist)<n){
+      warning(paste0(n-nrow(mix_snp_dist) ," data point(s) could not be simulated due to the cumulative density at the truncation point for the corresponding simulated evolution times being 0"))
+    }
+    return(mix_snp_dist)
 }
 
 
