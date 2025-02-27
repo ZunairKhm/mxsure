@@ -73,6 +73,9 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
                            timerand_ci$raw_results %>% mutate(method = paste0("TR ", i)))
   }
 
+  result$method <- factor(result$method, levels = result$method)
+  rawtimerand$method <- factor(rawtimerand$method, levels = result$method)
+
     plot <- ggplot(result, aes(x = method, y = point_est)) +
       geom_hline(yintercept = result$point_est[1], color="grey60")+
       geom_point(data=rawtimerand,aes(x=method, y=lambda),color="grey50",size=0.8, alpha=0.3)+
