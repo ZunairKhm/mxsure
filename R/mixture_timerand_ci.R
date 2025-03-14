@@ -60,12 +60,15 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
   timerand_ci <- mixture_snp_cutoff_ci(timerand_data$snp_dist,unrelated_snp_dist, timerand_data$time_dist,timerand_data$sites,
                                        sample_size=sample_size, sample_n=sample_n, confidence_level=confidence_level, truncation_point=truncation_point,
                                        start_params = c(normal_result[3], normal_result[2]))
+  p_value <- sum(timerand_ci$raw_results$lambda>=normal_result$lambda)/length(timerand_ci$raw_results$lambda)
+
   # Append results to 'result'
   result <- bind_rows(result, tibble(
     method = paste0("TR ", i),
     `5%` = timerand_ci$confidence_intervals$lambda[1],
     point_est = timerand_result$lambda,
-    `95%` = timerand_ci$confidence_intervals$lambda[2]
+    `95%` = timerand_ci$confidence_intervals$lambda[2],
+    p_value= p_value
   ))
 
   # Append raw results with a method column
@@ -93,7 +96,8 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
       n_overlapping_est=sum(result$`95%`[result$method!="Normal"]>=result$point_est[1]),
       perc_overlapping_est=sum(result$`95%`[result$method!="Normal"]>=result$point_est[1])/length(result$`95%`[result$method!="Normal"]),
       n_overlapping_lowci=sum(result$`95%`[result$method!="Normal"]>=result$`5%`[1]),
-      perc_overlapping_lowci=sum(result$`95%`[result$method!="Normal"]>=result$`5%`[1])/length(result$`95%`[result$method!="Normal"])
+      perc_overlapping_lowci=sum(result$`95%`[result$method!="Normal"]>=result$`5%`[1])/length(result$`95%`[result$method!="Normal"]),
+      average_p_value=mean(p_value, na.rm=TRUE)
     )
 
 
