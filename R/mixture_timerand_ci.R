@@ -79,6 +79,16 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
   result$method <- factor(result$method, levels = result$method)
   rawtimerand$method <- factor(rawtimerand$method, levels = result$method)
 
+
+  outcome <- tibble(
+    n_permutations=permutations,
+    n_overlapping_est=sum(result$`95%`[result$method!="Normal"]>=result$point_est[1]),
+    perc_overlapping_est=sum(result$`95%`[result$method!="Normal"]>=result$point_est[1])/length(result$`95%`[result$method!="Normal"]),
+    n_overlapping_lowci=sum(result$`95%`[result$method!="Normal"]>=result$`5%`[1]),
+    perc_overlapping_lowci=sum(result$`95%`[result$method!="Normal"]>=result$`5%`[1])/length(result$`95%`[result$method!="Normal"]),
+    average_p_value=mean(result$p_value, na.rm=TRUE)
+  )
+
     plot <- ggplot(result, aes(x = method, y = point_est)) +
       geom_hline(yintercept = result$point_est[1], color="grey60")+
       geom_point(data=rawtimerand,aes(x=method, y=lambda),color="grey50",size=0.8, alpha=0.3)+
@@ -86,19 +96,13 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
       geom_point(size = 2, color = "red3") +  # Point estimate
       scale_y_continuous(#transform = "log10"
                          )+
+      annotate("label", label=paste0("p=",format(round(outcome$average_p_value, 4), nsmall = 4)), x=Inf, y=Inf, vjust=1, hjust=1)+
       labs(title=title,
            x = NULL,
            y = "Rate") +
       theme_minimal()
 
-    outcome <- tibble(
-      n_permutations=permutations,
-      n_overlapping_est=sum(result$`95%`[result$method!="Normal"]>=result$point_est[1]),
-      perc_overlapping_est=sum(result$`95%`[result$method!="Normal"]>=result$point_est[1])/length(result$`95%`[result$method!="Normal"]),
-      n_overlapping_lowci=sum(result$`95%`[result$method!="Normal"]>=result$`5%`[1]),
-      perc_overlapping_lowci=sum(result$`95%`[result$method!="Normal"]>=result$`5%`[1])/length(result$`95%`[result$method!="Normal"]),
-      average_p_value=mean(p_value, na.rm=TRUE)
-    )
+
 
 
   xres_timerand <- list(
