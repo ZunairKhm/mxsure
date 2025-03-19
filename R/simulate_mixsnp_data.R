@@ -15,6 +15,9 @@
 #'
 #' @examples
 simulate_mixsnp_data <- function(lambda, k, unrel_shape=100, unrel_rate=1, error_param=NA, n=100, rel_timelimit=1, rel_timemin=0, truncation_point=NA){
+
+  # n <- n/dpois(truncation_point, lambda*(unrel_shape/unrel_rate))
+
   mix_snp_dist <- map_dfr(1:n, ~{
 
     if(is.na(truncation_point)){
@@ -23,11 +26,11 @@ simulate_mixsnp_data <- function(lambda, k, unrel_shape=100, unrel_rate=1, error
     tt <- runif(1, rel_timemin*365.25, rel_timelimit*365.25)
     td <- rgamma(1, unrel_shape,rate= unrel_rate)*365.25
     if (runif(1) <k) {
-      truncation_correction <- ifelse(ppois(truncation_point, tt*lambda)!=0, ppois(truncation_point, tt*lambda), NA)
+      truncation_correction <- ifelse(ppois(truncation_point, tt*lambda)>(1/n), ppois(truncation_point, tt*lambda), NA)
       dd <- qpois(runif(1)*truncation_correction, tt*lambda)
       rr <- "Related"
     } else {
-      truncation_correction <- ifelse(ppois(truncation_point, td*lambda)!=0, ppois(truncation_point, td*lambda), NA)
+      truncation_correction <- ifelse(ppois(truncation_point, td*lambda)>(1/n), ppois(truncation_point, td*lambda), NA)
       dd <- qpois(runif(1)*truncation_correction, td*lambda)
       rr <- "Unrelated"
     }
@@ -37,11 +40,13 @@ simulate_mixsnp_data <- function(lambda, k, unrel_shape=100, unrel_rate=1, error
     return(tibble(snp_dist=dd, time_dist=tt, relation=rr))
   })
 
+  # mix_snp_dist <- filter(mix_snp_dist, snp_dist<=truncation_point)
+
   mix_snp_dist <-  na.omit(mix_snp_dist)
     if(nrow(mix_snp_dist)==0){
-      warning("No data could be simulated due to the cumulative density at the truncation point for all simulated evolution times being 0")
+      warning("No data could be simulated due to the cumulative density at the truncation point for all simulated evolution times being lower than 1/n")
     } else if(nrow(mix_snp_dist)<n){
-      warning(paste0(n-nrow(mix_snp_dist) ," data point(s) could not be simulated due to the cumulative density at the truncation point for the corresponding simulated evolution times being 0"))
+      warning(paste0(n-nrow(mix_snp_dist) ," data point(s) could not be simulated due to the cumulative density at the truncation point for the corresponding simulated evolution times being lower than 1/n"))
     }
     return(mix_snp_dist)
 }
