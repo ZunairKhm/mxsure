@@ -26,19 +26,11 @@ simulate_mixsnp_data <- function(lambda, k, unrel_shape=100, unrel_rate=1, error
     tt <- runif(1, rel_timemin*365.25, rel_timelimit*365.25)
     td <- rgamma(1, unrel_shape,rate= unrel_rate)*365.25
     if (runif(1) <k) {
-<<<<<<< HEAD
       truncation_correction <- ifelse(ppois(truncation_point, tt*lambda)>(1/n), ppois(truncation_point, tt*lambda), NA)
       dd <- qpois(runif(1)*truncation_correction, tt*lambda)
       rr <- "Related"
     } else {
       truncation_correction <- ifelse(ppois(truncation_point, td*lambda)>(1/n), ppois(truncation_point, td*lambda), NA)
-=======
-      truncation_correction <- ifelse(ppois(truncation_point, tt*lambda)<1/n, ppois(truncation_point, tt*lambda), NA)
-      dd <- qpois(runif(1)*truncation_correction, tt*lambda)
-      rr <- "Related"
-    } else {
-      truncation_correction <- ifelse(ppois(truncation_point, td*lambda)<1/n, ppois(truncation_point, td*lambda), NA)
->>>>>>> 586619c6a5f517bcef3372104adb2b97be548eb9
       dd <- qpois(runif(1)*truncation_correction, td*lambda)
       rr <- "Unrelated"
     }
