@@ -79,7 +79,7 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
   }else if(p_value_type=="within_ci"){
     p_value_n <- sum(timerand_ci$raw_results$lambda<=result$`95%`[result$method=="Normal"]&timerand_ci$raw_results$lambda>=result$`5%`[result$method=="Normal"])
   }else if (p_value_type=="above_low_ci"){
-    p_value_n <- sum(timerand_ci$raw_results$lambda>=timerand_ci$raw_results$lambda>=result$`5%`[result$method=="Normal"])
+    p_value_n <- sum(timerand_ci$raw_results$lambda>=result$`5%`[result$method=="Normal"])
   }
     p_value_t <- length(timerand_ci$raw_results$lambda)
 

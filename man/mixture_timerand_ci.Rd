@@ -13,13 +13,15 @@ mixture_timerand_ci(
   sample_size = length(trans_snp_dist),
   sample_n = 500,
   permutations = 3,
+  quiet = FALSE,
   confidence_level = 0.95,
   within_individual = FALSE,
   subjectA_id,
   subjectB_id,
+  clustered = FALSE,
+  p_value_type = "above_estimate",
   start_params = NA,
   ci_data = NA,
-  raw = FALSE,
   title = NULL
 )
 }
@@ -32,11 +34,27 @@ mixture_timerand_ci(
 
 \item{trans_sites}{list of sites considered for each SNP distance in mixed data set}
 
+\item{truncation_point}{SNP distances to truncate at}
+
 \item{sample_size}{size of each bootstrap sample}
 
 \item{sample_n}{number of bootstrap sampling to conduct}
 
+\item{permutations}{number of time permutation to run}
+
+\item{quiet}{if false will print progress bar for each permutation}
+
 \item{confidence_level}{confidence level for CIs}
+
+\item{within_individual}{permute time data within each individuals (requires indiviudal ID codes that must be the exact same)}
+
+\item{subjectA_id}{needed for within individual permutation}
+
+\item{subjectB_id}{needed for within individual permutation (must be the same as subject A)}
+
+\item{clustered}{permute between different time distances}
+
+\item{p_value_type}{either "above_estimate", "above_low_ci", or "within_ci"}
 
 \item{start_params}{initial parameters for optim, if NA (as default) will try 3 different start parameters and produce the highest likelihood result. Specifying the start parameters minimises computing time.}
 
