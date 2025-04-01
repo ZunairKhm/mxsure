@@ -27,19 +27,21 @@ snp_over_time <- function(SNPs, Time, lambda, sites=NA, snp_threshold, title="SN
   }
 
   if(!is.na(mean(sites, na.rm=TRUE))){
-    lambda <- (lambda*mean(sites))/1000000
+    lambda <- (lambda*mean(sites))/1000000}
     predictive_intervals <- tibble(Time=0:max(c(max(Time), time_limits[2]), na.rm=TRUE))
     predictive_intervals <- predictive_intervals|>
       mutate(estimate=qpois(0.5, Time*lambda))
 
-    }
+
   if(!is.na(mean(sites, na.rm=TRUE)) & !anyNA(ci)){
     ci[1] <- (ci[1]*mean(sites))/1000000
-    ci[2] <- (ci[2]*mean(sites))/1000000
+    ci[2] <- (ci[2]*mean(sites))/1000000}
+
     predictive_intervals <- predictive_intervals|>
       mutate(low_ci=qpois(0.025, Time*lambda),
              high_ci=qpois(0.975, Time*lambda))
-  }
+
+
 
 
 
