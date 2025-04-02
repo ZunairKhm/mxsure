@@ -70,10 +70,14 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
       timerand_data <- tibble(snp_dist=trans_snp_dist, time_dist=sample(trans_time_dist, length(trans_time_dist)), sites=trans_sites)
     }
 
+
+    #return(timerand_data)
+
   timerand_result <- mixture_snp_cutoff(timerand_data$snp_dist,unrelated_snp_dist, timerand_data$time_dist, timerand_data$sites, truncation_point=truncation_point)
   timerand_ci <- mixture_snp_cutoff_ci(timerand_data$snp_dist,unrelated_snp_dist, timerand_data$time_dist,timerand_data$sites,
                                        sample_size=sample_size, sample_n=sample_n, confidence_level=confidence_level, truncation_point=truncation_point,
-                                       start_params = c(normal_result[3], normal_result[2]))
+                                       #,start_params = c(normal_result[3], normal_result[2])
+                                       )
   if(p_value_type=="above_estimate"){
   p_value_n <- sum(timerand_ci$raw_results$lambda>=normal_result$lambda)
   }else if(p_value_type=="within_ci"){
@@ -100,9 +104,6 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
 
   result$method <- factor(result$method, levels = result$method)
   rawtimerand$method <- factor(rawtimerand$method, levels = result$method)
-
-
-
 
 
   outcome <- tibble(
