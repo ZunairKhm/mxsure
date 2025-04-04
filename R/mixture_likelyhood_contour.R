@@ -134,3 +134,6 @@ mixture_likelyhood_contour <- function(trans_snp_dist, unrelated_snp_dist, trans
          y="Proportion Related")+
     theme(legend.position="none")
 }
+rm(ptruncnbinom, envir = .GlobalEnv)
+rm(dtruncnbinom, envir = .GlobalEnv)
+rm(qtruncnbinom, envir = .GlobalEnv)
