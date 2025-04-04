@@ -1,17 +1,6 @@
 library(tidyverse)
 
-#### Log Sum Exp ####
 
-log_sum_exp <- function(log_a, log_b) {
-  # Ensure log_a is the max
-  if (log_a < log_b) {
-    tmp <- log_a
-    log_a <- log_b
-    log_b <- tmp
-  }
-  # Return the sum in log space
-  return(log_a + log(1 + exp(log_b - log_a)))
-}
 
 
 
@@ -46,8 +35,24 @@ log_sum_exp <- function(log_a, log_b) {
 mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
                                   truncation_point=2000,
                                youden=FALSE,threshold_range=FALSE, max_time= NA,
-                               prior_lambda=NA, prior_k=NA, lambda_bounds=c(1e-4, 1), k_bounds=c(0,1),
+                               prior_lambda=NA, prior_k=NA, lambda_bounds=c(1e-10, 1), k_bounds=c(0,1),
                                upper.tail=0.95, max_false_positive=0.05, trace=FALSE, start_params= NA){
+
+  #### Log Sum Exp ####
+
+  log_sum_exp <- function(log_a, log_b) {
+    if (anyNA(c(log_a, log_b))){
+      return(-Inf)
+    }
+    # Ensure log_a is the max
+    if (log_a < log_b) {
+      tmp <- log_a
+      log_a <- log_b
+      log_b <- tmp
+    }
+    # Return the sum in log space
+    return(log_a + log(1 + exp(log_b - log_a)))
+  }
 
   #defining distribution functions for the truncated negative binomial distr
   dtruncnbinom <<- function(x, mu, size){
@@ -227,7 +232,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
   }
 
-  #### Threshold considering time but not sites
+  #### Threshold considering time but not sites ####
   if(!anyNA(trans_time_dist)&(anyNA(trans_sites))){
     if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
 
@@ -245,42 +250,49 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       llk <- function(params, x, t){
         k <- params[[1]]
         lambda <- params[[2]]
+        error <- params[[3]]
 
         -sum(pmap_dbl(list(x, t), ~ {log_sum_exp(log(k) + dpois(x = ..1,
-                                                                  lambda =  lambda*..2, #gives rate esimate per day
-                                                                  log = TRUE) -
+                                                                  lambda =  lambda*..2 + error, #gives rate esimate per day
+                                                                  log = TRUE)
+                                                 -
                                                      ppois(truncation_point,
                                                            lambda =  lambda*..2,
-                                                           log = TRUE ),
+                                                           log = TRUE )
+                                                 ,
                                                    log(1-k) + dnbinom(x = ..1,
                                                                       size = nb_fit$estimate["size"],
                                                                       mu = nb_fit$estimate["mu"],
-                                                                      log = TRUE)-
+                                                                      log = TRUE)
+                                                 -
                                                      pnbinom(truncation_point,
                                                              size = nb_fit$estimate["size"],
                                                              mu = nb_fit$estimate["mu"],
-                                                             log = TRUE))+
-                                        ifelse(!anyNA(prior_k),  dbeta(k, prior_k[1], prior_k[2], log = TRUE), 0)+
-                                        ifelse(!anyNA(prior_lambda), dgamma(lambda, prior_lambda[1], prior_lambda[2], log = TRUE),0)
+                                                             log = TRUE)
+                                                 )#+
+                                        # ifelse(!anyNA(prior_k),  dbeta(k, prior_k[1], prior_k[2], log = TRUE), 0)+
+                                        # ifelse(!anyNA(prior_lambda), dgamma(lambda, prior_lambda[1], prior_lambda[2], log = TRUE),0)
           }))
       }
 
       if(anyNA(start_params)){
         # Define parameter grid
-        start_vals <- expand.grid(k = c(0.25, 0.5, 0.75), lambda = c(0.0001, 0.001, 0.01))
+        start_vals <- expand.grid(k = c(0.25, 0.5, 0.75), lambda = c(0.0001, 0.001, 0.01), error = c(0))
 
         # Run nlminb for each combination
-        result_attempts <- map2(start_vals$k, start_vals$lambda, ~ nlminb(
-          start = c(.x, .y),
-          objective = llk,
-          x = trans_snp_dist,
-          t = trans_time_dist,
-          lower = c(k_bounds[1], lambda_bounds[1]),
-          upper = c(k_bounds[2], lambda_bounds[2]),
-          control = list(trace = trace)
-        ))
+        result_attempts <- pmap(list(start_vals$k, start_vals$lambda, start_vals$error),
+                                function(k, lambda, error) {
+                                  nlminb(
+                                    start = c(k, lambda, error),
+                                    objective = llk,
+                                    x = trans_snp_dist,
+                                    t = trans_time_dist,
+                                    lower = c(k_bounds[1], lambda_bounds[1], -Inf),
+                                    upper = c(k_bounds[2], lambda_bounds[2], Inf),
+                                    control = list(trace = trace)
+                                  )})
 
-        # Optionally, name the list elements
+        # name the list elements
         names(result_attempts) <- paste0("nlminb", seq_along(result_attempts))
 
         # Extract the best result
@@ -289,7 +301,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       }
       else{
         result <- nlminb(start=start_params, objective=llk, x = trans_snp_dist, t = trans_time_dist,
-                         lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
+                         lower = c(0, 1e-10, -Inf), upper = c(1, Inf, Inf), control = list(trace = trace))
         best_result_name <- "input param nlminb"
       }
 
@@ -316,9 +328,11 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         snp_threshold=snp_threshold,
         lambda=result$par[[2]],
         k=result$par[[1]],
+        error=result$par[[3]],
         estimated_fp=sum(unrelated_snp_dist<=snp_threshold)/length(unrelated_snp_dist),
         method="time",
         parameter_comb=best_result_name
+
       )
 
     } else {
@@ -328,6 +342,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
           snp_threshold=NA,
           lambda=NA,
           k=NA,
+          error=NA,
           estimated_fp=NA,
           method="failure",
           parameter_comb=NA

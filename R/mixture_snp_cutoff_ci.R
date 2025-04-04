@@ -18,7 +18,8 @@
 #'
 #' @export
 mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
-                                  sample_size=length(trans_snp_dist),truncation_point=NA, sample_n=1000, confidence_level=0.95, start_params=NA){
+                                  sample_size=length(trans_snp_dist),truncation_point=NA, sample_n=1000, confidence_level=0.95, start_params=NA,
+                                  lambda_bounds = c(1e-10, 1), k_bounds=c(0,1)){
 
   if(is.na(truncation_point)){
     truncation_point <- Inf
@@ -36,27 +37,35 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
   mix_data <- tibble(snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
 
   if (anyNA(start_params)){
+    start_params <- NA
+    } else if(start_params=="Efficient"){
   test_result <- suppressWarnings(
       mixture_snp_cutoff(
-        mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites,truncation_point=truncation_point, start_params = NA
+        mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites, truncation_point=truncation_point, start_params = NA,
+        lambda_bounds = lambda_bounds, k_bounds=k_bounds
       ), classes = "warning")
   start_params <- c(test_result[3], test_result[2])
   }
 
+
   mix_data <- filter(mix_data, snp_dist<truncation_point)
   unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
 
-  #bootstrapping both close and distant data sets allowing for parallelisationg
+  #bootstrapping both close and distant data sets allowing for parallelisation
   bootstrapresults <- furrr::future_map_dfr(1:sample_n, ~{
     x <- slice_sample(mix_data, n= sample_size, replace = TRUE)
     y <- sample(unrelated_snp_dist, size=length(unrelated_snp_dist), replace=TRUE)
-    z <- plyr::try_default( #suppresses warnings and errors from mixture_snp_cutoffs
-      suppressWarnings(
-        mixture_snp_cutoff(
-          x$snp_dist,y, x$time_dist, x$sites, truncation_point=truncation_point, start_params = start_params
-          ), classes = "warning"),
-                           data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA))
-   z[1:4]
+    z <- plyr::try_default(
+  #suppressWarnings(
+    mixture_snp_cutoff(
+      x$snp_dist, y, x$time_dist, x$sites, truncation_point=truncation_point, start_params = start_params, lambda_bounds = lambda_bounds, k_bounds=k_bounds
+    )
+  #, classes = "warning")
+  ,
+  data.frame(snp_threshold=NA, lambda=NA, k=NA, estimated_fp=NA, error=NA)
+)
+
+   z[1:5]
   },.progress=TRUE, .options = furrr::furrr_options(seed = TRUE))
 
   bootstrapresults <- bootstrapresults[complete.cases(bootstrapresults), ] #removes failed results from optim failures
@@ -71,8 +80,8 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
   } else {
     warning("Insufficient data points to fit distributions!")
 
-    lowerres <- data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA)
-    upperres <- data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA)
+    lowerres <- data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA, error=NA)
+    upperres <- data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA, error=NA)
 
     ci <- bind_rows(lowerres, upperres)
     res <- list(confidence_intervals=ci, raw_results=NA)
