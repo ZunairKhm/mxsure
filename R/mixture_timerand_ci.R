@@ -28,14 +28,14 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
                                   sample_size=length(trans_snp_dist), sample_n=500, permutations=3, quiet=FALSE, confidence_level=0.95,
                                   within_individual=FALSE, subjectA_id, subjectB_id,
                                   clustered=FALSE, p_value_type="above_estimate",
-                                  start_params=NA, ci_data=NA, title=NULL){
+                                  start_params=NA, ci_data=NA, title=NULL, lambda_bounds = c(1e-10, 1), k_bounds=c(0,1)){
   #unadjusted result
   normal_data <- tibble(snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
-  normal_result <- mixture_snp_cutoff(normal_data$snp_dist,unrelated_snp_dist, normal_data$time_dist,normal_data$sites, truncation_point=truncation_point)
+  normal_result <- mixture_snp_cutoff(normal_data$snp_dist,unrelated_snp_dist, normal_data$time_dist,normal_data$sites, truncation_point=truncation_point, lambda_bounds = lambda_bounds)
   if(anyNA(ci_data)){
     normal_ci <- mixture_snp_cutoff_ci(normal_data$snp_dist,unrelated_snp_dist, normal_data$time_dist,normal_data$sites, truncation_point=truncation_point,
                                        sample_size=sample_size, sample_n=sample_n, confidence_level=confidence_level,
-                                       start_params = c(normal_result[3], normal_result[2]))
+                                       start_params = c(normal_result[3], normal_result[2]), lambda_bounds = lambda_bounds, k_bounds=k_bounds)
   } else{
     normal_ci <- ci_data
   }
@@ -71,19 +71,20 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
     }
 
 
-    #return(timerand_data)
+  timerand_result <- mixture_snp_cutoff(timerand_data$snp_dist,unrelated_snp_dist, timerand_data$time_dist, timerand_data$sites, truncation_point=truncation_point,
+                                        lambda_bounds = lambda_bounds, k_bounds=k_bounds)
 
-  timerand_result <- mixture_snp_cutoff(timerand_data$snp_dist,unrelated_snp_dist, timerand_data$time_dist, timerand_data$sites, truncation_point=truncation_point)
-  timerand_ci <- mixture_snp_cutoff_ci(timerand_data$snp_dist,unrelated_snp_dist, timerand_data$time_dist,timerand_data$sites,
+  timerand_ci <- mixture_snp_cutoff_ci(timerand_data$snp_dist, unrelated_snp_dist, timerand_data$time_dist, timerand_data$sites,
                                        sample_size=sample_size, sample_n=sample_n, confidence_level=confidence_level, truncation_point=truncation_point,
-                                       #,start_params = c(normal_result[3], normal_result[2])
+                                       lambda_bounds = lambda_bounds, k_bounds=k_bounds
+                                       ,start_params = ifelse(is.na(start_params), NA, c(normal_result[3], normal_result[2]))
                                        )
   if(p_value_type=="above_estimate"){
   p_value_n <- sum(timerand_ci$raw_results$lambda>=normal_result$lambda)
   }else if(p_value_type=="within_ci"){
-    p_value_n <- sum(timerand_ci$raw_results$lambda<=result$`95%`[result$method=="Normal"]&timerand_ci$raw_results$lambda>=result$`5%`[result$method=="Normal"])
+    p_value_n <- sum(timerand_ci$raw_results$lambda <= result$`95%`[result$method=="Normal"] & timerand_ci$raw_results$lambda >= result$`5%`[result$method=="Normal"])
   }else if (p_value_type=="above_low_ci"){
-    p_value_n <- sum(timerand_ci$raw_results$lambda>=result$`5%`[result$method=="Normal"])
+    p_value_n <- sum(timerand_ci$raw_results$lambda >= result$`5%`[result$method=="Normal"])
   }
     p_value_t <- length(timerand_ci$raw_results$lambda)
 
