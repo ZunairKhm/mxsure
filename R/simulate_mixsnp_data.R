@@ -14,9 +14,11 @@
 #' @export
 #'
 #' @examples
-simulate_mixsnp_data <- function(lambda, k, unrel_shape=100, unrel_rate=1, error_param=NA, n=100, rel_timelimit=1, rel_timemin=0, truncation_point=NA){
+simulate_mixsnp_data <- function(lambda, k, unrel_mean=25, unrel_sd=50, error_param=NA, n=100, rel_timelimit=1, rel_timemin=0, truncation_point=NA){
 
   # n <- n/dpois(truncation_point, lambda*(unrel_shape/unrel_rate))
+  unrel_shape <- (unrel_mean/unrel_sd)^2
+  unrel_rate <- unrel_mean/(unrel_sd^2)
 
   mix_snp_dist <- map_dfr(1:n, ~{
 
