@@ -38,14 +38,15 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
 
   if (anyNA(start_params)){
     start_params <- NA
-    } else if(start_params=="Efficient"){
-  test_result <- suppressWarnings(
+    } else if(all(start_params=="Efficient")){
+  test_result <- #suppressWarnings(
       mixture_snp_cutoff(
         mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites, truncation_point=truncation_point, start_params = NA,
-        lambda_bounds = lambda_bounds, k_bounds=k_bounds
-      ), classes = "warning")
+        lambda_bounds = lambda_bounds, k_bounds=k_bounds)
+  #, classes = "warning")
   start_params <- c(test_result[3], test_result[2])
   }
+
 
 
   mix_data <- filter(mix_data, snp_dist<truncation_point)
@@ -56,15 +57,13 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
     x <- slice_sample(mix_data, n= sample_size, replace = TRUE)
     y <- sample(unrelated_snp_dist, size=length(unrelated_snp_dist), replace=TRUE)
     z <- plyr::try_default(
-  #suppressWarnings(
+  suppressWarnings(
     mixture_snp_cutoff(
       x$snp_dist, y, x$time_dist, x$sites, truncation_point=truncation_point, start_params = start_params, lambda_bounds = lambda_bounds, k_bounds=k_bounds
     )
-  #, classes = "warning")
-  ,
-  data.frame(snp_threshold=NA, lambda=NA, k=NA, estimated_fp=NA, error=NA)
+  , classes = "warning")
+  ,data.frame(snp_threshold=NA, lambda=NA, k=NA, estimated_fp=NA, error=NA)
 )
-
    z[1:5]
   },.progress=TRUE, .options = furrr::furrr_options(seed = TRUE))
 
@@ -77,6 +76,7 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
 
   ci <- bind_rows(lowerres, upperres)
   res <- list(confidence_intervals=ci, raw_results=bootstrapresults)
+
   } else {
     warning("Insufficient data points to fit distributions!")
 

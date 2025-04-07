@@ -42,10 +42,7 @@ snp_over_time <- function(SNPs, Time, lambda, sites=NA, snp_threshold, title="SN
              high_ci=qpois(0.975, Time*lambda))
 
 
-
-
-
-  ggplot(filter(data,SNPs<=snp_threshold), aes(x=Time, y=SNPs))+
+  ggplot(filter(data,SNPs<=snp_threshold+1), aes(x=Time, y=SNPs))+
     scale_y_continuous(limits = c(0, snp_threshold+1), expand = c(0.01,0.01))+
     scale_x_continuous(limits = c(0, NA), expand = c(0.01,0.01))+
     geom_point()+

@@ -1,9 +1,4 @@
 library(tidyverse)
-
-
-
-
-
 #' Mixture SNP Cutoff
 #'
 #' Estimates evolutionary rates from a mixed transmission dataset and an unrelated data set with a mixed probability distribution approach.Uses these rates to produce a threshold of SNP distances to be considered linked or not.
@@ -141,9 +136,10 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       llk <- function(params, x){
         k <- params[[1]]
         lambda <- params[[2]]
+        intercept <- params[[3]]
 
         -sum(pmap_dbl(list(x), ~ {log_sum_exp(log(k) + dpois(x = ..1,
-                                                                  lambda =  lambda, #gives rate esimate per day
+                                                                  lambda =  lambda + intercept, #gives rate esimate per average time of the dataset
                                                                   log = TRUE) -
                                                      ppois(truncation_point,
                                                            lambda =  lambda,
@@ -162,17 +158,19 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
       if(anyNA(start_params)){
         # Define parameter grid
-        start_vals <- expand.grid(k = c(0.01, 0.25, 0.5, 0.75), lambda = c(0.0001, 0.001, 0.01))
+        start_vals <- expand.grid(k = c(0.25, 0.5, 0.75), lambda = c(0.0001, 0.001, 0.01), intercept = c(0))
 
         # Run nlminb for each combination
-        result_attempts <- map2(start_vals$k, start_vals$lambda, ~ nlminb(
-          start = c(.x, .y),
-          objective = llk,
-          x = trans_snp_dist,
-          lower = c(k_bounds[1], lambda_bounds[1]),
-          upper = c(k_bounds[2], lambda_bounds[2]),
-          control = list(trace = trace)
-        ))
+        result_attempts <- pmap(list(start_vals$k, start_vals$lambda, start_vals$intercept),
+                                function(k, lambda, intercept) {
+                                  nlminb(
+                                    start = c(k, lambda, intercept),
+                                    objective = llk,
+                                    x = trans_snp_dist,
+                                    lower = c(k_bounds[1], lambda_bounds[1], -Inf),
+                                    upper = c(k_bounds[2], lambda_bounds[2], Inf),
+                                    control = list(trace = trace)
+                                  )})
 
         # Optionally, name the list elements
         names(result_attempts) <- paste0("nlminb", seq_along(result_attempts))
@@ -182,8 +180,8 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         best_result_name <- names(result_attempts)[[which.min(sapply(result_attempts, `[[`, "objective"))]]
       }
       else{
-        result <- nlminb(start=start_params, objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
-                         lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
+        result <- nlminb(start=start_params, objective=llk, x = trans_snp_dist,
+                         lower = c(0, 1e-10, -Inf), upper = c(1, Inf, Inf), control = list(trace = trace))
         best_result_name <- "input param nlminb"
       }
 
@@ -250,10 +248,10 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       llk <- function(params, x, t){
         k <- params[[1]]
         lambda <- params[[2]]
-        error <- params[[3]]
+        intercept <- params[[3]]
 
         -sum(pmap_dbl(list(x, t), ~ {log_sum_exp(log(k) + dpois(x = ..1,
-                                                                  lambda =  lambda*..2 + error, #gives rate esimate per day
+                                                                  lambda =  lambda*..2 + intercept, #gives rate esimate per day
                                                                   log = TRUE)
                                                  -
                                                      ppois(truncation_point,
@@ -277,13 +275,13 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
       if(anyNA(start_params)){
         # Define parameter grid
-        start_vals <- expand.grid(k = c(0.25, 0.5, 0.75), lambda = c(0.0001, 0.001, 0.01), error = c(0))
+        start_vals <- expand.grid(k = c(0.25, 0.5, 0.75), lambda = c(0.0001, 0.001, 0.01), intercept = c(0))
 
         # Run nlminb for each combination
-        result_attempts <- pmap(list(start_vals$k, start_vals$lambda, start_vals$error),
-                                function(k, lambda, error) {
+        result_attempts <- pmap(list(start_vals$k, start_vals$lambda, start_vals$intercept),
+                                function(k, lambda, intercept) {
                                   nlminb(
-                                    start = c(k, lambda, error),
+                                    start = c(k, lambda, intercept),
                                     objective = llk,
                                     x = trans_snp_dist,
                                     t = trans_time_dist,
@@ -300,7 +298,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         best_result_name <- names(result_attempts)[[which.min(sapply(result_attempts, `[[`, "objective"))]]
       }
       else{
-        result <- nlminb(start=start_params, objective=llk, x = trans_snp_dist, t = trans_time_dist,
+        result <- nlminb(start=c(start_params,0), objective=llk, x = trans_snp_dist, t = trans_time_dist,
                          lower = c(0, 1e-10, -Inf), upper = c(1, Inf, Inf), control = list(trace = trace))
         best_result_name <- "input param nlminb"
       }
@@ -328,7 +326,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         snp_threshold=snp_threshold,
         lambda=result$par[[2]],
         k=result$par[[1]],
-        error=result$par[[3]],
+        intercept=result$par[[3]],
         estimated_fp=sum(unrelated_snp_dist<=snp_threshold)/length(unrelated_snp_dist),
         method="time",
         parameter_comb=best_result_name
@@ -342,7 +340,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
           snp_threshold=NA,
           lambda=NA,
           k=NA,
-          error=NA,
+          intercept=NA,
           estimated_fp=NA,
           method="failure",
           parameter_comb=NA
@@ -382,9 +380,10 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       llk <- function(params, x, t, s){
         k <- params[[1]]
         lambda <- params[[2]]
+        intercept <- params[[3]]
 
-        -sum(pmap_dbl(list(x, t,s), ~ {log_sum_exp(log(k) + dpois(x = ..1,
-                                                                  lambda =  lambda*..2*(..3/1000000), #gives rate esimate per day time per million bp
+        -sum(pmap_dbl(list(x, t, s), ~ {log_sum_exp(log(k) + dpois(x = ..1,
+                                                                  lambda =  lambda*..2*(..3/1000000) + intercept, #gives rate esimate per day time per million bp
                                                                   log = TRUE) -
                                                      ppois(truncation_point,
                                                            lambda =  lambda*..2*(..3/1000000),
@@ -404,19 +403,21 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
       if(anyNA(start_params)){
         # Define parameter grid
-        start_vals <- expand.grid(k = c(0.01, 0.25, 0.5, 0.75), lambda = c(0.0001, 0.001, 0.01))
+        start_vals <- expand.grid(k = c(0.01, 0.25, 0.5, 0.75), lambda = c(0.0001, 0.001, 0.01), intercept=c(0))
 
         # Run nlminb for each combination
-        result_attempts <- map2(start_vals$k, start_vals$lambda, ~ nlminb(
-          start = c(.x, .y),
-          objective = llk,
-          x = trans_snp_dist,
-          t = trans_time_dist,
-          s = trans_sites,
-          lower = c(k_bounds[1], lambda_bounds[1]),
-          upper = c(k_bounds[2], lambda_bounds[2]),
-          control = list(trace = trace)
-        ))
+        result_attempts <- pmap(list(start_vals$k, start_vals$lambda, start_vals$intercept),
+                                function(k, lambda, intercept) {
+                                  nlminb(
+                                    start = c(k, lambda, intercept),
+                                    objective = llk,
+                                    x = trans_snp_dist,
+                                    t = trans_time_dist,
+                                    s = trans_sites,
+                                    lower = c(k_bounds[1], lambda_bounds[1], -Inf),
+                                    upper = c(k_bounds[2], lambda_bounds[2], Inf),
+                                    control = list(trace = trace)
+                                  )})
 
         # Optionally, name the list elements
         names(result_attempts) <- paste0("nlminb", seq_along(result_attempts))
@@ -426,8 +427,8 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         best_result_name <- names(result_attempts)[[which.min(sapply(result_attempts, `[[`, "objective"))]]
       }
       else{
-        result <- nlminb(start=start_params, objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
-                         lower = c(0, 1e-10), upper = c(1, Inf), control = list(trace = trace))
+        result <- nlminb(start=c(start_params,0), objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
+                         lower = c(0, 1e-10, -Inf), upper = c(1, Inf, Inf), control = list(trace = trace))
         best_result_name <- "input param nlminb"
       }
 
@@ -455,6 +456,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         snp_threshold=snp_threshold,
         lambda=result$par[[2]],
         k=result$par[[1]],
+        intercept=result$par[[3]],
         estimated_fp=sum(unrelated_snp_dist<=snp_threshold)/length(unrelated_snp_dist),
         method="time+sites",
         parameter_comb=best_result_name
@@ -466,6 +468,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
           snp_threshold=NA,
           lambda=NA,
           k=NA,
+          intercept=NA,
           estimated_fp=NA,
           method="failure",
           parameter_comb=NA
