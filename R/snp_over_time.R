@@ -27,19 +27,19 @@ snp_over_time <- function(SNPs, Time, lambda, sites=NA, snp_threshold, title="SN
   }
 
   if(!is.na(mean(sites, na.rm=TRUE))){
-    lambda <- (lambda*mean(sites))/1000000}
+    lambda <- (lambda*mean(sites))}
     predictive_intervals <- tibble(Time=0:max(c(max(Time), time_limits[2]), na.rm=TRUE))
     predictive_intervals <- predictive_intervals|>
       mutate(estimate=qpois(0.5, Time*lambda))
 
 
   if(!is.na(mean(sites, na.rm=TRUE)) & !anyNA(ci)){
-    ci[1] <- (ci[1]*mean(sites))/1000000
-    ci[2] <- (ci[2]*mean(sites))/1000000}
+    ci[1] <- (ci[1]*mean(sites))
+    ci[2] <- (ci[2]*mean(sites))}
 
     predictive_intervals <- predictive_intervals|>
-      mutate(low_ci=qpois(0.025, Time*lambda),
-             high_ci=qpois(0.975, Time*lambda))
+      mutate(low_ci=qpois(0.025, (Time/365.25)*lambda),
+             high_ci=qpois(0.975, (Time/365.25)*lambda))
 
 
   ggplot(filter(data,SNPs<=snp_threshold+1), aes(x=Time, y=SNPs))+
@@ -54,8 +54,8 @@ snp_over_time <- function(SNPs, Time, lambda, sites=NA, snp_threshold, title="SN
     geom_step(data = predictive_intervals, aes(x=Time, y=high_ci), linetype="dotted")+
     geom_abline(intercept=snp_threshold, slope=0, linetype="dashed", alpha=0.75)+
     geom_label(x=Inf, y=Inf, vjust=1, hjust=1,
-               label = paste0(signif(lambda*365.25,digits = 3), " SNPs per year",
-                              (ifelse(anyNA(ci),"", paste0("\n95% CI: ", signif(ci[1]*365.25, 3), ", ", signif(ci[2]*365.25, 3)))),
+               label = paste0(signif(lambda, digits = 3), " SNPs per year",
+                              (ifelse(anyNA(ci),"", paste0("\n95% CI: ", signif(ci[1], 3), ", ", signif(ci[2], 3)))),
                               (ifelse(anyNA(p_value),"", paste0("\np-value=", format(round(p_value, 4)))))
                               ),
                size=5)+

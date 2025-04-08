@@ -19,10 +19,12 @@ mixture_timerand_ci(
   subjectA_id,
   subjectB_id,
   clustered = FALSE,
-  p_value_type = "above_estimate",
+  prop_type = "above_estimate",
   start_params = NA,
   ci_data = NA,
-  title = NULL
+  title = NULL,
+  lambda_bounds = c(1e-10, 1),
+  k_bounds = c(0, 1)
 )
 }
 \arguments{
@@ -54,7 +56,7 @@ mixture_timerand_ci(
 
 \item{clustered}{permute between different time distances}
 
-\item{p_value_type}{either "above_estimate", "above_low_ci", or "within_ci"}
+\item{prop_type}{proportion of bootstraps either "above_estimate", "above_low_ci", or "within_ci"}
 
 \item{start_params}{initial parameters for optim, if NA (as default) will try 3 different start parameters and produce the highest likelihood result. Specifying the start parameters minimises computing time.}
 

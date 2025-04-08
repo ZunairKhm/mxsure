@@ -15,8 +15,9 @@ mixture_snp_cutoff(
   max_time = NA,
   prior_lambda = NA,
   prior_k = NA,
-  lambda_bounds = c(1e-04, 1),
+  lambda_bounds = c(1e-10, 1),
   k_bounds = c(0, 1),
+  intercept_bounds = c(-Inf, Inf),
   upper.tail = 0.95,
   max_false_positive = 0.05,
   trace = FALSE,
@@ -54,7 +55,7 @@ mixture_snp_cutoff(
 
 \item{trace}{trace parameter to pass to nlminb}
 
-\item{start_params}{initial parametrs for nlminb, if NA (as default) will try a range of different start parameters and produce the highest likelyhood result}
+\item{start_params}{initial parameters for lambda, k, and intercept parameters for optimisation. If NA (as default) will try a range of different start parameters and produce the highest likelyhood result}
 }
 \value{
 SNP threshold, mutation rate, proportion related, estimated false positive and negative rate estimations

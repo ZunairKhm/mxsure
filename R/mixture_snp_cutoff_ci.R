@@ -18,7 +18,7 @@
 #'
 #' @export
 mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
-                                  sample_size=length(trans_snp_dist),truncation_point=NA, sample_n=1000, confidence_level=0.95, start_params=NA,
+                                  sample_size=length(trans_snp_dist),truncation_point=NA, sample_n=1000, confidence_level=0.95, start_params="Efficient",
                                   lambda_bounds = c(1e-10, 1), k_bounds=c(0,1)){
 
   if(is.na(truncation_point)){
@@ -44,7 +44,7 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
         mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites, truncation_point=truncation_point, start_params = NA,
         lambda_bounds = lambda_bounds, k_bounds=k_bounds)
   #, classes = "warning")
-  start_params <- c(test_result[3], test_result[2])
+  start_params <- c(test_result[3], test_result[2], test_result[4])
   }
 
 
@@ -62,7 +62,7 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
       x$snp_dist, y, x$time_dist, x$sites, truncation_point=truncation_point, start_params = start_params, lambda_bounds = lambda_bounds, k_bounds=k_bounds
     )
   , classes = "warning")
-  ,data.frame(snp_threshold=NA, lambda=NA, k=NA, estimated_fp=NA, error=NA)
+  ,data.frame(snp_threshold=NA, lambda=NA, k=NA,intercept=NA, estimated_fp=NA)
 )
    z[1:5]
   },.progress=TRUE, .options = furrr::furrr_options(seed = TRUE))
@@ -80,8 +80,8 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
   } else {
     warning("Insufficient data points to fit distributions!")
 
-    lowerres <- data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA, error=NA)
-    upperres <- data.frame(snp_threshold=NA,lambda=NA,k=NA,estimated_fp=NA, error=NA)
+    lowerres <- data.frame(snp_threshold=NA,lambda=NA,k=NA,intercept=NA,estimated_fp=NA)
+    upperres <- data.frame(snp_threshold=NA,lambda=NA,k=NA,intercept=NA,estimated_fp=NA)
 
     ci <- bind_rows(lowerres, upperres)
     res <- list(confidence_intervals=ci, raw_results=NA)
