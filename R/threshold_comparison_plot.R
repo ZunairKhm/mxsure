@@ -17,7 +17,7 @@
 #' @export
 #'
 #' @examples
-threshold_comparison_plot <- function(trans_snp_dist, unrelated_snp_dist, snp_thresholds, method_names,
+threshold_comparison_plot <- function(trans_snp_dist, unrelated_snp_dist, snp_thresholds, method_names, show_related=TRUE,
                                  identity=FALSE, percent_dist_mixed, percent_dist_distant, identity_thresh=99.99,
                                  k_est=NULL, title=NULL,labels=TRUE, dataset_names=c("Mixed", "Distant")) {
   data <- tibble(method = method_names, snp_threshold = snp_thresholds)
@@ -66,23 +66,42 @@ threshold_comparison_plot <- function(trans_snp_dist, unrelated_snp_dist, snp_th
 
  #return(data)
 
-  ggplot(data, aes(x = p, y = method, fill = dataset)) +
-    geom_bar(stat = "identity", position = "dodge", width=0.9) +
-    scale_fill_manual(values = c( "darkseagreen", "red3")) +
-    scale_x_continuous(limits=c(0,1), expand = c(0,0))+
-    geom_vline(xintercept=k_est, linetype="solid", colour="grey20", alpha=0.6)+
-    geom_text(aes(label = if (labels) label else NA, x = 0.5),
-              position = position_dodge(width = 0.9),
-              color = "black") +
-    labs(
-      title = title,
-      x = "Shared strain proportion",
-      y = "Method",
-      fill = "Relationship"
-    ) +
-    theme_bw()+
-    theme(legend.position = "bottom")
+  if(show_related){
 
+    ggplot(data, aes(x = p, y = method, fill = dataset)) +
+      geom_bar(stat = "identity", position = "dodge", width=0.9) +
+      scale_fill_manual(values = c( "darkseagreen", "red3")) +
+      scale_x_continuous(limits=c(0,1), expand = c(0,0))+
+      geom_vline(xintercept=k_est, linetype="solid", colour="grey20", alpha=0.6)+
+      geom_text(aes(label = if (labels) label else NA, x = 0.5),
+                position = position_dodge(width = 0.9),
+                color = "black") +
+      labs(
+        title = title,
+        x = "Shared strain proportion",
+        y = "Threshold Method",
+        fill = "Relationship"
+      ) +
+      theme_bw()+
+      theme(legend.position = "bottom")
+
+  }else{
+    ggplot(filter(data,dataset==dataset_names[2]), aes(x = p, y = method, fill = method)) +
+      geom_bar(stat = "identity", position = "dodge", width=0.9) +
+      scale_x_continuous(limits=c(0,1), expand = c(0,0))+
+      geom_vline(xintercept=k_est, linetype="solid", colour="grey20", alpha=0.6)+
+      geom_text(aes(label = if (labels) label else NA, x = 0.5),
+                position = position_dodge(width = 0.9),
+                color = "black") +
+      labs(
+        title = title,
+        x = "Estimated False Positive Rate",
+        y = "Threshold Method",
+        fill = NULL
+      ) +
+      theme_bw()+
+      theme(legend.position = "none")
+  }
 
 
 }
