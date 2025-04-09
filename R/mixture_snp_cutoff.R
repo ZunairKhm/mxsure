@@ -17,7 +17,7 @@ library(tidyverse)
 #' @param truncation_point a SNP distance limit for the data, if set to NA will estimate as if there is no limit. Will be faster with a lower truncation point.
 #' @param prior_lambda parameters for a gamma prior distribution for rate estimation, if set to "default" will use default parameters
 #' @param prior_k parameters for a beta prior distribution for related proportion estimation, if set to "default" will use default parameters
-#' @param lambda_bounds bounds of rate estimation
+#' @param lambda_bounds bounds of rate estimation in SNPs/year/site if given time and site data
 #' @param k_bounds bounds of related proportion estimation
 #'
 #' @importFrom stats optim pnbinom qpois rnbinom
@@ -32,6 +32,11 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                                youden=FALSE,threshold_range=FALSE, max_time= NA,
                                prior_lambda=NA, prior_k=NA, lambda_bounds=c(1e-10, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf),
                                upper.tail=0.95, max_false_positive=0.05, trace=FALSE, start_params= NA){
+
+  #correction to convert to snp/day(/site)
+  if(!anyNA(trans_time_dist)){
+    lambda_bounds <- lambda_bounds/365.25
+  }
 
   #### Log Sum Exp ####
 
@@ -49,7 +54,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
     return(log_a + log(1 + exp(log_b - log_a)))
   }
 
-  #defining distribution functions for the truncated negative binomial distr
+  #defining distribution functions for the truncated negative binomial distr, needs to be specific to the truncation point and in the global environment for fitdistplus
   dtruncnbinom <<- function(x, mu, size){
     dnbinom(x = x, size = size, mu = mu) / pnbinom(truncation_point, size = size, mu = mu)
   }
@@ -73,7 +78,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
   trans_sites <- x$trans_sites
   unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
 
-  #setting priors
+  #setting default priors, not on by default
   if(length(prior_lambda)==1){
     if(is.element(prior_lambda, "default")){
       prior_lambda <- c(1.06, 0.44)
@@ -187,7 +192,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         best_result_name <- "input param nlminb"
       }
 
-      snp_threshold <- qpois(upper.tail, lambda = result$par[[2]])
+      snp_threshold <- qpois(upper.tail, lambda = result$par[[2]]*2)
 
 
       if ((sum(unrelated_snp_dist<=snp_threshold)/length(unrelated_snp_dist)) > max_false_positive){
@@ -206,6 +211,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         snp_threshold=snp_threshold,
         lambda=result$par[[2]],
         k=result$par[[1]],
+        intercept=result$par[[3]],
         estimated_fp=estimated_fp,
         lambda_units="SNPs per average sampling time per genome",
         parameter_comb=best_result_name
@@ -216,6 +222,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         snp_threshold=NA,
         lambda=NA,
         k=NA,
+        intercept=NA,
         estimated_fp=NA,
         estimated_fn=NA,
         lambda_units=NA,
@@ -244,7 +251,6 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       }else{100}
 
       nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size))
-
 
       #mixed data fitting
       llk <- function(params, x, t){
