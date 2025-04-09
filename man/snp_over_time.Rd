@@ -5,34 +5,35 @@
 \title{SNP dist/time plot}
 \usage{
 snp_over_time(
-  SNPs,
-  Time,
-  lambda,
-  sites = NA,
-  snp_threshold,
+  trans_snp_dist,
+  unrelated_snp_dist,
+  trans_time_dist,
+  trans_sites,
+  truncation_point = 2000,
   title = "SNPs over Time",
   jitter = TRUE,
   p_value = NA,
-  ci = NA,
-  time_limits = c(0, NA)
+  ci_data = NA,
+  time_limits = c(0, NA),
+  draw_predictive_intervals = TRUE
 )
 }
 \arguments{
-\item{SNPs}{list of SNP distances from a mixed transmission data set}
+\item{title}{title for graph}
 
-\item{Time}{list of time differences between samples from each SNP distance in the mixed data set (in days)}
+\item{jitter}{jitter data (keeps data above 0 SNPs and 0 time)}
+
+\item{p_value}{optional input to display time randomised p value from mixture_timerand_test}
+
+\item{snp_dist}{list of SNP distances from a mixed transmission data set}
+
+\item{time_dist}{list of time differences between samples from each SNP distance in the mixed data set (in days)}
 
 \item{lambda}{mutation rate to plot in the graph (calculated with mixture_snp_cutoff)}
 
 \item{sites}{list of sites considered for each SNP distance in mixed data set; adjusts lambda to be in SNPs/day if provided}
 
 \item{snp_threshold}{a threshold to apply to the mixed data set for considering related data (calculated with mixture_snp_cutoff)}
-
-\item{title}{title for graph}
-
-\item{jitter}{jitter data (keeps data above 0 SNPs and 0 time)}
-
-\item{p_value}{optional input to display time randomised p value from mixture_timerand_test}
 
 \item{ci}{optional input to display CIs of mutation rate}
 }

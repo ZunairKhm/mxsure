@@ -9,7 +9,7 @@ mixture_likelyhood_thresholds(
   unrelated_snp_dist,
   trans_time_dist,
   trans_sites,
-  year_range = c(seq(0.5, 10, 0.5))
+  truncation_point = 2000
 )
 }
 \arguments{

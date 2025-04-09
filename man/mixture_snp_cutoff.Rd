@@ -45,7 +45,7 @@ mixture_snp_cutoff(
 
 \item{prior_k}{parameters for a beta prior distribution for related proportion estimation, if set to "default" will use default parameters}
 
-\item{lambda_bounds}{bounds of rate estimation}
+\item{lambda_bounds}{bounds of rate estimation in SNPs/year/site if given time and site data}
 
 \item{k_bounds}{bounds of related proportion estimation}
 
