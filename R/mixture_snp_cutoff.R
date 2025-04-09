@@ -147,7 +147,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                                                                   lambda =  lambda + intercept, #gives rate esimate per average time of the dataset
                                                                   log = TRUE) -
                                                      ppois(truncation_point,
-                                                           lambda =  lambda,
+                                                           lambda =  lambda + intercept,
                                                            log = TRUE ),
                                                    log(1-k) + dnbinom(x = ..1,
                                                                       size = nb_fit$estimate["size"],
@@ -263,7 +263,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                                                                   log = TRUE)
                                                  -
                                                      ppois(truncation_point,
-                                                           lambda =  lambda*..2,
+                                                           lambda =  lambda*..2 + intercept,
                                                            log = TRUE )
                                                  ,
                                                    log(1-k) + dnbinom(x = ..1,
@@ -391,7 +391,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                                                                   lambda =  lambda*(..2)*..3 + intercept, #gives rate esimate per year time per bp
                                                                   log = TRUE) -
                                                      ppois(truncation_point,
-                                                           lambda =  lambda*..2*(..3),
+                                                           lambda =  lambda*..2*(..3) + intercept,
                                                            log = TRUE ),
                                                    log(1-k) + dnbinom(x = ..1,
                                                                       size = nb_fit$estimate["size"],
