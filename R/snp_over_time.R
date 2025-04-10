@@ -71,8 +71,8 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
       mutate(estimate=qpois(0.5, (time_dist/365.25)*lambda))
 
   if(!anyNA(ci_data)){
-    ci[1] <- (ci$confidence_intervals$lambda[1]*mean(sites))
-    ci[2] <- (ci$confidence_intervals$lambda[2]*mean(sites))
+    ci[1] <- (ci_data$confidence_intervals$lambda[1]*mean(trans_sites))
+    ci[2] <- (ci_data$confidence_intervals$lambda[2]*mean(trans_sites))
     }
 
     predictive_intervals <- predictive_intervals|>
@@ -94,7 +94,7 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
     geom_step(data = predictive_intervals, aes(x=time_dist, y=low_ci), color="black", linetype="dotted")+
     geom_step(data = predictive_intervals, aes(x=time_dist, y=high_ci), color="black", linetype="dotted")+
     geom_abline(intercept=mix_res$snp_threshold, slope=0, linetype="dashed", alpha=0.75, color="black")+
-    geom_label(x=Inf, y=Inf, vjust=1, hjust=1,
+    geom_label(x=Inf, y=Inf, vjust=1, hjust=1,color= "black",
                label = paste0(signif(lambda, digits = 3), " SNPs per year",
                               (ifelse(anyNA(ci_data),"", paste0("\n95% CI: ", signif(ci[1], 3), ", ", signif(ci[2], 3)))),
                               (ifelse(anyNA(p_value),"", paste0("\np-value=", format(round(p_value, 4)))))
@@ -111,7 +111,7 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
       geom_point()+
       geom_abline(intercept=mix_res$intercept, slope = lambda/365.25)+
       geom_abline(intercept=mix_res$snp_threshold, slope=0, linetype="dashed", alpha=0.75)+
-      geom_label(x=Inf, y=Inf, vjust=1, hjust=1,
+      geom_label(x=Inf, y=Inf, vjust=1, hjust=1, color= "black",
                  label = paste0(signif(lambda, digits = 3), " SNPs per year",
                                 (ifelse(anyNA(ci_data),"", paste0("\n95% CI: ", signif(ci[1], 3), ", ", signif(ci[2], 3)))),
                                 (ifelse(anyNA(p_value),"", paste0("\np-value=", format(round(p_value, 4)))))

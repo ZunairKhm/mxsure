@@ -19,7 +19,7 @@
 #' @export
 mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
                                   sample_size=length(trans_snp_dist),truncation_point=NA, sample_n=1000, confidence_level=0.95, start_params="Efficient",
-                                  lambda_bounds = c(1e-10, 1), k_bounds=c(0,1)){
+                                  lambda_bounds = c(1e-10, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf)){
 
   if(is.na(truncation_point)){
     truncation_point <- Inf
@@ -42,7 +42,7 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
   test_result <- #suppressWarnings(
       mixture_snp_cutoff(
         mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites, truncation_point=truncation_point, start_params = NA,
-        lambda_bounds = lambda_bounds, k_bounds=k_bounds)
+        lambda_bounds = lambda_bounds, k_bounds=k_bounds,  intercept_bounds=intercept_bounds)
   #, classes = "warning")
   start_params <- c(test_result[3], test_result[2], test_result[4])
   }
@@ -59,7 +59,7 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
     z <- plyr::try_default(
   suppressWarnings(
     mixture_snp_cutoff(
-      x$snp_dist, y, x$time_dist, x$sites, truncation_point=truncation_point, start_params = start_params, lambda_bounds = lambda_bounds, k_bounds=k_bounds
+      x$snp_dist, y, x$time_dist, x$sites, truncation_point=truncation_point, start_params = start_params, lambda_bounds = lambda_bounds, k_bounds=k_bounds,  intercept_bounds=intercept_bounds
     )
   , classes = "warning")
   ,data.frame(snp_threshold=NA, lambda=NA, k=NA,intercept=NA, estimated_fp=NA)

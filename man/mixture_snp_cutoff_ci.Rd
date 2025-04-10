@@ -15,7 +15,8 @@ mixture_snp_cutoff_ci(
   confidence_level = 0.95,
   start_params = "Efficient",
   lambda_bounds = c(1e-10, 1),
-  k_bounds = c(0, 1)
+  k_bounds = c(0, 1),
+  intercept_bounds = c(-Inf, Inf)
 )
 }
 \arguments{
