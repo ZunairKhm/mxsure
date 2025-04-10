@@ -17,7 +17,7 @@ simulate_mixsnp_data(
 )
 }
 \arguments{
-\item{lambda}{mutation rate input (SNPs per day)}
+\item{lambda}{mutation rate input (SNPs per year)}
 
 \item{k}{proportion of mixed dataset that is linked, set to 0 to produce a distant dataset}
 

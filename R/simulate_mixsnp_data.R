@@ -1,6 +1,6 @@
 #' Simulate Mixed related SNP distance dataset
 #'
-#' @param lambda mutation rate input (SNPs per day)
+#' @param lambda mutation rate input (SNPs per year)
 #' @param k proportion of mixed dataset that is linked, set to 0 to produce a distant dataset
 #' @param error_param chance that each SNP is missed
 #' @param n size of dataset to simulate
@@ -28,12 +28,12 @@ simulate_mixsnp_data <- function(lambda, k, unrel_mean=25, unrel_sd=50, error_pa
     tt <- runif(1, rel_timemin*365.25, rel_timelimit*365.25)
     td <- rgamma(1, unrel_shape,rate= unrel_rate)*365.25
     if (runif(1) <k) {
-      truncation_correction <- ifelse(ppois(truncation_point, tt*lambda)>(1/n), ppois(truncation_point, tt*lambda), NA)
-      dd <- qpois(runif(1)*truncation_correction, tt*lambda)
+      truncation_correction <- ifelse(ppois(truncation_point, tt*lambda/365.25)>(1/n), ppois(truncation_point, tt*lambda/365.25), NA)
+      dd <- qpois(runif(1)*truncation_correction, tt*lambda/365.25)
       rr <- "Related"
     } else {
-      truncation_correction <- ifelse(ppois(truncation_point, td*lambda)>(1/n), ppois(truncation_point, td*lambda), NA)
-      dd <- qpois(runif(1)*truncation_correction, td*lambda)
+      truncation_correction <- ifelse(ppois(truncation_point, td*lambda/365.25)>(1/n), ppois(truncation_point, td*lambda/365.25), NA)
+      dd <- qpois(runif(1)*truncation_correction, td*lambda/365.25)
       rr <- "Unrelated"
     }
     if (!is.na(error_param)){
