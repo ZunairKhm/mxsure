@@ -71,8 +71,8 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
       mutate(estimate=qpois(0.5, (time_dist/365.25)*lambda))
 
   if(!anyNA(ci_data)){
-    ci[1] <- (ci_data$confidence_intervals$lambda[1]*mean(trans_sites))
-    ci[2] <- (ci_data$confidence_intervals$lambda[2]*mean(trans_sites))
+    ci <- c(ci_data$confidence_intervals$lambda[1]*mean(trans_sites),
+     ci_data$confidence_intervals$lambda[2]*mean(trans_sites))
     }
 
     predictive_intervals <- predictive_intervals|>

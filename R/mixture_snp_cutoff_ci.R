@@ -18,7 +18,7 @@
 #'
 #' @export
 mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
-                                  sample_size=length(trans_snp_dist),truncation_point=NA, sample_n=1000, confidence_level=0.95, start_params="Efficient",
+                                  sample_size=length(trans_snp_dist),truncation_point=NA, sample_n=1000, confidence_level=0.95, start_params=NA, #"Efficient",
                                   lambda_bounds = c(1e-10, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf)){
 
   if(is.na(truncation_point)){
@@ -52,9 +52,10 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
   mix_data <- filter(mix_data, snp_dist<truncation_point)
   unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
 
+  raw_data <- list()
   #bootstrapping both close and distant data sets allowing for parallelisation
-  bootstrapresults <- furrr::future_map_dfr(1:sample_n, ~{
-    x <- slice_sample(mix_data, n= sample_size, replace = TRUE)
+  raw_bootstrapresults <- furrr::future_map_dfr(1:sample_n, ~{
+    x <- slice_sample(mix_data, n= nrow(mix_data), replace = TRUE)
     y <- sample(unrelated_snp_dist, size=length(unrelated_snp_dist), replace=TRUE)
     z <- plyr::try_default(
   suppressWarnings(
@@ -62,12 +63,14 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
       x$snp_dist, y, x$time_dist, x$sites, truncation_point=truncation_point, start_params = start_params, lambda_bounds = lambda_bounds, k_bounds=k_bounds,  intercept_bounds=intercept_bounds
     )
   , classes = "warning")
-  ,data.frame(snp_threshold=NA, lambda=NA, k=NA,intercept=NA, estimated_fp=NA)
-)
-   z[1:5]
+  ,data.frame(snp_threshold=NA, lambda=NA, k=NA,intercept=NA, estimated_fp=NA))
+
+  return(z)
+
   },.progress=TRUE, .options = furrr::furrr_options(seed = TRUE))
 
-  bootstrapresults <- bootstrapresults[complete.cases(bootstrapresults), ] #removes failed results from optim failures
+  bootstrapresults <- raw_bootstrapresults[complete.cases(raw_bootstrapresults), ] #removes failed results from optimisation failures
+  bootstrapresults <- bootstrapresults[1:5]
 
   lowerres <- bootstrapresults|> #finds quantiles for confidence intervals
     summarise(across(everything(),  ~quantile(.x, 1-confidence_level, na.rm=TRUE)))
@@ -75,7 +78,7 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
     summarise(across(everything(), ~quantile(.x, confidence_level, na.rm=TRUE)))
 
   ci <- bind_rows(lowerres, upperres)
-  res <- list(confidence_intervals=ci, raw_results=bootstrapresults)
+  res <- list(confidence_intervals=ci, raw_results=raw_bootstrapresults)
 
   } else {
     warning("Insufficient data points to fit distributions!")

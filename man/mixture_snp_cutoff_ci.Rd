@@ -13,7 +13,7 @@ mixture_snp_cutoff_ci(
   truncation_point = NA,
   sample_n = 1000,
   confidence_level = 0.95,
-  start_params = "Efficient",
+  start_params = NA,
   lambda_bounds = c(1e-10, 1),
   k_bounds = c(0, 1),
   intercept_bounds = c(-Inf, Inf)
