@@ -17,7 +17,7 @@
 #' @export
 #'
 #' @examples
-threshold_comparison_plot <- function(trans_snp_dist, unrelated_snp_dist, snp_thresholds, method_names, show_related=TRUE,
+threshold_comparison_plot <- function(trans_snp_dist, unrelated_snp_dist, snp_thresholds, method_names, show_related=FALSE,
                                  identity=FALSE, percent_dist_mixed, percent_dist_distant, identity_thresh=99.99,
                                  k_est=NULL, title=NULL,labels=TRUE, dataset_names=c("Mixed", "Distant")) {
   data <- tibble(method = method_names, snp_threshold = snp_thresholds)

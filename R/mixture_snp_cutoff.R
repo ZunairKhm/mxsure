@@ -30,12 +30,12 @@ library(tidyverse)
 mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
                                   truncation_point=2000,
                                youden=FALSE,threshold_range=FALSE, max_time= NA,
-                               prior_lambda=NA, prior_k=NA, lambda_bounds=c(1e-10, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf),
+                               prior_lambda=NA, prior_k=NA, lambda_bounds=c(1e-8, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf),
                                upper.tail=0.95, max_false_positive=0.05, trace=FALSE, start_params= NA){
 
   #correction to convert to snp/day(/site)
   if(!anyNA(trans_time_dist)){
-    lambda_bounds <- lambda_bounds/365.25
+    lambda_bounds <- lambda_bounds*1000000/365.25
   }
 
   #### Log Sum Exp ####
@@ -70,6 +70,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
   if(is.na(truncation_point)){
     truncation_point <- Inf
   }
+
   unrelated_snp_dist_orig <- unrelated_snp_dist
   x <- tibble(trans_snp_dist, trans_time_dist, trans_sites)
   x <- filter(x, trans_snp_dist<truncation_point)
@@ -261,10 +262,10 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         -sum(pmap_dbl(list(x, t), ~ {suppressWarnings(log_sum_exp(log(k) + dpois(x = ..1,
                                                                   lambda =  lambda*(..2) + intercept, #gives rate esimate per day
                                                                   log = TRUE)
-                                                 -
-                                                     ppois(truncation_point,
-                                                           lambda =  lambda*..2 + intercept,
-                                                           log = TRUE )
+                                                 # -
+                                                 #     ppois(truncation_point,
+                                                 #           lambda =  lambda*..2 + intercept,
+                                                 #           log = TRUE )
                                                  ,
                                                    log(1-k) + dnbinom(x = ..1,
                                                                       size = nb_fit$estimate["size"],
@@ -304,7 +305,8 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
       }
       else{
-        result <- nlminb(start=c(start_params, 0), objective=llk, x = trans_snp_dist, t = trans_time_dist,
+        start_params[2] <- start_params[2]/365.25
+        result <- nlminb(start=c(start_params), objective=llk, x = trans_snp_dist, t = trans_time_dist,
                          lower = c(k_bounds[1], lambda_bounds[1], intercept_bounds[1]),
                          upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2]),
                          control = list(trace = trace))
@@ -388,11 +390,12 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         intercept <- params[[3]]
 
         -sum(pmap_dbl(list(x, t, s), ~ {suppressWarnings(log_sum_exp(log(k) + dpois(x = ..1,
-                                                                  lambda =  lambda*(..2)*..3 + intercept, #gives rate esimate per day per bp
-                                                                  log = TRUE) -
-                                                     ppois(truncation_point,
-                                                           lambda =  lambda*..2*(..3) + intercept,
-                                                           log = TRUE ),
+                                                                  lambda =  lambda*(..2)*(..3/1000000) + intercept, #gives rate esimate per day per bp
+                                                                  log = TRUE)
+                                                     # -ppois(truncation_point,
+                                                     #       lambda =  lambda*..2*(..3) + intercept,
+                                                     #       log = TRUE )
+                                                     ,
                                                    log(1-k) + dnbinom(x = ..1,
                                                                       size = nb_fit$estimate["size"],
                                                                       mu = nb_fit$estimate["mu"],
@@ -409,7 +412,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
       if(anyNA(start_params)){
         # Define parameter grid
-        start_vals <- expand.grid(k = c(0.5, 0.75, 0.9), lambda = c(1e-11, 1e-10, 1e-9, 1e-8), intercept=c(0))
+        start_vals <- expand.grid(k = c(0.5, 0.75, 0.9), lambda = c(1e-10, 1e-4, 1e-3, 1e-2), intercept=c(0))
 
         # Run nlminb for each combination
         result_attempts <- pmap(list(start_vals$k, start_vals$lambda, start_vals$intercept),
@@ -432,7 +435,8 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
       }
       else{
-        result <- nlminb(start=c(start_params), objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
+        start_params[2] <- (start_params[2]*1000000)/(365.25)
+        result <- nlminb(start=start_params, objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,
                          lower = c(k_bounds[1], lambda_bounds[1], intercept_bounds[1]),
                          upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2]),
                          control = list(trace = trace))
@@ -443,7 +447,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         max_time <- max(trans_time_dist)
       }
 
-      snp_threshold <- qpois(upper.tail, lambda=result$par[[2]]*(max_time)*(mean(trans_sites)))
+      snp_threshold <- qpois(upper.tail, lambda=result$par[[2]]*(max_time)*(mean(trans_sites)/1000000))
 
       if(threshold_range==TRUE & !is.na(snp_threshold)){
         threshold_range_df <- data.frame(years=seq(0.5, 10, 0.5), threshold=NA, estimated_fp=NA, prop_pos=NA)
@@ -460,7 +464,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       # results
       results <-  tibble(
         snp_threshold=snp_threshold,
-        lambda=result$par[[2]]*365.25,
+        lambda=(result$par[[2]]*365.25)/1000000,
         k=result$par[[1]],
         intercept=result$par[[3]],
         estimated_fp=sum(unrelated_snp_dist<=snp_threshold)/length(unrelated_snp_dist),

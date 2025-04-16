@@ -79,7 +79,7 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
 
   if(!anyNA(start_params)){
   if (any(start_params=="Efficient")){
-    start_params <-c(timerand_result[3], timerand_result[2], timerand_result[4])
+    start_params <-as.numeric(c(timerand_result[3], timerand_result[2], timerand_result[4]))
   }}
 
   timerand_ci <- mixture_snp_cutoff_ci(timerand_data$snp_dist, unrelated_snp_dist, timerand_data$time_dist, timerand_data$sites,
