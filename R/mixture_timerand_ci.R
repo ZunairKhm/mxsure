@@ -25,10 +25,10 @@
 #'
 #' @examples
 mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA, truncation_point=NA,
-                                  sample_size=length(trans_snp_dist), sample_n=500, permutations=3, quiet=FALSE, confidence_level=0.95,
+                                  sample_size=length(trans_snp_dist), sample_n=100, permutations=3, quiet=FALSE, confidence_level=0.95,
                                   within_individual=FALSE, subjectA_id, subjectB_id,
                                   clustered=FALSE, prop_type="above_estimate",
-                                start_params=NA, ci_data=NA, title=NULL, lambda_bounds = c(1e-10, 1), k_bounds=c(0,1)){
+                                start_params=NA, ci_data=NA, title=NULL, lambda_bounds = c(1e-10, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf)){
   #unadjusted result
   normal_data <- tibble(snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
   normal_result <- mixture_snp_cutoff(normal_data$snp_dist,unrelated_snp_dist, normal_data$time_dist,normal_data$sites, truncation_point=truncation_point, lambda_bounds = lambda_bounds)
@@ -36,7 +36,7 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
   if(anyNA(ci_data)){
     normal_ci <- mixture_snp_cutoff_ci(normal_data$snp_dist,unrelated_snp_dist, normal_data$time_dist,normal_data$sites, truncation_point=truncation_point,
                                        sample_size=sample_size, sample_n=sample_n, confidence_level=confidence_level,
-                                       start_params = c(normal_result[3], normal_result[2], normal_result[4]), lambda_bounds = lambda_bounds, k_bounds=k_bounds)
+                                       start_params = c(normal_result[3], normal_result[2], normal_result[4]), lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds)
   } else{
     normal_ci <- ci_data
   }
@@ -75,7 +75,7 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
 
 
   timerand_result <- mixture_snp_cutoff(timerand_data$snp_dist,unrelated_snp_dist, timerand_data$time_dist, timerand_data$sites, truncation_point=truncation_point,
-                                        lambda_bounds = lambda_bounds, k_bounds=k_bounds)
+                                        lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds)
 
   if(!anyNA(start_params)){
   if (any(start_params=="Efficient")){
@@ -84,7 +84,7 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
 
   timerand_ci <- mixture_snp_cutoff_ci(timerand_data$snp_dist, unrelated_snp_dist, timerand_data$time_dist, timerand_data$sites,
                                        sample_size=sample_size, sample_n=sample_n, confidence_level=confidence_level, truncation_point=truncation_point,
-                                       lambda_bounds = lambda_bounds, k_bounds=k_bounds
+                                       lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds
                                        ,start_params = start_params
                                        )
   if(prop_type=="above_estimate"){

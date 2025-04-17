@@ -18,7 +18,7 @@
 #'
 #' @export
 mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
-                                  sample_size=length(trans_snp_dist),truncation_point=NA, sample_n=1000, confidence_level=0.95, start_params=NA, #"Efficient",
+                                  sample_size=length(trans_snp_dist),truncation_point=NA, sample_n=100, confidence_level=0.95, start_params=NA, #"Efficient",
                                   lambda_bounds = c(1e-10, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf)){
 
   if(is.na(truncation_point)){
