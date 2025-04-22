@@ -18,8 +18,9 @@ library(ggplot2)
 #' @return a plot of SNP distance over time using ggplot
 #'
 #' @export
-snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, trans_sites, truncation_point=2000, title="SNPs over Time", jitter=TRUE, p_value=NA, ci_data=NA, time_limits=c(0,NA), draw_predictive_intervals=TRUE){
+snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, trans_sites, truncation_point=2000, title="SNPs over Time", jitter=TRUE, p_value=NA, ci_data=NA, time_limits=c(0,NA), under_threshold=TRUE){
 
+  unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
 
   #defining distribution functions for the truncated negative binomial distr, needs to be specific to the truncation point and in the global environment for fitdistplus
   dtruncnbinom <<- function(x, mu, size){
@@ -49,9 +50,12 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
 
   LH <-  distinct(tibble(snp_dist=trans_snp_dist, time_dist=trans_time_dist))
   LH <- LH |>
-    mutate(rel_lh = (dpois(snp_dist, (mix_res$lambda*(time_dist/365.25)*mean(trans_sites)+mix_res$intercept)) / ppois(truncation_point, (mix_res$lambda*(time_dist/365.25)*mean(trans_sites)+mix_res$intercept))),
-           unrel_lh = (dnbinom(snp_dist, mu = nb_fit$estimate['mu'], size = nb_fit$estimate['size']) / pnbinom(truncation_point, mu = nb_fit$estimate['mu'], size = nb_fit$estimate['size'])))|>
-    mutate(LHR = rel_lh/unrel_lh)
+    mutate(rel_lh = (dpois(snp_dist, (mix_res$lambda*(time_dist/365.25)*mean(trans_sites)+mix_res$intercept), log=TRUE) #/ ppois(truncation_point, (mix_res$lambda*(time_dist/365.25)*mean(trans_sites)+mix_res$intercept))
+                     ),
+           unrel_lh = (dnbinom(snp_dist, mu = nb_fit$estimate['mu'], size = nb_fit$estimate['size'], log = TRUE) - pnbinom(truncation_point, mu = nb_fit$estimate['mu'], size = nb_fit$estimate['size'], log=TRUE)))|>
+    mutate(LHR = (rel_lh-unrel_lh))
+
+  #return(LH)
 
   rm(ptruncnbinom, envir = .GlobalEnv)
   rm(dtruncnbinom, envir = .GlobalEnv)
@@ -59,7 +63,11 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
 
 
   data <- data.frame(snp_dist=trans_snp_dist, time_dist=trans_time_dist)
+  if(under_threshold){
   data <- filter(data, trans_snp_dist<=mix_res$snp_threshold+1)
+  } else {
+    data <- filter(data, trans_snp_dist<truncation_point)
+  }
   data$LHR <- LH$LHR[match(paste(data$snp_dist, data$time_dist), paste(LH$snp_dist, LH$time_dist))]
   if(jitter==TRUE){
   data$snp_dist <- abs(jitter(data$snp_dist))
@@ -81,11 +89,16 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
 
 
 
-  if(draw_predictive_intervals){
+  if(under_threshold){
   ggplot(data, aes(x=time_dist, y=snp_dist, color=LHR))+
     scale_y_continuous(limits = c(0, mix_res$snp_threshold+1), expand = c(0.01,0.01))+
     scale_x_continuous(limits = c(0, NA), expand = c(0.01,0.01))+
-      scale_color_continuous()+
+      scale_color_gradientn(
+        colors = viridis::cividis(256),
+        limits=c(-2, 2),
+        values = scales::rescale(c(-2:2)),
+        oob=scales::squish
+      ) +
     geom_point()+
     # geom_abline(intercept=0, slope = lambda)
     # geom_abline(intercept=0, slope = ifelse(!anyNA(ci), ci[1], NA), linetype="dotted")+
@@ -93,7 +106,7 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
     geom_step(data = predictive_intervals, aes(x=time_dist, y=estimate), color="black")+
     geom_step(data = predictive_intervals, aes(x=time_dist, y=low_ci), color="black", linetype="dotted")+
     geom_step(data = predictive_intervals, aes(x=time_dist, y=high_ci), color="black", linetype="dotted")+
-    geom_abline(intercept=mix_res$snp_threshold, slope=0, linetype="dashed", alpha=0.75, color="black")+
+      geom_hline(yintercept=mix_res$snp_threshold, linetype="dashed", alpha=0.75, color="black")+
     geom_label(x=Inf, y=Inf, vjust=1, hjust=1,color= "black",
                label = paste0(signif(lambda, digits = 3), " SNPs per year",
                               (ifelse(anyNA(ci_data),"", paste0("\n95% CI: ", signif(ci[1], 3), ", ", signif(ci[2], 3)))),
@@ -102,16 +115,28 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
                size=5)+
     labs(title=title,
          y="SNPs",
-         x="Time (Days)")+
+         x="Time (Days)",
+         legend="logLHR")+
     theme_minimal()
   } else {
-    ggplot(data, aes(x=time_dist, y=snp_dist, colour =LHR))+
-      scale_y_continuous(limits = c(0, mix_res$snp_threshold+1), expand = c(0.01,0.01))+
+    ggplot(data, aes(x=time_dist, y=snp_dist, color=LHR))+
+      scale_y_continuous(limits = c(0, NA), expand = c(0.01,0.01), transform = "pseudo_log")+
       scale_x_continuous(limits = c(0, NA), expand = c(0.01,0.01))+
+      scale_color_gradientn(
+        colors = viridis::cividis(256),
+        limits=c(-2, 2),
+        values = scales::rescale(c(-2:2)),
+        oob=scales::squish
+      ) +
       geom_point()+
-      geom_abline(intercept=mix_res$intercept, slope = lambda/365.25)+
-      geom_abline(intercept=mix_res$snp_threshold, slope=0, linetype="dashed", alpha=0.75)+
-      geom_label(x=Inf, y=Inf, vjust=1, hjust=1, color= "black",
+      # geom_abline(intercept=0, slope = lambda)
+      # geom_abline(intercept=0, slope = ifelse(!anyNA(ci), ci[1], NA), linetype="dotted")+
+      # geom_abline(intercept=0, slope = ifelse(!anyNA(ci), ci[2], NA), linetype="dotted")+
+      geom_step(data = predictive_intervals, aes(x=time_dist, y=estimate), color="black")+
+      geom_step(data = predictive_intervals, aes(x=time_dist, y=low_ci), color="black", linetype="dotted")+
+      geom_step(data = predictive_intervals, aes(x=time_dist, y=high_ci), color="black", linetype="dotted")+
+      geom_hline(yintercept=mix_res$snp_threshold, linetype="dashed", alpha=0.75, color="black")+
+      geom_label(x=Inf, y=Inf, vjust=1, hjust=1,color= "black",
                  label = paste0(signif(lambda, digits = 3), " SNPs per year",
                                 (ifelse(anyNA(ci_data),"", paste0("\n95% CI: ", signif(ci[1], 3), ", ", signif(ci[2], 3)))),
                                 (ifelse(anyNA(p_value),"", paste0("\np-value=", format(round(p_value, 4)))))
@@ -119,7 +144,8 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
                  size=5)+
       labs(title=title,
            y="SNPs",
-           x="Time (Days)")+
+           x="Time (Days)",
+           legend="logLHR")+
       theme_minimal()
   }
     }

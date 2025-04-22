@@ -11,7 +11,7 @@ mixture_snp_cutoff_ci(
   trans_sites = NA,
   sample_size = length(trans_snp_dist),
   truncation_point = NA,
-  sample_n = 1000,
+  sample_n = 100,
   confidence_level = 0.95,
   start_params = NA,
   lambda_bounds = c(1e-10, 1),

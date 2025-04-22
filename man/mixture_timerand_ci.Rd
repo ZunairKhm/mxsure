@@ -11,7 +11,7 @@ mixture_timerand_ci(
   trans_sites = NA,
   truncation_point = NA,
   sample_size = length(trans_snp_dist),
-  sample_n = 500,
+  sample_n = 100,
   permutations = 3,
   quiet = FALSE,
   confidence_level = 0.95,
@@ -24,7 +24,8 @@ mixture_timerand_ci(
   ci_data = NA,
   title = NULL,
   lambda_bounds = c(1e-10, 1),
-  k_bounds = c(0, 1)
+  k_bounds = c(0, 1),
+  intercept_bounds = c(-Inf, Inf)
 )
 }
 \arguments{

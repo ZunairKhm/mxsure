@@ -15,7 +15,7 @@ snp_over_time(
   p_value = NA,
   ci_data = NA,
   time_limits = c(0, NA),
-  draw_predictive_intervals = TRUE
+  under_threshold = TRUE
 )
 }
 \arguments{

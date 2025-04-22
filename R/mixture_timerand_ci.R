@@ -31,7 +31,7 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
                                 start_params=NA, ci_data=NA, title=NULL, lambda_bounds = c(1e-10, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf)){
   #unadjusted result
   normal_data <- tibble(snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
-  normal_result <- mixture_snp_cutoff(normal_data$snp_dist,unrelated_snp_dist, normal_data$time_dist,normal_data$sites, truncation_point=truncation_point, lambda_bounds = lambda_bounds)
+  normal_result <- mixture_snp_cutoff(normal_data$snp_dist,unrelated_snp_dist, normal_data$time_dist,normal_data$sites, truncation_point=truncation_point, lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds)
 
   if(anyNA(ci_data)){
     normal_ci <- mixture_snp_cutoff_ci(normal_data$snp_dist,unrelated_snp_dist, normal_data$time_dist,normal_data$sites, truncation_point=truncation_point,
@@ -73,19 +73,28 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
       timerand_data <- tibble(snp_dist=trans_snp_dist, time_dist=sample(trans_time_dist, length(trans_time_dist)), sites=trans_sites)
     }
 
+    if(!anyNA(start_params)){
+      if (any(start_params=="Efficient")){
+        start_params_timerand <- NA
+    } else {
+      start_params_timerand <- start_params
+    }
+     } else {
+        start_params_timerand <- start_params
+      }
 
   timerand_result <- mixture_snp_cutoff(timerand_data$snp_dist,unrelated_snp_dist, timerand_data$time_dist, timerand_data$sites, truncation_point=truncation_point,
-                                        lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds)
+                                        lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, start_params = start_params_timerand)
 
   if(!anyNA(start_params)){
   if (any(start_params=="Efficient")){
-    start_params <-as.numeric(c(timerand_result[3], timerand_result[2], timerand_result[4]))
+    start_params_timerand <-as.numeric(c(timerand_result[3], timerand_result[2], timerand_result[4]))
   }}
 
   timerand_ci <- mixture_snp_cutoff_ci(timerand_data$snp_dist, unrelated_snp_dist, timerand_data$time_dist, timerand_data$sites,
                                        sample_size=sample_size, sample_n=sample_n, confidence_level=confidence_level, truncation_point=truncation_point,
                                        lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds
-                                       ,start_params = start_params
+                                       ,start_params = start_params_timerand
                                        )
   if(prop_type=="above_estimate"){
   p_value_n <- sum(timerand_ci$raw_results$lambda>=normal_result$lambda)

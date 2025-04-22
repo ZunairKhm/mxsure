@@ -9,7 +9,7 @@ threshold_comparison_plot(
   unrelated_snp_dist,
   snp_thresholds,
   method_names,
-  show_related = TRUE,
+  show_related = FALSE,
   identity = FALSE,
   percent_dist_mixed,
   percent_dist_distant,

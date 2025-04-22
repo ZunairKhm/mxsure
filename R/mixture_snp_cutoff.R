@@ -413,7 +413,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
       if(anyNA(start_params)){
         # Define parameter grid
-        start_vals <- expand.grid(k = c(0.5), lambda = c(1e-16, 1e-11, 0.0001, 0.001, 0.01), intercept=c(0))
+        start_vals <- expand.grid(k = c(0.99), lambda = 10^c((log10(lambda_bounds[1]):log10(lambda_bounds[2]))), intercept=c(1))
 
         # Run nlminb for each combination
         result_attempts <- pmap(list(start_vals$k, start_vals$lambda, start_vals$intercept),
@@ -437,7 +437,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
       }
       else{
-        start_params[2] <- log((start_params[2]*1e6)/(365.25))
+        start_params[2] <- log((as.numeric(start_params[2])*1e6)/(365.25))
         result <- nlminb(start=start_params, objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,# method="SANN",
                          lower = c(k_bounds[1], log(lambda_bounds[1]), intercept_bounds[1]),
                          upper = c(k_bounds[2], log(lambda_bounds[2]), intercept_bounds[2]),
