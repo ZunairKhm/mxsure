@@ -8,14 +8,13 @@ on:
       - main
       - master
   schedule:
-    - cron:  '1 1 1 * *'  # Runs on the 1st day of each month at 1:01 AM UTC
+    - cron: '1 1 1 * *'  # Runs on the 1st day of each month at 1:01 AM UTC
 
 name: R-CMD-check
 
 jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
-
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
 
     strategy:
@@ -68,11 +67,6 @@ jobs:
         run: |
           install.packages("stringi", type = "source")
         shell: Rscript {0}
-
-      - name: Install tidyverse (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get install -y r-cran-tidyverse
 
       - name: Install R dependencies
         run: |
