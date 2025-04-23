@@ -60,7 +60,28 @@ jobs:
 
       - name: Install system dependencies (Linux)
         if: runner.os == 'Linux'
-        run: |
+         run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libcurl4-openssl-dev \
+            libssl-dev \
+            libxml2-dev \
+            libgit2-dev \
+            libfontconfig1-dev \
+            libharfbuzz-dev \
+            libfribidi-dev \
+            libfreetype6-dev \
+            libpng-dev \
+            libtiff5-dev \
+            libjpeg-dev \
+            zlib1g-dev \
+            libglpk-dev \
+            libgmp3-dev \
+            libudunits2-dev \
+            libgdal-dev \
+            libgeos-dev \
+            libproj-dev
+      
           while read -r cmd
           do
             eval sudo $cmd
