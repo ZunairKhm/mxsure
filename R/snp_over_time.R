@@ -18,7 +18,7 @@ library(ggplot2)
 #' @return a plot of SNP distance over time using ggplot
 #'
 #' @export
-snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, trans_sites, truncation_point=2000, title="SNPs over Time", jitter=TRUE, p_value=NA, ci_data=NA, time_limits=c(0,NA), under_threshold=TRUE){
+snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, trans_sites, truncation_point=2000, max_time=NA, title="SNPs over Time", jitter=TRUE, p_value=NA, ci_data=NA, time_limits=c(0,NA), under_threshold=TRUE){
 
   unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
 
@@ -41,8 +41,8 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
     m^2/(v - m)
   }else{100}
 
-  nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size))
-  mix_res <- suppressWarnings(mixture_snp_cutoff(trans_snp_dist, unrelated_snp_dist, trans_time_dist, trans_sites))
+  nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist[unrelated_snp_dist<truncation_point], dist="truncnbinom", start=list(mu=m, size=size))
+  mix_res <- suppressWarnings(mixture_snp_cutoff(trans_snp_dist, unrelated_snp_dist, trans_time_dist, trans_sites, truncation_point = 2000, max_time = max_time))
 
   if(is.na(mean(trans_sites, na.rm=TRUE))){
     trans_sites <- 1
@@ -73,7 +73,7 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
   data$snp_dist <- abs(jitter(data$snp_dist))
   data$time_dist <- abs(jitter(data$time_dist))
   }
-    lambda <- mix_res$lambda*mean(trans_sites)
+    lambda <- mix_res$lambda*mean(trans_sites) #convert snp/year/site to snp/year/genome
     predictive_intervals <- tibble(time_dist=0:max(c(max(data$time_dist), time_limits[2]), na.rm=TRUE))
     predictive_intervals <- predictive_intervals|>
       mutate(estimate=qpois(0.5, (time_dist/365.25)*lambda))
@@ -107,12 +107,6 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
     geom_step(data = predictive_intervals, aes(x=time_dist, y=low_ci), color="black", linetype="dotted")+
     geom_step(data = predictive_intervals, aes(x=time_dist, y=high_ci), color="black", linetype="dotted")+
       geom_hline(yintercept=mix_res$snp_threshold, linetype="dashed", alpha=0.75, color="black")+
-    geom_label(x=Inf, y=Inf, vjust=1, hjust=1,color= "black",
-               label = paste0(signif(lambda, digits = 3), " SNPs per year",
-                              (ifelse(anyNA(ci_data),"", paste0("\n95% CI: ", signif(ci[1], 3), ", ", signif(ci[2], 3)))),
-                              (ifelse(anyNA(p_value),"", paste0("\np-value=", format(round(p_value, 4)))))
-                              ),
-               size=5)+
     labs(title=title,
          y="SNPs",
          x="Time (Days)",
@@ -124,7 +118,7 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
     theme_minimal()
   } else {
     ggplot(data, aes(x=time_dist, y=snp_dist, color=LHR))+
-      scale_y_continuous(limits = c(0, NA), expand = c(0.01,0.01), transform = "pseudo_log", breaks = c(signif(exp(seq(0, log(truncation_point), length.out=10)), 1)))+
+      scale_y_continuous(limits = c(0, NA), expand = c(0.01,0.01), transform = "pseudo_log", breaks = c(0, signif(exp(seq(0, log(truncation_point), length.out=10)), 1)))+
       scale_x_continuous(limits = c(0, NA), expand = c(0.01,0.01))+
       scale_color_gradientn(
         colors = viridis::viridis(256),
