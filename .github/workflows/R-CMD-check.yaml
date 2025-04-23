@@ -63,8 +63,13 @@ jobs:
         run: |
           sudo bash -c "$(wget -qO- https://eddelbuettel.github.io/r2u/script.r2u.sh)"
 
-          
-      - name: Install tidyverse
+      - name: Preinstall stringi from source (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          install.packages("stringi", type = "source")
+        shell: Rscript {0}
+
+      - name: Install tidyverse (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get install -y r-cran-tidyverse
