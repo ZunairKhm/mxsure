@@ -33,6 +33,25 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
   normal_data <- tibble(snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
   normal_result <- mixture_snp_cutoff(normal_data$snp_dist,unrelated_snp_dist, normal_data$time_dist,normal_data$sites, truncation_point=truncation_point, lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds)
 
+  if (sample_n==0){
+    return(list(
+      result=tibble(NA),
+      raw_results=tibble(NA),
+      outcome=tibble(
+        n_permutations=NA,
+        any_overlapping_est=NA,
+        n_overlapping_est=NA,
+        perc_overlapping_est=NA,
+        any_overlapping_lowci=NA,
+        n_overlapping_lowci=NA,
+        perc_overlapping_lowci=NA,
+        prop=NA
+      ),
+      plot=tibble(NA)
+    ))
+  }
+
+
   if(anyNA(ci_data)){
     normal_ci <- mixture_snp_cutoff_ci(normal_data$snp_dist,unrelated_snp_dist, normal_data$time_dist,normal_data$sites, truncation_point=truncation_point,
                                        sample_size=sample_size, sample_n=sample_n, confidence_level=confidence_level,

@@ -96,7 +96,7 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
       scale_color_gradientn(
         colors = viridis::cividis(256),
         limits=c(-2, 2),
-        values = scales::rescale(c(-2:2)),
+        values = scales::rescale(c(-2, 0 ,2)),
         oob=scales::squish
       ) +
     geom_point()+
@@ -116,16 +116,20 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
     labs(title=title,
          y="SNPs",
          x="Time (Days)",
-         legend="logLHR")+
+         color="logLHR",
+         subtitle=paste0(signif(lambda, digits = 3), " SNPs per year",
+                         (ifelse(anyNA(ci_data),"", paste0("; 95% CI: ", signif(ci[1], 3), ", ", signif(ci[2], 3)))),
+                         (ifelse(anyNA(p_value),"", paste0("; p-value=", format(round(p_value, 4)))))
+         ))+
     theme_minimal()
   } else {
     ggplot(data, aes(x=time_dist, y=snp_dist, color=LHR))+
-      scale_y_continuous(limits = c(0, NA), expand = c(0.01,0.01), transform = "pseudo_log")+
+      scale_y_continuous(limits = c(0, NA), expand = c(0.01,0.01), transform = "pseudo_log", breaks = c(signif(exp(seq(0, log(truncation_point), length.out=10)), 1)))+
       scale_x_continuous(limits = c(0, NA), expand = c(0.01,0.01))+
       scale_color_gradientn(
-        colors = viridis::cividis(256),
+        colors = viridis::viridis(256),
         limits=c(-2, 2),
-        values = scales::rescale(c(-2:2)),
+        values = scales::rescale(c(-2, 0, 2)),
         oob=scales::squish
       ) +
       geom_point()+
@@ -136,16 +140,14 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
       geom_step(data = predictive_intervals, aes(x=time_dist, y=low_ci), color="black", linetype="dotted")+
       geom_step(data = predictive_intervals, aes(x=time_dist, y=high_ci), color="black", linetype="dotted")+
       geom_hline(yintercept=mix_res$snp_threshold, linetype="dashed", alpha=0.75, color="black")+
-      geom_label(x=Inf, y=Inf, vjust=1, hjust=1,color= "black",
-                 label = paste0(signif(lambda, digits = 3), " SNPs per year",
-                                (ifelse(anyNA(ci_data),"", paste0("\n95% CI: ", signif(ci[1], 3), ", ", signif(ci[2], 3)))),
-                                (ifelse(anyNA(p_value),"", paste0("\np-value=", format(round(p_value, 4)))))
-                 ),
-                 size=5)+
       labs(title=title,
            y="SNPs",
            x="Time (Days)",
-           legend="logLHR")+
+           color="logLHR",
+           subtitle=paste0(signif(lambda, digits = 3), " SNPs per year",
+                           (ifelse(anyNA(ci_data),"", paste0("; 95% CI: ", signif(ci[1], 3), ", ", signif(ci[2], 3)))),
+                           (ifelse(anyNA(p_value),"", paste0("; p-value=", format(round(p_value, 4)))))
+           ))+
       theme_minimal()
   }
     }

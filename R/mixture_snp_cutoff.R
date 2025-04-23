@@ -220,17 +220,21 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       )
     } else {
       warning("Insufficient data points to fit distributions!")
-      results <- tibble(
-        snp_threshold=NA,
-        lambda=NA,
-        k=NA,
-        intercept=NA,
-        estimated_fp=NA,
-        estimated_fn=NA,
-        lambda_units=NA,
-        parameter_comb=NA
+      results <-
+        tibble(
+          snp_threshold=NA,
+          lambda=NA,
+          k=NA,
+          intercept=NA,
+          estimated_fp=NA,
+          lambda_units=NA,
+          convergence=NA,
+          message=NA,
+          iterations=NA,
+          nb_size=NA,
+          nb_mu=NA
 
-      )
+        )
     }
 
     if(youden==TRUE){
@@ -351,7 +355,12 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
           k=NA,
           intercept=NA,
           estimated_fp=NA,
-          lambda_units=NA
+          lambda_units=NA,
+          convergence=NA,
+          message=NA,
+          iterations=NA,
+          nb_size=NA,
+          nb_mu=NA
 
         )
     }
@@ -473,7 +482,9 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         lambda_units="SNPs per year per site",
         convergence=result$convergence,
         message=result$message,
-        iterations=result$iterations
+        iterations=result$iterations,
+        nb_size=nb_fit$estimate["size"],
+        nb_mu=nb_fit$estimate["mu"]
       )
     } else {
       warning("Insufficient data points to fit distributions!")
@@ -484,7 +495,12 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
           k=NA,
           intercept=NA,
           estimated_fp=NA,
-          lambda_units=NA
+          lambda_units=NA,
+          convergence=NA,
+          message=NA,
+          iterations=NA,
+          nb_size=NA,
+          nb_mu=NA
 
         )
       threshold_range_df <- NA
