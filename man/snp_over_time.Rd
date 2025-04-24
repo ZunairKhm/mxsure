@@ -10,6 +10,7 @@ snp_over_time(
   trans_time_dist,
   trans_sites,
   truncation_point = 2000,
+  max_time = NA,
   title = "SNPs over Time",
   jitter = TRUE,
   p_value = NA,
