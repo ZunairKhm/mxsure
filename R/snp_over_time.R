@@ -108,7 +108,7 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
     geom_step(data = predictive_intervals, aes(x=time_dist, y=high_ci), color="black", linetype="dotted")+
       geom_hline(yintercept=mix_res$snp_threshold, linetype="dashed", alpha=0.75, color="black")+
     labs(title=title,
-         y="SNPs",
+         y="SNP Distance",
          x="Time (Days)",
          color="logLHR",
          subtitle=paste0(signif(lambda, digits = 3), " SNPs per year",
@@ -135,7 +135,7 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
       geom_step(data = predictive_intervals, aes(x=time_dist, y=high_ci), color="black", linetype="dotted")+
       geom_hline(yintercept=mix_res$snp_threshold, linetype="dashed", alpha=0.75, color="black")+
       labs(title=title,
-           y="SNPs",
+           y="SNP Distance",
            x="Time (Days)",
            color="logLHR",
            subtitle=paste0(signif(lambda, digits = 3), " SNPs per year",
