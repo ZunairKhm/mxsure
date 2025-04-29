@@ -162,11 +162,11 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
       ggbeeswarm::geom_quasirandom(data=rawtimerand,aes(x=method, y=lambda),color="grey50",size=1.1, alpha=0.4, stroke = 0)+
       geom_errorbar(aes(ymin = `5%`, ymax = `95%`), width = 0.3) +
       geom_point(size = 2, color = "red3") +  # Point estimate
-      scale_y_continuous(transform = "log10", n.breaks = 5)+
-      annotate("label", label=paste0("prop.=",format(round(outcome$prop, 4), nsmall = 4)), x=Inf, y=Inf, vjust=1, hjust=1)+
+      scale_y_continuous(transform = scales::pseudo_log_trans(sigma=1e-10,base=10), breaks=c(0, 10^(-10:-1)))+
       labs(title=title,
            x = NULL,
-           y = paste0("Rate (",normal_result$lambda_units, ")" )) +
+           y = paste0("Rate (",normal_result$lambda_units, ")" ),
+           subtitle = paste0("prop.=",format(round(outcome$prop, 4)))) +
       theme_bw()+
       theme(legend.position="none")
 
