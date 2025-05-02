@@ -8,7 +8,7 @@ snp_over_time(
   trans_snp_dist,
   unrelated_snp_dist,
   trans_time_dist,
-  trans_sites,
+  trans_sites = NA,
   truncation_point = 2000,
   max_time = NA,
   title = "SNPs over Time",
@@ -16,7 +16,7 @@ snp_over_time(
   p_value = NA,
   ci_data = NA,
   time_limits = c(0, NA),
-  under_threshold = TRUE
+  under_threshold = FALSE
 )
 }
 \arguments{
