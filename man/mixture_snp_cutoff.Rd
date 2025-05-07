@@ -15,7 +15,7 @@ mixture_snp_cutoff(
   max_time = NA,
   prior_lambda = NA,
   prior_k = NA,
-  lambda_bounds = c(1e-10, 1),
+  lambda_bounds = c(0, 1),
   k_bounds = c(0, 1),
   intercept_bounds = c(-Inf, Inf),
   upper.tail = 0.95,

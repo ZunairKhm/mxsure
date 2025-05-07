@@ -14,7 +14,7 @@ mixture_snp_cutoff_ci(
   sample_n = 100,
   confidence_level = 0.95,
   start_params = NA,
-  lambda_bounds = c(1e-10, 1),
+  lambda_bounds = c(0, 1),
   k_bounds = c(0, 1),
   intercept_bounds = c(-Inf, Inf)
 )

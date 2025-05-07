@@ -30,7 +30,7 @@ library(tidyverse)
 mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
                                   truncation_point=2000,
                                youden=FALSE,threshold_range=FALSE, max_time= NA,
-                               prior_lambda=NA, prior_k=NA, lambda_bounds=c(1e-10, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf),
+                               prior_lambda=NA, prior_k=NA, lambda_bounds=c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf),
                                upper.tail=0.95, max_false_positive=0.05, trace=FALSE, start_params= NA){
 
   #correction to convert to snp/day(/site)
@@ -175,7 +175,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                                     objective = llk,
                                     x = trans_snp_dist,
                                     lower = c(k_bounds[1], lambda_bounds[1], 0),
-                                    upper = c(k_bounds[2], lambda_bounds[2], 0),
+                                    upper = c(k_bounds[2], lambda_bounds[2], 1e-10),
                                     control = list(trace = trace)
                                   )})
 
@@ -189,7 +189,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       else{
         result <- nlminb(start=start_params, objective=llk, x = trans_snp_dist,,
                          lower = c(k_bounds[1], lambda_bounds[1], 0),
-                         upper = c(k_bounds[2], lambda_bounds[2], 0),
+                         upper = c(k_bounds[2], lambda_bounds[2], 1e-10),
                          control = list(trace = trace))
         best_result_name <- "input param nlminb"
       }
