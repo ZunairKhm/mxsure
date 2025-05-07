@@ -20,7 +20,7 @@
 #' @param clustered permute between different time distances
 #' @param prop_type proportion of bootstraps either "above_estimate", "above_low_ci", or "within_ci"
 #'
-#' @return ggplot comparing point estimates and confidence levels between normal data and time randomised data
+#' @return ggplot comparing point estimates and confidence levels between original data and time randomised data
 #' @export
 #'
 #' @examples
@@ -28,10 +28,10 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
                                   sample_size=length(trans_snp_dist), sample_n=100, permutations=3, quiet=FALSE, confidence_level=0.95,
                                   within_individual=FALSE, subjectA_id, subjectB_id,
                                   clustered=FALSE, prop_type="above_estimate",
-                                start_params=NA, ci_data=NA, title=NULL, lambda_bounds = c(1e-10, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf)){
+                                start_params=NA, ci_data=NA, title=NULL, lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf)){
   #unadjusted result
-  normal_data <- tibble(snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
-  normal_result <- mixture_snp_cutoff(normal_data$snp_dist,unrelated_snp_dist, normal_data$time_dist,normal_data$sites, truncation_point=truncation_point, lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds)
+  original_data <- tibble(snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
+  original_result <- mixture_snp_cutoff(original_data$snp_dist,unrelated_snp_dist, original_data$time_dist,original_data$sites, truncation_point=truncation_point, lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds)
 
   if (sample_n==0){
     return(list(
@@ -53,25 +53,25 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
 
 
   if(anyNA(ci_data)){
-    normal_ci <- mixture_snp_cutoff_ci(normal_data$snp_dist,unrelated_snp_dist, normal_data$time_dist,normal_data$sites, truncation_point=truncation_point,
+    original_ci <- mixture_snp_cutoff_ci(original_data$snp_dist,unrelated_snp_dist, original_data$time_dist,original_data$sites, truncation_point=truncation_point,
                                        sample_size=sample_size, sample_n=sample_n, confidence_level=confidence_level,
-                                       start_params = c(normal_result[3], normal_result[2], normal_result[4]), lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds)
+                                       start_params = c(original_result[3], original_result[2], original_result[4]), lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds)
   } else{
-    normal_ci <- ci_data
+    original_ci <- ci_data
   }
 
   result <- tibble(
-    "method"="Normal",
-    "5%"=normal_ci$confidence_intervals$lambda[1],
-    "point_est"=normal_result$lambda,
-    "95%"=normal_ci$confidence_intervals$lambda[2],
+    "method"="Original",
+    "5%"=original_ci$confidence_intervals$lambda[1],
+    "point_est"=original_result$lambda,
+    "95%"=original_ci$confidence_intervals$lambda[2],
     overlapping_est=FALSE,
     overlapping_low_ci=FALSE
   )
 
   # time rand loop
-  rawtimerand <- normal_ci$raw_results |>
-    mutate(method = "Normal")
+  rawtimerand <- original_ci$raw_results |>
+    mutate(method = "Original")
 
   for(i in 1:permutations){
     if(!quiet){print(paste0("Processing Permutation: ", i))}
@@ -116,11 +116,11 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
                                        ,start_params = start_params_timerand
                                        )
   if(prop_type=="above_estimate"){
-  p_value_n <- sum(timerand_ci$raw_results$lambda>=normal_result$lambda)
+  p_value_n <- sum(timerand_ci$raw_results$lambda>=original_result$lambda)
   }else if(prop_type=="within_ci"){
-    p_value_n <- sum(timerand_ci$raw_results$lambda <= result$`95%`[result$method=="Normal"] & timerand_ci$raw_results$lambda >= result$`5%`[result$method=="Normal"])
+    p_value_n <- sum(timerand_ci$raw_results$lambda <= result$`95%`[result$method=="Original"] & timerand_ci$raw_results$lambda >= result$`5%`[result$method=="Original"])
   }else if (prop_type=="above_low_ci"){
-    p_value_n <- sum(timerand_ci$raw_results$lambda >= result$`5%`[result$method=="Normal"])
+    p_value_n <- sum(timerand_ci$raw_results$lambda >= result$`5%`[result$method=="Original"])
   }
     p_value_t <- length(timerand_ci$raw_results$lambda)
 
@@ -132,8 +132,8 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
     `95%` = timerand_ci$confidence_intervals$lambda[2],
     p_value_n= p_value_n,
     p_value_t=p_value_t,
-    overlapping_est=timerand_ci$confidence_intervals$lambda[2]>normal_result$lambda,
-    overlapping_low_ci=timerand_ci$confidence_intervals$lambda[2]>normal_ci$confidence_intervals$lambda[1]
+    overlapping_est=timerand_ci$confidence_intervals$lambda[2]>original_result$lambda,
+    overlapping_low_ci=timerand_ci$confidence_intervals$lambda[2]>original_ci$confidence_intervals$lambda[1]
   ))
 
   # Append raw results with a method column
@@ -147,12 +147,12 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
 
   outcome <- tibble(
     n_permutations=permutations,
-    any_overlapping_est=sum(result$`95%`[result$method!="Normal"]>=result$point_est[1])>0,
-    n_overlapping_est=sum(result$`95%`[result$method!="Normal"]>=result$point_est[1]),
-    perc_overlapping_est=sum(result$`95%`[result$method!="Normal"]>=result$point_est[1])/length(result$`95%`[result$method!="Normal"]),
-    any_overlapping_lowci=sum(result$`95%`[result$method!="Normal"]>=result$`5%`[1])>0,
-    n_overlapping_lowci=sum(result$`95%`[result$method!="Normal"]>=result$`5%`[1]),
-    perc_overlapping_lowci=sum(result$`95%`[result$method!="Normal"]>=result$`5%`[1])/length(result$`95%`[result$method!="Normal"]),
+    any_overlapping_est=sum(result$`95%`[result$method!="Original"]>=result$point_est[1])>0,
+    n_overlapping_est=sum(result$`95%`[result$method!="Original"]>=result$point_est[1]),
+    perc_overlapping_est=sum(result$`95%`[result$method!="Original"]>=result$point_est[1])/length(result$`95%`[result$method!="Original"]),
+    any_overlapping_lowci=sum(result$`95%`[result$method!="Original"]>=result$`5%`[1])>0,
+    n_overlapping_lowci=sum(result$`95%`[result$method!="Original"]>=result$`5%`[1]),
+    perc_overlapping_lowci=sum(result$`95%`[result$method!="Original"]>=result$`5%`[1])/length(result$`95%`[result$method!="Original"]),
     prop=(sum(result$p_value_n, na.rm=TRUE)+1)/(sum(result$p_value_t, na.rm=TRUE)+1)
   )
 
@@ -162,10 +162,10 @@ mixture_timerand_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_d
       ggbeeswarm::geom_quasirandom(data=rawtimerand,aes(x=method, y=lambda),color="grey50",size=1.1, alpha=0.4, stroke = 0)+
       geom_errorbar(aes(ymin = `5%`, ymax = `95%`), width = 0.3) +
       geom_point(size = 2, color = "red3") +  # Point estimate
-      scale_y_continuous(transform = scales::pseudo_log_trans(sigma=1e-10,base=10), breaks=c(0, 10^(-10:-1)))+
+      scale_y_continuous(expand = c(0,0), transform = scales::pseudo_log_trans(sigma=1e-10,base=10), breaks=c(0, 10^(-10:-1)))+
       labs(title=title,
            x = NULL,
-           y = paste0("Rate (",normal_result$lambda_units, ")" ),
+           y = paste0("Rate (",original_result$lambda_units, ")" ),
            subtitle = paste0("prop.=",format(round(outcome$prop, 4)))) +
       theme_bw()+
       theme(legend.position="none")

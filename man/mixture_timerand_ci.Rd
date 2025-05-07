@@ -23,7 +23,7 @@ mixture_timerand_ci(
   start_params = NA,
   ci_data = NA,
   title = NULL,
-  lambda_bounds = c(1e-10, 1),
+  lambda_bounds = c(0, 1),
   k_bounds = c(0, 1),
   intercept_bounds = c(-Inf, Inf)
 )
@@ -66,7 +66,7 @@ mixture_timerand_ci(
 \item{title}{title for ggplot}
 }
 \value{
-ggplot comparing point estimates and confidence levels between normal data and time randomised data
+ggplot comparing point estimates and confidence levels between original data and time randomised data
 }
 \description{
 Time Randomisation Test for mixture distribution mutation rate estimation
