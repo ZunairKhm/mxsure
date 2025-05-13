@@ -33,9 +33,9 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                                prior_lambda=NA, prior_k=NA, lambda_bounds=c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf),
                                upper.tail=0.95, max_false_positive=0.05, trace=FALSE, start_params= NA){
 
-  #correction to convert to snp/day(/site)
-  if(anyNA(trans_time_dist)){
-    lambda_bounds <- lambda_bounds*1000000/365.25
+  #correction to convert to snp/day(/MBp)
+  if(!anyNA(trans_time_dist)){
+    lambda_bounds <- (lambda_bounds*1000000)/365.25
   }
 
   #### Log Sum Exp ####
@@ -52,17 +52,6 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
     }
     # Return the sum in log space
     return(log_a + log(1 + exp(log_b - log_a)))
-  }
-
-  #defining distribution functions for the truncated negative binomial distr, needs to be specific to the truncation point and in the global environment for fitdistplus
-  dtruncnbinom <<- function(x, mu, size){
-    dnbinom(x = x, size = size, mu = mu) / pnbinom(truncation_point, size = size, mu = mu)
-  }
-  ptruncnbinom <<- function(q, mu, size){
-    pnbinom(q = q, size = size, mu = mu) / pnbinom(truncation_point, size = size, mu = mu)
-  }
-  qtruncnbinom <<- function(p, mu, size){
-    qnbinom(p = p*(pnbinom(truncation_point, size=size, mu=mu)), size = size, mu = mu)
   }
 
 
@@ -137,7 +126,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         m^2/(v - m)
       }else{100}
 
-      nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size))
+      nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size), fix.arg = list(truncation_point=truncation_point), discrete = TRUE)
 
       #mixed data fitting
       llk <- function(params, x){
@@ -256,7 +245,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         m^2/(v - m)
       }else{100}
 
-      nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size), discrete = TRUE)
+      nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size), fix.arg = list(truncation_point=truncation_point), discrete = TRUE)
 
       #mixed data fitting
       llk <- function(params, x, t){
@@ -391,7 +380,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         m^2/(v - m)
       }else{100}
 
-      nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size))
+      nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size), fix.arg = list(truncation_point=truncation_point), discrete = TRUE)
 
       #mixed dataset fitting
       llk <- function(params, x, t, s){
@@ -400,7 +389,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         intercept <- params[[3]]
 
         log(-sum(pmap_dbl(list(x, t, s), ~ {suppressWarnings(log_sum_exp(log(k) + dpois(x = ..1,
-                                                                  lambda =  lambda*(..2)*(..3/1e6) + intercept, #gives rate esimate per day per bp
+                                                                  lambda =  lambda*(..2)*(..3/1e6) + intercept, #gives rate estimate per day per bp
                                                                   log = TRUE)
                                                      # -ppois(truncation_point,
                                                      #       lambda =  lambda*..2*(..3) + intercept,
@@ -520,9 +509,5 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       return(results)
     }
   }
-
-  rm(ptruncnbinom, envir = .GlobalEnv)
-  rm(dtruncnbinom, envir = .GlobalEnv)
-  rm(qtruncnbinom, envir = .GlobalEnv)
 
 }

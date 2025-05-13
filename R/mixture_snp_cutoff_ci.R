@@ -39,11 +39,11 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
   if (anyNA(start_params)){
     start_params <- NA
     } else if(all(start_params=="Efficient")){
-  test_result <- #suppressWarnings(
+  test_result <- suppressWarnings(
       mixture_snp_cutoff(
         mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites, truncation_point=truncation_point, start_params = NA,
         lambda_bounds = lambda_bounds, k_bounds=k_bounds,  intercept_bounds=intercept_bounds)
-  #, classes = "warning")
+  , classes = "warning")
   start_params <- as.numeric(c(test_result[3], test_result[2], test_result[4]))
   }
 

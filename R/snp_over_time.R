@@ -18,30 +18,8 @@ library(ggplot2)
 #' @return a plot of SNP distance over time using ggplot
 #'
 #' @export
-snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, trans_sites=NA, truncation_point=2000, max_time=NA, title="SNPs over Time", jitter=TRUE, p_value=NA, ci_data=NA, time_limits=c(0,NA), under_threshold=FALSE){
+snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, trans_sites=NA, truncation_point=2000, max_time=NA, title="SNP Distance Over Time", jitter=TRUE, p_value=NA, ci_data=NA, time_limits=c(0,NA), under_threshold=FALSE){
 
-  unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
-
-  #defining distribution functions for the truncated negative binomial distr, needs to be specific to the truncation point and in the global environment for fitdistplus
-  dtruncnbinom <<- function(x, mu, size){
-    dnbinom(x = x, size = size, mu = mu) / pnbinom(truncation_point, size = size, mu = mu)
-  }
-  ptruncnbinom <<- function(q, mu, size){
-    pnbinom(q = q, size = size, mu = mu) / pnbinom(truncation_point, size = size, mu = mu)
-  }
-  qtruncnbinom <<- function(p, mu, size){
-    qnbinom(p = p*(pnbinom(truncation_point, size=size, mu=mu)), size = size, mu = mu)
-  }
-
-
-  # distant dataset fitting
-  m <- mean(unrelated_snp_dist)
-  v <- var(unrelated_snp_dist)
-  size <- if (v > m) {
-    m^2/(v - m)
-  }else{100}
-
-  nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist[unrelated_snp_dist<truncation_point], dist="truncnbinom", start=list(mu=m, size=size))
   mix_res <- suppressWarnings(mixture_snp_cutoff(trans_snp_dist, unrelated_snp_dist, trans_time_dist, trans_sites, truncation_point = 2000, max_time = max_time))
 
   if(is.na(mean(trans_sites, na.rm=TRUE))){
@@ -52,14 +30,8 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
   LH <- LH |>
     mutate(rel_lh = (dpois(snp_dist, (mix_res$lambda*(time_dist/365.25)*mean(trans_sites)+mix_res$intercept), log=TRUE) #/ ppois(truncation_point, (mix_res$lambda*(time_dist/365.25)*mean(trans_sites)+mix_res$intercept))
                      ),
-           unrel_lh = (dnbinom(snp_dist, mu = nb_fit$estimate['mu'], size = nb_fit$estimate['size'], log = TRUE) - pnbinom(truncation_point, mu = nb_fit$estimate['mu'], size = nb_fit$estimate['size'], log=TRUE)))|>
+           unrel_lh = (dnbinom(snp_dist, mu = mix_res$nb_mu, size = mix_res$nb_size, log = TRUE) - pnbinom(truncation_point, mu = mix_res$nb_mu, size = mix_res$nb_size, log=TRUE)))|>
     mutate(LHR = (rel_lh-unrel_lh))
-  #return(LH)
-
-  rm(ptruncnbinom, envir = .GlobalEnv)
-  rm(dtruncnbinom, envir = .GlobalEnv)
-  rm(qtruncnbinom, envir = .GlobalEnv)
-
 
   data <- data.frame(snp_dist=trans_snp_dist, time_dist=trans_time_dist)
   if(under_threshold){
@@ -68,17 +40,19 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
     data <- filter(data, trans_snp_dist<truncation_point)
   }
   data$LHR <- LH$LHR[match(paste(data$snp_dist, data$time_dist), paste(LH$snp_dist, LH$time_dist))]
-  data <- data |>
-    mutate(LHR_bin = cut(LHR,
-                         breaks = c(-Inf, -2, -1, 0, 1, 2, Inf),
-                         labels = c("LHR < 0.01",
-                           "0.01 ≤ LHR < 0.1",
-                           "0.1 ≤ LHR < 1",
-                           "1 ≤ LHR < 10",
-                           "10 ≤ LHR < 100",
-                           "LHR ≥ 100"
-                         ),
-                         right = FALSE))
+  lhr_levels <- c("LHR < 0.01",
+                "0.01 ≤ LHR < 0.1",
+                "0.1 ≤ LHR < 1",
+                "1 ≤ LHR < 10",
+                "10 ≤ LHR < 100",
+                "LHR ≥ 100")
+
+data <- data |>
+  mutate(LHR_bin = cut(LHR,
+                       breaks = c(-Inf, -2, -1, 0, 1, 2, Inf),
+                       labels = lhr_levels,
+                       right = FALSE)) |>
+  mutate(LHR_bin = factor(LHR_bin, levels = lhr_levels))
 
 
   if(jitter==TRUE){
@@ -106,7 +80,7 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
     scale_y_continuous(limits = c(0, mix_res$snp_threshold+1), expand = c(0.01,0.01))+
     scale_x_continuous(limits = c(0, NA), expand = c(0.01,0.01))+
       scale_color_manual(
-        values = viridis::viridis(7, option = "C", direction = 1)[1:6],
+        values = setNames(viridis::viridis(7, option = "C", direction = 1)[1:6], lhr_levels),
         drop = FALSE
       ) +
     geom_point()+
@@ -131,7 +105,7 @@ snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, t
       scale_y_continuous(limits = c(0, NA), expand = c(0.01,0.01), transform = "pseudo_log", breaks = c(0, signif(exp(seq(0, log(truncation_point), length.out=10)), 1)))+
       scale_x_continuous(limits = c(0, NA), expand = c(0.01,0.01))+
       scale_color_manual(
-        values = viridis::viridis(7, option = "C", direction = 1)[1:6],
+        values = setNames(viridis::viridis(7, option = "C", direction = 1)[1:6], lhr_levels),
         drop = FALSE
       ) +
       geom_point()+
