@@ -11,7 +11,7 @@ snp_over_time(
   trans_sites = NA,
   truncation_point = 2000,
   max_time = NA,
-  title = "SNPs over Time",
+  title = "SNP Distance Over Time",
   jitter = TRUE,
   p_value = NA,
   ci_data = NA,

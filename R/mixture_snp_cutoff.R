@@ -205,7 +205,8 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         intercept=result$par[[3]],
         estimated_fp=estimated_fp,
         lambda_units="SNPs per average sampling time per genome",
-        parameter_comb=best_result_name
+        nb_size=nb_fit$estimate["size"],
+        nb_mu=nb_fit$estimate["mu"]
       )
     } else {
       warning("Insufficient data points to fit distributions!")
@@ -331,7 +332,9 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         k=result$par[[1]],
         intercept=result$par[[3]],
         estimated_fp=sum(unrelated_snp_dist<=snp_threshold)/length(unrelated_snp_dist),
-        lambda_units="SNPs per year per genome"
+        lambda_units="SNPs per year per genome",
+        nb_size=nb_fit$estimate["size"],
+        nb_mu=nb_fit$estimate["mu"]
 
       )
 

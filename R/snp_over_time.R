@@ -20,7 +20,9 @@ library(ggplot2)
 #' @export
 snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, trans_sites=NA, truncation_point=2000, max_time=NA, title="SNP Distance Over Time", jitter=TRUE, p_value=NA, ci_data=NA, time_limits=c(0,NA), under_threshold=FALSE){
 
-  mix_res <- suppressWarnings(mixture_snp_cutoff(trans_snp_dist, unrelated_snp_dist, trans_time_dist, trans_sites, truncation_point = 2000, max_time = max_time))
+  mix_res <- suppressWarnings(
+    mixture_snp_cutoff(trans_snp_dist, unrelated_snp_dist, trans_time_dist, trans_sites, truncation_point = truncation_point, max_time = max_time)
+    )
 
   if(is.na(mean(trans_sites, na.rm=TRUE))){
     trans_sites <- 1
@@ -83,7 +85,7 @@ data <- data |>
         values = setNames(viridis::viridis(7, option = "C", direction = 1)[1:6], lhr_levels),
         drop = FALSE
       ) +
-    geom_point()+
+    geom_point(show.legend = TRUE)+
     # geom_abline(intercept=0, slope = lambda)
     # geom_abline(intercept=0, slope = ifelse(!anyNA(ci), ci[1], NA), linetype="dotted")+
     # geom_abline(intercept=0, slope = ifelse(!anyNA(ci), ci[2], NA), linetype="dotted")+
@@ -108,7 +110,7 @@ data <- data |>
         values = setNames(viridis::viridis(7, option = "C", direction = 1)[1:6], lhr_levels),
         drop = FALSE
       ) +
-      geom_point()+
+      geom_point(show.legend = TRUE)+
       # geom_abline(intercept=0, slope = lambda)
       # geom_abline(intercept=0, slope = ifelse(!anyNA(ci), ci[1], NA), linetype="dotted")+
       # geom_abline(intercept=0, slope = ifelse(!anyNA(ci), ci[2], NA), linetype="dotted")+
