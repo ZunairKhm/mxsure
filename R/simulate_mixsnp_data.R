@@ -1,20 +1,25 @@
-#' Simulate Mixed related SNP distance dataset
+#' Simulate mixed related SNP distance dataset
 #'
 #' @param lambda mutation rate input (SNPs per year)
 #' @param k proportion of mixed dataset that is linked, set to 0 to produce a distant dataset
-#' @param error_param chance that each SNP is missed
+#' @param error_param chance that each SNP is missed. For simulating systematic error.
 #' @param n size of dataset to simulate
-#' @param unrel_rate rate of gamma distribution for time of evolution unrelated pairs in years
-#' @param unrel_shape shape of gamma distribution for time of evolution for unrelated pairs in years
-#' @param rel_timelimit maximum time allowed between samples in years (calculates time difference from uniform dist.)
+#' @param rel_timemax maximum time allowed between samples in years (calculates time difference from uniform dist.)
 #' @param rel_timemin minimum time allowed between samples in years
 #' @param truncation_point maximum allowed SNP distances, if set too low can cause all SNP distances to be 0
+#' @param unrel_mean mean of gamma distribution for which the evolutionary time for the unrelated datapoints are chosen
+#' @param unrel_sd sd of gamma distribution for which the evolutionary time for the unrelated datapoints are chosen
+#'
+#' @importFrom purrr map_dfr
+#' @importFrom stats na.omit
 #'
 #' @return SNP distance dataset with a mixture of related and unrelated pairs with time differences
 #' @export
 #'
 #' @examples
-simulate_mixsnp_data <- function(lambda, k, unrel_mean=25, unrel_sd=50, error_param=NA, n=100, rel_timelimit=1, rel_timemin=0, truncation_point=NA){
+#' simulate_mixsnp_data(1, 0.8)
+#'
+simulate_mixsnp_data <- function(lambda, k, unrel_mean=25, unrel_sd=12.5, error_param=NA, n=100, rel_timemax=1, rel_timemin=0, truncation_point=NA){
 
   # n <- n/dpois(truncation_point, lambda*(unrel_shape/unrel_rate))
   unrel_shape <- (unrel_mean/unrel_sd)^2
@@ -25,7 +30,7 @@ simulate_mixsnp_data <- function(lambda, k, unrel_mean=25, unrel_sd=50, error_pa
     if(is.na(truncation_point)){
       truncation_point <- Inf
     }
-    tt <- runif(1, rel_timemin*365.25, rel_timelimit*365.25)
+    tt <- runif(1, rel_timemin*365.25, rel_timemax*365.25)
     td <- rgamma(1, unrel_shape,rate= unrel_rate)*365.25
     if (runif(1) <k) {
       truncation_correction <- ifelse(ppois(truncation_point, tt*lambda/365.25)>(1/n), ppois(truncation_point, tt*lambda/365.25), NA)

@@ -1,6 +1,6 @@
 #' Threshold Comparison Plot
 #'
-#' @param trans_snp_dist list of SNP distances from a mixed transmission data set
+#' @param mixed_snp_dist list of SNP distances from a mixed transmission data set
 #' @param unrelated_snp_dist list of SNP distances from an unrelated data set
 #' @param snp_thresholds list of SNP thresholds to consider
 #' @param method_names list of names associated with each SNP threshold
@@ -12,20 +12,23 @@
 #' @param title title of plot
 #' @param labels whether to include labels on the plot
 #' @param dataset_names names of the mixed/distant datasets
+#' @param show_related whether to show related dataset comparisons
+#'
+#' @importFrom ggplot2 ggplot aes geom_bar scale_fill_manual scale_x_continuous geom_vline geom_text position_dodge labs theme_bw theme
+#' @importFrom purrr map2_dbl
 #'
 #' @return plot comparing proportion of data under each threshold
 #' @export
 #'
-#' @examples
-threshold_comparison_plot <- function(trans_snp_dist, unrelated_snp_dist, snp_thresholds, method_names, show_related=FALSE,
+threshold_comparison_plot <- function(mixed_snp_dist, unrelated_snp_dist, snp_thresholds, method_names, show_related=FALSE,
                                  identity=FALSE, percent_dist_mixed, percent_dist_distant, identity_thresh=99.99,
                                  k_est=NULL, title=NULL,labels=TRUE, dataset_names=c("Mixed", "Distant")) {
   data <- tibble(method = method_names, snp_threshold = snp_thresholds)
 
   data <- data |>
     mutate(
-      n_mixed=map2_dbl(snp_threshold, method, ~sum(trans_snp_dist <= .x)),
-      tot_mixed=length(trans_snp_dist),
+      n_mixed=map2_dbl(snp_threshold, method, ~sum(mixed_snp_dist <= .x)),
+      tot_mixed=length(mixed_snp_dist),
       n_distant=map2_dbl(snp_threshold, method, ~sum(unrelated_snp_dist <= .x)),
       tot_distant = length(unrelated_snp_dist)
     )|>

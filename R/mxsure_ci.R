@@ -1,24 +1,30 @@
 #' Bootstrapped confidence intervals for mixture SNP cutoffs
 #'
-#' Creates confidence intervals for outputs from mixture_snp_cutoff using bootstrapping. Utilises the furrr package to allow for parallel computation, to enable use the plan() function from the future package.
+#' Creates confidence intervals for outputs from mxsure_estimate using bootstrapping. Utilises the furrr package to allow for parallel computation, to enable use the plan() function from the future package.
 #'
-#' @param trans_snp_dist list of SNP distances from a mixed transmission data set
+#' @param mixed_snp_dist list of SNP distances from a mixed transmission data set
 #' @param unrelated_snp_dist list of SNP distances from an unrelated data set
-#' @param trans_time_dist list of time differences between samples from each SNP distance in the mixed data set (in days)
-#' @param trans_sites list of sites considered for each SNP distance in mixed data set
+#' @param mixed_time_dist list of time differences between samples from each SNP distance in the mixed data set (in days)
+#' @param mixed_sites list of sites considered for each SNP distance in mixed data set
 #' @param sample_size size of each bootstrap sample
 #' @param sample_n number of bootstrap sampling to conduct
 #' @param start_params initial parametrs for optim, if NA (as default) will try 3 different start parameters and produce the highest likelyhood result. Specifying the start parameters minimises computing time.
 #' @param truncation_point a SNP distance limit for the data, if set to NA will estimate as if there is no limit
 #' @param confidence_level confidence level to produce confidence intervals
+#' @param lambda_bounds bounds of rate estimation in SNPs/year/site if given time and site data
+#' @param k_bounds bounds of related proportion estimation
+#' @param intercept_bounds bounds of intercept estimation
 #'
 #' @importFrom furrr future_map_dfr furrr_options
+#' @importFrom dplyr bind_rows summarise across everything
+#' @importFrom tibble tibble
+#' @importFrom stats complete.cases
 #'
-#' @return Confidence intervals
+#' @return Confidence intervals for all esitimates produced by mxsure_esitimate.
 #'
 #' @export
-mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
-                                  sample_size=length(trans_snp_dist),truncation_point=NA, sample_n=100, confidence_level=0.95, start_params=NA, #"Efficient",
+mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA,
+                                  sample_size=length(mixed_snp_dist),truncation_point=NA, sample_n=100, confidence_level=0.95, start_params=NA, #"Efficient",
                                   lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf)){
 
   if(is.na(truncation_point)){
@@ -32,15 +38,15 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
     ci <- bind_rows(lowerres, upperres)
     res <- list(confidence_intervals=ci, raw_results=NA)
   }
-  else if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
+  else if ((length(mixed_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
 
-  mix_data <- tibble(snp_dist=trans_snp_dist, time_dist=trans_time_dist, sites=trans_sites)
+  mix_data <- tibble(snp_dist=mixed_snp_dist, time_dist=mixed_time_dist, sites=mixed_sites)
 
   if (anyNA(start_params)){
     start_params <- NA
     } else if(all(start_params=="Efficient")){
   test_result <- suppressWarnings(
-      mixture_snp_cutoff(
+      mxsure_estimate(
         mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites, truncation_point=truncation_point, start_params = NA,
         lambda_bounds = lambda_bounds, k_bounds=k_bounds,  intercept_bounds=intercept_bounds)
   , classes = "warning")
@@ -58,7 +64,7 @@ mixture_snp_cutoff_ci <- function(trans_snp_dist, unrelated_snp_dist, trans_time
     y <- sample(unrelated_snp_dist, size=length(unrelated_snp_dist), replace=TRUE)
     z <- plyr::try_default(
   suppressWarnings(
-    mixture_snp_cutoff(
+    mxsure_estimate(
       x$snp_dist, y, x$time_dist, x$sites, truncation_point=truncation_point, start_params = start_params, lambda_bounds = lambda_bounds, k_bounds=k_bounds,  intercept_bounds=intercept_bounds
     )
   , classes = "warning")
