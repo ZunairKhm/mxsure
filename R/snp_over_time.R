@@ -4,50 +4,59 @@ library(ggplot2)
 #'
 #' Creates a plot of snp distance over time
 #'
-#' @param snp_dist list of SNP distances from a mixed transmission data set
-#' @param time_dist list of time differences between samples from each SNP distance in the mixed data set (in days)
-#' @param lambda mutation rate to plot in the graph (calculated with mixture_snp_cutoff)
-#' @param sites list of sites considered for each SNP distance in mixed data set; adjusts lambda to be in SNPs/day if provided
-#' @param snp_threshold a threshold to apply to the mixed data set for considering related data (calculated with mixture_snp_cutoff)
-#' @param title title for graph
-#' @param jitter jitter data (keeps data above 0 SNPs and 0 time)
-#' @param p_value optional input to display time randomised p value from mixture_timerand_test
-#' @param ci optional input to display CIs of mutation rate
+#' @param title title for graph passed to ggplot
+#' @param jitter whether to jitter data (keeps data above 0 SNPs and 0 time)
+#' @param mixed_snp_dist list of SNP distances from a mixed transmission data set
+#' @param unrelated_snp_dist list of SNP distances from an unrelated data set
+#' @param mixed_time_dist list of time differences between samples from each SNP distance in the mixed data set (in days)
+#' @param mixed_sites list of sites considered for each SNP distance in mixed data set
+#' @param truncation_point a SNP distance limit for the data, if set to NA will estimate as if there is no limit
+#' @param max_time the time (in days) utilised to calculate SNP thresholds, only applicable when time differences are provided, if not provided will utilise maximum of supplied times
+#' @param ci_data optional input for previously calculated CI data (mxsure_ci) to display
+#' @param time_limits x axis limits passed to ggplot
+#' @param under_threshold whether to only plot points below the calculated SNP threshold
+#' @param p_value optional input to display time randomised p value from mxsure_timerand_test
 #'
+#' @importFrom ggplot2 ggplot aes scale_y_continuous scale_x_continuous scale_color_manual geom_point geom_step geom_hline labs theme_minimal guides guide_legend
+#' @importFrom dplyr distinct mutate recode
+#' @importFrom tidyr pivot_longer
+#' @importFrom tibble tibble
+#' @importFrom stats dpois dnbinom setNames
+#' @importFrom viridis viridis
 #'
 #' @return a plot of SNP distance over time using ggplot
 #'
 #' @export
-snp_over_time <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist, trans_sites=NA, truncation_point=2000, max_time=NA, title="SNP Distance Over Time", jitter=TRUE, p_value=NA, ci_data=NA, time_limits=c(0,NA), under_threshold=FALSE){
+snp_over_time <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites=NA, truncation_point=2000, max_time=NA, title="SNP Distance Over Time", jitter=TRUE, p_value=NA, ci_data=NA, time_limits=c(0,NA), under_threshold=FALSE){
 
   mix_res <- suppressWarnings(
-    mixture_snp_cutoff(trans_snp_dist, unrelated_snp_dist, trans_time_dist, trans_sites, truncation_point = truncation_point, max_time = max_time)
+    mxsure_estimate(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point = truncation_point, max_time = max_time)
     )
 
-  if(is.na(mean(trans_sites, na.rm=TRUE))){
-    trans_sites <- 1
+  if(is.na(mean(mixed_sites, na.rm=TRUE))){
+    mixed_sites <- 1
   }
 
-  LH <-  distinct(tibble(snp_dist=trans_snp_dist, time_dist=trans_time_dist))
+  LH <-  distinct(tibble(snp_dist=mixed_snp_dist, time_dist=mixed_time_dist))
   LH <- LH |>
-    mutate(rel_lh = (dpois(snp_dist, (mix_res$lambda*(time_dist/365.25)*mean(trans_sites)+mix_res$intercept), log=TRUE) #/ ppois(truncation_point, (mix_res$lambda*(time_dist/365.25)*mean(trans_sites)+mix_res$intercept))
+    mutate(rel_lh = (dpois(snp_dist, (mix_res$lambda*(time_dist/365.25)*mean(mixed_sites)+mix_res$intercept), log=TRUE) #/ ppois(truncation_point, (mix_res$lambda*(time_dist/365.25)*mean(mixed_sites)+mix_res$intercept))
                      ),
-           unrel_lh = (dnbinom(snp_dist, mu = mix_res$nb_mu, size = mix_res$nb_size, log = TRUE) - pnbinom(truncation_point, mu = mix_res$nb_mu, size = mix_res$nb_size, log=TRUE)))|>
+           unrel_lh = (dnbinom(snp_dist, mu = mix_res$nb_mu, size = mix_res$nb_size, log = TRUE) - pnbinom(truncation_point, mu = mix_res$nb_mu, size = mix_res$nb_size, log.p=TRUE)))|>
     mutate(LHR = (rel_lh-unrel_lh))
 
-  data <- data.frame(snp_dist=trans_snp_dist, time_dist=trans_time_dist)
+  data <- data.frame(snp_dist=mixed_snp_dist, time_dist=mixed_time_dist)
   if(under_threshold){
-  data <- filter(data, trans_snp_dist<=mix_res$snp_threshold+1)
+  data <- filter(data, mixed_snp_dist<=mix_res$snp_threshold+1)
   } else {
-    data <- filter(data, trans_snp_dist<truncation_point)
+    data <- filter(data, mixed_snp_dist<truncation_point)
   }
   data$LHR <- LH$LHR[match(paste(data$snp_dist, data$time_dist), paste(LH$snp_dist, LH$time_dist))]
   lhr_levels <- c("LHR < 0.01",
-                "0.01 ≤ LHR < 0.1",
-                "0.1 ≤ LHR < 1",
-                "1 ≤ LHR < 10",
-                "10 ≤ LHR < 100",
-                "LHR ≥ 100")
+                "0.01 \u2264 LHR < 0.1",
+                "0.1 \u2264 LHR < 1",
+                "1 \u2264 LHR < 10",
+                "10 \u2264 LHR < 100",
+                "LHR \u2264 100")
 
 data <- data |>
   mutate(LHR_bin = cut(LHR,
@@ -61,14 +70,14 @@ data <- data |>
   data$snp_dist <- abs(jitter(data$snp_dist))
   data$time_dist <- abs(jitter(data$time_dist))
   }
-    lambda <- mix_res$lambda*mean(trans_sites) #convert snp/year/site to snp/year/genome
+    lambda <- mix_res$lambda*mean(mixed_sites) #convert snp/year/site to snp/year/genome
     predictive_intervals <- tibble(time_dist=0:max(c(max(data$time_dist), time_limits[2]), na.rm=TRUE))
     predictive_intervals <- predictive_intervals|>
       mutate(estimate=qpois(0.5, (time_dist/365.25)*lambda))
 
   if(!anyNA(ci_data)){
-    ci <- c(ci_data$confidence_intervals$lambda[1]*mean(trans_sites),
-     ci_data$confidence_intervals$lambda[2]*mean(trans_sites))
+    ci <- c(ci_data$confidence_intervals$lambda[1]*mean(mixed_sites),
+     ci_data$confidence_intervals$lambda[2]*mean(mixed_sites))
     }
 
     predictive_intervals <- predictive_intervals|>

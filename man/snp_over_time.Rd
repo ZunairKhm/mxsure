@@ -5,10 +5,10 @@
 \title{SNP dist/time plot}
 \usage{
 snp_over_time(
-  trans_snp_dist,
+  mixed_snp_dist,
   unrelated_snp_dist,
-  trans_time_dist,
-  trans_sites = NA,
+  mixed_time_dist,
+  mixed_sites = NA,
   truncation_point = 2000,
   max_time = NA,
   title = "SNP Distance Over Time",
@@ -20,23 +20,29 @@ snp_over_time(
 )
 }
 \arguments{
-\item{title}{title for graph}
+\item{mixed_snp_dist}{list of SNP distances from a mixed transmission data set}
 
-\item{jitter}{jitter data (keeps data above 0 SNPs and 0 time)}
+\item{unrelated_snp_dist}{list of SNP distances from an unrelated data set}
 
-\item{p_value}{optional input to display time randomised p value from mixture_timerand_test}
+\item{mixed_time_dist}{list of time differences between samples from each SNP distance in the mixed data set (in days)}
 
-\item{snp_dist}{list of SNP distances from a mixed transmission data set}
+\item{mixed_sites}{list of sites considered for each SNP distance in mixed data set}
 
-\item{time_dist}{list of time differences between samples from each SNP distance in the mixed data set (in days)}
+\item{truncation_point}{a SNP distance limit for the data, if set to NA will estimate as if there is no limit}
 
-\item{lambda}{mutation rate to plot in the graph (calculated with mixture_snp_cutoff)}
+\item{max_time}{the time (in days) utilised to calculate SNP thresholds, only applicable when time differences are provided, if not provided will utilise maximum of supplied times}
 
-\item{sites}{list of sites considered for each SNP distance in mixed data set; adjusts lambda to be in SNPs/day if provided}
+\item{title}{title for graph passed to ggplot}
 
-\item{snp_threshold}{a threshold to apply to the mixed data set for considering related data (calculated with mixture_snp_cutoff)}
+\item{jitter}{whether to jitter data (keeps data above 0 SNPs and 0 time)}
 
-\item{ci}{optional input to display CIs of mutation rate}
+\item{p_value}{optional input to display time randomised p value from mxsure_timerand_test}
+
+\item{ci_data}{optional input for previously calculated CI data (mxsure_ci) to display}
+
+\item{time_limits}{x axis limits passed to ggplot}
+
+\item{under_threshold}{whether to only plot points below the calculated SNP threshold}
 }
 \value{
 a plot of SNP distance over time using ggplot

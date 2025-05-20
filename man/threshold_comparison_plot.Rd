@@ -5,7 +5,7 @@
 \title{Threshold Comparison Plot}
 \usage{
 threshold_comparison_plot(
-  trans_snp_dist,
+  mixed_snp_dist,
   unrelated_snp_dist,
   snp_thresholds,
   method_names,
@@ -21,13 +21,15 @@ threshold_comparison_plot(
 )
 }
 \arguments{
-\item{trans_snp_dist}{list of SNP distances from a mixed transmission data set}
+\item{mixed_snp_dist}{list of SNP distances from a mixed transmission data set}
 
 \item{unrelated_snp_dist}{list of SNP distances from an unrelated data set}
 
 \item{snp_thresholds}{list of SNP thresholds to consider}
 
 \item{method_names}{list of names associated with each SNP threshold}
+
+\item{show_related}{whether to show related dataset comparisons}
 
 \item{identity}{whether to include an identity threshold as well}
 

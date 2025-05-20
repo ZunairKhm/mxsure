@@ -2,16 +2,16 @@
 % Please edit documentation in R/simulate_mixsnp_data.R
 \name{simulate_mixsnp_data}
 \alias{simulate_mixsnp_data}
-\title{Simulate Mixed related SNP distance dataset}
+\title{Simulate mixed related SNP distance dataset}
 \usage{
 simulate_mixsnp_data(
   lambda,
   k,
   unrel_mean = 25,
-  unrel_sd = 50,
+  unrel_sd = 12.5,
   error_param = NA,
   n = 100,
-  rel_timelimit = 1,
+  rel_timemax = 1,
   rel_timemin = 0,
   truncation_point = NA
 )
@@ -21,23 +21,27 @@ simulate_mixsnp_data(
 
 \item{k}{proportion of mixed dataset that is linked, set to 0 to produce a distant dataset}
 
-\item{error_param}{chance that each SNP is missed}
+\item{unrel_mean}{mean of gamma distribution for which the evolutionary time for the unrelated datapoints are chosen}
+
+\item{unrel_sd}{sd of gamma distribution for which the evolutionary time for the unrelated datapoints are chosen}
+
+\item{error_param}{chance that each SNP is missed. For simulating systematic error.}
 
 \item{n}{size of dataset to simulate}
 
-\item{rel_timelimit}{maximum time allowed between samples in years (calculates time difference from uniform dist.)}
+\item{rel_timemax}{maximum time allowed between samples in years (calculates time difference from uniform dist.)}
 
 \item{rel_timemin}{minimum time allowed between samples in years}
 
 \item{truncation_point}{maximum allowed SNP distances, if set too low can cause all SNP distances to be 0}
-
-\item{unrel_rate}{rate of gamma distribution for time of evolution unrelated pairs in years}
-
-\item{unrel_shape}{shape of gamma distribution for time of evolution for unrelated pairs in years}
 }
 \value{
 SNP distance dataset with a mixture of related and unrelated pairs with time differences
 }
 \description{
-Simulate Mixed related SNP distance dataset
+Simulate mixed related SNP distance dataset
+}
+\examples{
+simulate_mixsnp_data(1, 0.8)
+
 }

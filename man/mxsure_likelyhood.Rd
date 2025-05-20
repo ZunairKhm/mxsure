@@ -5,21 +5,21 @@
 \title{Reports Likelyhoods for related and unrelated distributions for each datapoint provided}
 \usage{
 mxsure_likelyhood(
-  trans_snp_dist,
+  mixed_snp_dist,
   unrelated_snp_dist,
-  trans_time_dist,
-  trans_sites,
+  mixed_time_dist,
+  mixed_sites,
   truncation_point = 2000
 )
 }
 \arguments{
-\item{trans_snp_dist}{vector of SNP distances from mixed dataset}
+\item{mixed_snp_dist}{vector of SNP distances from mixed dataset}
 
 \item{unrelated_snp_dist}{vector of SNP distances from unrelated dataset}
 
-\item{trans_time_dist}{vector of time differences for each SNP distacne in the mixed dataset}
+\item{mixed_time_dist}{vector of time differences for each SNP distacne in the mixed dataset}
 
-\item{trans_sites}{vector of sites considered for each SNP distance in the mixed dataset}
+\item{mixed_sites}{vector of sites considered for each SNP distance in the mixed dataset}
 
 \item{truncation_point}{maximum limit of SNP distances to consider}
 }
@@ -27,5 +27,5 @@ mxsure_likelyhood(
 a dataframe with SNP distances, time differences, sites considered and the likeyhoods of related and unrelated models fitting for each datapoint
 }
 \description{
-Creates a plot of snp distance over time
+Reports Likelyhoods for related and unrelated distributions for each datapoint provided
 }

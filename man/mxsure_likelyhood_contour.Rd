@@ -5,11 +5,10 @@
 \title{Contour plot for likelyhood estimation of mixture distribution mutation rate estimation}
 \usage{
 mxsure_likelyhood_contour(
-  trans_snp_dist,
+  mixed_snp_dist,
   unrelated_snp_dist,
-  trans_time_dist,
-  trans_sites,
-  threshold = NA,
+  mixed_time_dist,
+  mixed_sites,
   truncation_point = NA,
   prior_lambda = NA,
   prior_k = NA,
@@ -26,19 +25,35 @@ mxsure_likelyhood_contour(
 )
 }
 \arguments{
-\item{trans_snp_dist}{list of SNP distances from a mixed transmission data set}
+\item{mixed_snp_dist}{list of SNP distances from a mixed transmission data set}
 
 \item{unrelated_snp_dist}{list of SNP distances from an unrelated data set}
 
-\item{trans_time_dist}{list of time differences between samples from each SNP distance in the mixed data set (in days)}
+\item{mixed_time_dist}{list of time differences between samples from each SNP distance in the mixed data set (in days)}
 
-\item{trans_sites}{list of sites considered for each SNP distance in mixed data set}
+\item{mixed_sites}{list of sites considered for each SNP distance in mixed data set}
 
-\item{resolution}{resolution of plot (main computation limitation)}
+\item{truncation_point}{a SNP distance limit for the data, if set to NA will estimate as if there is no limit}
+
+\item{prior_lambda}{parameters for a gamma prior distribution for rate estimation, if set to "default" will use some default parameters}
+
+\item{prior_k}{parameters for a beta prior distribution for related proportion estimation, if set to "default" will use some default parameters}
+
+\item{lambda_bounds}{bounds of rate estimation in SNPs/year/site if given time and site data}
+
+\item{k_bounds}{bounds of related proportion estimation}
+
+\item{intercept_bounds}{bounds of intercept estimation}
+
+\item{resolution}{resolution of plot, how many points along k and lambda to calculate (main computation limitation)}
 
 \item{lambda_limits}{bounds of lambda axis (plots on a log10 scale)}
 
 \item{k_limits}{bounds of k axis}
+
+\item{low_ci}{2 element vector for the low CIs for lambda and k respectively. If supplied, alongside high_ci, will produce a box around the estimate}
+
+\item{high_ci}{2 element vector for the high CIs for lambda and k respectively. If supplied, alongside low_ci, will produce a box around the estimate}
 
 \item{bins}{number of bins to pass to ggplot contour function}
 

@@ -5,7 +5,7 @@
 \title{SNP distace histogram}
 \usage{
 snp_hist(
-  trans_snp_dist,
+  mixed_snp_dist,
   unrelated_snp_dist = NULL,
   snp_threshold = NULL,
   limits = c(NA, 100),
@@ -14,13 +14,17 @@ snp_hist(
 )
 }
 \arguments{
-\item{trans_snp_dist}{list of SNP distances from a mixed transmission data set}
+\item{mixed_snp_dist}{list of SNP distances from a mixed transmission data set}
 
 \item{unrelated_snp_dist}{list of SNP distances from an unrelated data set}
 
 \item{snp_threshold}{a threshold to overlay on the graph (calculated with mixture_snp_cutoff)}
 
 \item{limits}{snp distance/x axis limits}
+
+\item{title}{title to pass to ggplot}
+
+\item{scales}{scales to pass to facet_wrap}
 }
 \value{
 a histogram plot of snp distances using ggplot

@@ -1,15 +1,15 @@
 library(tidyverse)
-#' Mixture SNP Cutoff
+#' mxsure
 #'
-#' Estimates evolutionary rates from a mixed transmission dataset and an unrelated data set with a mixed probability distribution approach.Uses these rates to produce a threshold of SNP distances to be considered linked or not.
+#' Estimates the substitution rate from SNP distances from a mixed related and an unrelated data set with a mixture distribution approach. Uses these rates to produce a threshold of SNP distances to be considered related or not.
 #'
-#' @param trans_snp_dist list of SNP distances from a mixed transmission data set
+#' @param mixed_snp_dist list of SNP distances from a mixed related data set
 #' @param unrelated_snp_dist list of SNP distances from an unrelated data set
-#' @param trans_time_dist list of time differences between samples from each SNP distance in the mixed data set (in days)
-#' @param trans_sites list of sites considered for each SNP distance in mixed data set
-#' @param youden whether to produce SNP thresholds using the Youden method
+#' @param mixed_time_dist list of time differences between samples from each SNP distance in the mixed data set (in days)
+#' @param mixed_sites list of sites considered for each SNP distance in mixed data set
+#' @param youden whether to produce additional SNP thresholds using the Youden method
 #' @param threshold_range whether to produce a dataset of threshold considering a range of times (from 0.5 to 10 years)
-#' @param max_time the maximum time(in days) utilised to calculate SNP thresholds, only applicable when time differences are provided, if not provided will utilise maximum of supplied times
+#' @param max_time the time (in days) utilised to calculate SNP thresholds, only applicable when time differences are provided, if not provided will utilise maximum of supplied times
 #' @param upper.tail percentile to calculate SNP thresholds
 #' @param max_false_positive if the false positive rate from calculated threshold is higher than this value a warning is produced
 #' @param trace trace parameter to pass to nlminb
@@ -19,22 +19,32 @@ library(tidyverse)
 #' @param prior_k parameters for a beta prior distribution for related proportion estimation, if set to "default" will use default parameters
 #' @param lambda_bounds bounds of rate estimation in SNPs/year/site if given time and site data
 #' @param k_bounds bounds of related proportion estimation
+#' @param intercept_bounds bounds of intercept estimation
 #'
-#' @importFrom stats optim pnbinom qpois rnbinom
+#' @importFrom stats qpois rnbinom nlminb var
 #' @importFrom dplyr filter
 #' @importFrom fitdistrplus fitdist
+#' @importFrom tibble tibble
+#' @importFrom purrr map_dbl modify pmap_dbl pmap
 #'
-#' @return SNP threshold, mutation rate, proportion related, estimated false positive and negative rate estimations
+#' @return Estimates for the related SNP threshold, substitution rate, proportion related, and estimated false positive rate
+#'
+#' @examples
+#' x <- simulate_mixsnp_data(1, 0.8)
+#' y<- simulate_mixsnp_data(1, 0, n=1000)
+#' mxsure_estimate(x$snp_dist, y$snp_dist, x$time_dist)
+#'
 #'
 #' @export
-mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_dist=NA, trans_sites=NA,
-                                  truncation_point=2000,
-                               youden=FALSE,threshold_range=FALSE, max_time= NA,
-                               prior_lambda=NA, prior_k=NA, lambda_bounds=c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf),
-                               upper.tail=0.95, max_false_positive=0.05, trace=FALSE, start_params= NA){
+mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA,truncation_point=2000,
+                               youden=FALSE,threshold_range=FALSE, max_time= NA, start_params= NA,
+                              lambda_bounds=c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf), prior_lambda=NA, prior_k=NA,
+                               upper.tail=0.95, max_false_positive=0.05, trace=FALSE){
+
+
 
   #correction to convert to snp/day(/MBp)
-  if(!anyNA(trans_time_dist)){
+  if(!anyNA(mixed_time_dist)){
     lambda_bounds <- (lambda_bounds*1000000)/365.25
   }
 
@@ -62,11 +72,11 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
   }
 
   unrelated_snp_dist_orig <- unrelated_snp_dist
-  x <- tibble(trans_snp_dist, trans_time_dist, trans_sites)
-  x <- filter(x, trans_snp_dist<truncation_point)
-  trans_snp_dist <- x$trans_snp_dist
-  trans_time_dist <- x$trans_time_dist
-  trans_sites <- x$trans_sites
+  x <- tibble(mixed_snp_dist, mixed_time_dist, mixed_sites)
+  x <- filter(x, mixed_snp_dist<truncation_point)
+  mixed_snp_dist <- x$mixed_snp_dist
+  mixed_time_dist <- x$mixed_time_dist
+  mixed_sites <- x$mixed_sites
   unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
 
   #setting default priors, not on by default
@@ -81,17 +91,17 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
 
   #### Youden Cutoffs ####
   if(youden==TRUE){
-    if ((length(trans_snp_dist) >= 10) && (length(unrelated_snp_dist) >= 10)){
+    if ((length(mixed_snp_dist) >= 10) && (length(unrelated_snp_dist) >= 10)){
 
-      youden_index <- map_dbl(trans_snp_dist, ~{
-        tp <- sum(trans_snp_dist <= .x)
+      youden_index <- map_dbl(mixed_snp_dist, ~{
+        tp <- sum(mixed_snp_dist <= .x)
         tn <- sum(unrelated_snp_dist > .x)
-        fn <- sum(trans_snp_dist > .x)
+        fn <- sum(mixed_snp_dist > .x)
         fp <- sum(unrelated_snp_dist <= .x)
 
         return(tp/(tp+fn) + tn/(tn+fp) - 1)
       })
-      youden_snp_threshold <- trans_snp_dist[which.max(youden_index)]
+      youden_snp_threshold <- mixed_snp_dist[which.max(youden_index)]
 
       youden_results <-
         tibble(
@@ -114,10 +124,10 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
   }
 
   #### threshold without time or sites considered ####
-  if((anyNA(trans_time_dist) & anyNA(trans_sites))){
+  if((anyNA(mixed_time_dist) & anyNA(mixed_sites))){
     warning("No time data inputted, rate will still be estimated but consider whether this is appropriate")
 
-    if ((length(trans_snp_dist) >= 20) && (length(unrelated_snp_dist) >= 20)){
+    if ((length(mixed_snp_dist) >= 20) && (length(unrelated_snp_dist) >= 20)){
       #distant data fitting
       # distant dataset fitting
       m <- mean(unrelated_snp_dist)
@@ -162,7 +172,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                                   nlminb(
                                     start = c(k, lambda, intercept),
                                     objective = llk,
-                                    x = trans_snp_dist,
+                                    x = mixed_snp_dist,
                                     lower = c(k_bounds[1], lambda_bounds[1], 0),
                                     upper = c(k_bounds[2], lambda_bounds[2], 1e-10),
                                     control = list(trace = trace)
@@ -176,7 +186,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         best_result_name <- names(result_attempts)[[which.min(sapply(result_attempts, `[[`, "objective"))]]
       }
       else{
-        result <- nlminb(start=start_params, objective=llk, x = trans_snp_dist,,
+        result <- nlminb(start=start_params, objective=llk, x = mixed_snp_dist,,
                          lower = c(k_bounds[1], lambda_bounds[1], 0),
                          upper = c(k_bounds[2], lambda_bounds[2], 1e-10),
                          control = list(trace = trace))
@@ -236,8 +246,8 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
   }
 
   #### Threshold considering time but not sites ####
-  if(!anyNA(trans_time_dist)&(anyNA(trans_sites))){
-    if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
+  if(!anyNA(mixed_time_dist)&(anyNA(mixed_sites))){
+    if ((length(mixed_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
 
       # distant dataset fitting
       m <- mean(unrelated_snp_dist)
@@ -287,8 +297,8 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                                   nlminb(
                                     start = c(k, lambda, intercept),
                                     objective = llk,
-                                    x = trans_snp_dist,
-                                    t = trans_time_dist,
+                                    x = mixed_snp_dist,
+                                    t = mixed_time_dist,
                                     lower = c(k_bounds[1], lambda_bounds[1], intercept_bounds[1]),
                                     upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2]),
                                     control = list(trace = trace)
@@ -301,7 +311,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       }
       else{
         start_params[2] <- start_params[2]/365.25
-        result <- nlminb(start=c(start_params), objective=llk, x = trans_snp_dist, t = trans_time_dist,
+        result <- nlminb(start=c(start_params), objective=llk, x = mixed_snp_dist, t = mixed_time_dist,
                          lower = c(k_bounds[1], lambda_bounds[1], intercept_bounds[1]),
                          upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2]),
                          control = list(trace = trace))
@@ -309,7 +319,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       }
 
       if (is.na(max_time)) {
-        max_time <- max(trans_time_dist)
+        max_time <- max(mixed_time_dist)
       }
 
       snp_threshold <- qpois(upper.tail, lambda=result$par[[2]]*(max_time))
@@ -317,7 +327,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
         threshold_range_df <- data.frame(years=seq(0.5, 10, 0.5), threshold=NA, estimated_fp=NA, prop_pos=NA)
         threshold_range_df$threshold <- modify(threshold_range_df$years, ~{qpois(upper.tail, lambda=result$par[[2]]*365.25*.x)})
         threshold_range_df$estimated_fp <-modify(threshold_range_df$threshold, ~{sum(unrelated_snp_dist<=.x)/length(unrelated_snp_dist)})
-        threshold_range_df$prop_pos <-modify(threshold_range_df$threshold, ~{sum(trans_snp_dist<=.x)/length(trans_snp_dist)})
+        threshold_range_df$prop_pos <-modify(threshold_range_df$threshold, ~{sum(mixed_snp_dist<=.x)/length(mixed_snp_dist)})
       }
 
       if ((sum(unrelated_snp_dist<=snp_threshold)/length(unrelated_snp_dist)) > max_false_positive){
@@ -373,8 +383,8 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
   }
 
   #### Threshold considering time and sites #####
-  if(!anyNA(trans_time_dist)&(!anyNA(trans_sites))){
-    if ((length(trans_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
+  if(!anyNA(mixed_time_dist)&(!anyNA(mixed_sites))){
+    if ((length(mixed_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
 
       # distant dataset fitting
       m <- mean(unrelated_snp_dist)
@@ -422,9 +432,9 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
                                   nlminb(
                                     start = c(k, lambda, intercept),
                                     objective = llk,
-                                    x = trans_snp_dist,
-                                    t = trans_time_dist,
-                                    s = trans_sites,# method="SANN",
+                                    x = mixed_snp_dist,
+                                    t = mixed_time_dist,
+                                    s = mixed_sites,# method="SANN",
                                     lower = c(k_bounds[1], lambda_bounds[1], intercept_bounds[1]),
                                     upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2]),
                                     control = list(trace = trace)
@@ -439,7 +449,7 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       }
       else{
         start_params[2] <- (as.numeric(start_params[2])*1e6)/(365.25)
-        result <- nlminb(start=start_params, objective=llk, x = trans_snp_dist, t = trans_time_dist, s = trans_sites,# method="SANN",
+        result <- nlminb(start=start_params, objective=llk, x = mixed_snp_dist, t = mixed_time_dist, s = mixed_sites,# method="SANN",
                          lower = c(k_bounds[1], lambda_bounds[1], intercept_bounds[1]),
                          upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2]),
                          control = list(trace = trace))
@@ -447,16 +457,16 @@ mixture_snp_cutoff <- function(trans_snp_dist, unrelated_snp_dist, trans_time_di
       }
 
       if (is.na(max_time)) {
-        max_time <- max(trans_time_dist)
+        max_time <- max(mixed_time_dist)
       }
 
-      snp_threshold <- qpois(upper.tail, lambda=result$par[[2]]*(max_time)*(mean(trans_sites)/1e6))
+      snp_threshold <- qpois(upper.tail, lambda=result$par[[2]]*(max_time)*(mean(mixed_sites)/1e6))
 
       if(threshold_range==TRUE & !is.na(snp_threshold)){
         threshold_range_df <- data.frame(years=seq(0.5, 10, 0.5), threshold=NA, estimated_fp=NA, prop_pos=NA)
-        threshold_range_df$threshold <- modify(threshold_range_df$years, ~{qpois(upper.tail, lambda=result$par[[2]]*.x*365.25*(mean(trans_sites)))})
+        threshold_range_df$threshold <- modify(threshold_range_df$years, ~{qpois(upper.tail, lambda=result$par[[2]]*.x*365.25*(mean(mixed_sites)))})
         threshold_range_df$estimated_fp <-modify(threshold_range_df$threshold, ~{sum(unrelated_snp_dist<=.x)/length(unrelated_snp_dist)})
-        threshold_range_df$prop_pos <-modify(threshold_range_df$threshold, ~{sum(trans_snp_dist<=.x)/length(trans_snp_dist)})
+        threshold_range_df$prop_pos <-modify(threshold_range_df$threshold, ~{sum(mixed_snp_dist<=.x)/length(mixed_snp_dist)})
       }
 
       if ((sum(unrelated_snp_dist<=snp_threshold)/length(unrelated_snp_dist)) > max_false_positive){
