@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# mixturesnpcutoff
+# MxSure
 
 <!-- badges: start -->
 
@@ -37,10 +37,10 @@ This shows the basic use case using data produced from the simulation functions.
 ```{r example}
 library(mixturesnpcutoff)
 ## basic example code
-x <- simulate_mixsnp_data(0.00179*4, 0.8, 500)
-y <- simulate_unrelsnp_data()
+x <- simulate_mixsnp_data(1, 0.8)
+y <- simulate_mixsnp_data(1, 0, n=1000)
 
-z<- mixture_snp_cutoff(x$snp_dist, y, x$time_dist)
+mxsure_estimate(x$snp_dist, y$snp_dist, x$time_dist)
 ```
 
-mixture_snp_cutoff will produce a mutation rate in SNPs/day or SNPs/day/million basepairs if sites considered is provided. It will also produce a cutoff that considers a max time (default 2 years) for SNP distances that can be considered related/transmitted or unrelated.
+mxsure_estimate will produce a mutation rate in SNPs/year or SNPs/year/site if sites considered is provided. It will also produce a cutoff that considers a max time for SNP distances that can be considered related/transmitted or unrelated.

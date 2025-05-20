@@ -1,5 +1,3 @@
-library(ggplot2)
-
 #' SNP distace histogram
 #'
 #' Creates a histogram of snp distances with or without the unrelated dataset

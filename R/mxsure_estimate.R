@@ -1,4 +1,3 @@
-library(tidyverse)
 #' mxsure
 #'
 #' Estimates the substitution rate from SNP distances from a mixed related and an unrelated data set with a mixture distribution approach. Uses these rates to produce a threshold of SNP distances to be considered related or not.

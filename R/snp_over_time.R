@@ -1,5 +1,3 @@
-library(ggplot2)
-
 #' SNP dist/time plot
 #'
 #' Creates a plot of snp distance over time

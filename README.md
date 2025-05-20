@@ -1,9 +1,10 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# mixturesnpcutoff
+# MxSure
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 This package implements a mixture distribution approach to estimating
@@ -26,26 +27,19 @@ This shows the basic use case using data produced from the simulation
 functions.
 
 ``` r
-library(mixturesnpcutoff)
-#> Loading required package: tidyverse
-#> ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-#> ✔ dplyr     1.1.4     ✔ readr     2.1.5
-#> ✔ forcats   1.0.0     ✔ stringr   1.5.1
-#> ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
-#> ✔ lubridate 1.9.4     ✔ tidyr     1.3.1
-#> ✔ purrr     1.0.2     
-#> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-#> ✖ dplyr::filter() masks stats::filter()
-#> ✖ dplyr::lag()    masks stats::lag()
-#> ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+library(mxsure)
 ## basic example code
-x <- simulate_mixsnp_data(0.00179*4, 0.8, 500)
-y <- simulate_unrelsnp_data()
+x <- simulate_mixsnp_data(1, 0.8)
+y <- simulate_mixsnp_data(1, 0, n=1000)
 
-z<- mixture_snp_cutoff(x$snp_dist, y, x$time_dist)
+mxsure_estimate(x$snp_dist, y$snp_dist, x$time_dist)
+#> # A tibble: 1 × 8
+#>   snp_threshold lambda     k intercept estimated_fp lambda_units   nb_size nb_mu
+#>           <dbl>  <dbl> <dbl>     <dbl>        <dbl> <chr>            <dbl> <dbl>
+#> 1             2  0.803 0.788    0.0221        0.006 SNPs per year…    3.84  24.9
 ```
 
-mixture_snp_cutoff will produce a mutation rate in SNPs/day or
-SNPs/day/million basepairs if sites considered is provided. It will also
-produce a cutoff that considers a max time (default 2 years) for SNP
-distances that can be considered related/transmitted or unrelated.
+mxsure_estimate will produce a mutation rate in SNPs/year or
+SNPs/year/site if sites considered is provided. It will also produce a
+cutoff that considers a max time for SNP distances that can be
+considered related/transmitted or unrelated.
