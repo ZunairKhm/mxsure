@@ -36,7 +36,7 @@ mxsure_estimate(x$snp_dist, y$snp_dist, x$time_dist)
 #> # A tibble: 1 × 8
 #>   snp_threshold lambda     k intercept estimated_fp lambda_units   nb_size nb_mu
 #>           <dbl>  <dbl> <dbl>     <dbl>        <dbl> <chr>            <dbl> <dbl>
-#> 1             2  0.803 0.788    0.0221        0.006 SNPs per year…    3.84  24.9
+#> 1             3   1.02 0.809  -0.00150        0.009 SNPs per year…    4.35  25.2
 ```
 
 mxsure_estimate will produce a mutation rate in SNPs/year or

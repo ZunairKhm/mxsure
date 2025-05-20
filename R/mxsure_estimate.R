@@ -29,6 +29,7 @@
 #' @return Estimates for the related SNP threshold, substitution rate, proportion related, and estimated false positive rate
 #'
 #' @examples
+#' library(mxsure)
 #' x <- simulate_mixsnp_data(1, 0.8)
 #' y<- simulate_mixsnp_data(1, 0, n=1000)
 #' mxsure_estimate(x$snp_dist, y$snp_dist, x$time_dist)

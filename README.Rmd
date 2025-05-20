@@ -35,7 +35,7 @@ pak::pak("ZunairKhm/mixturesnpcutoff")
 This shows the basic use case using data produced from the simulation functions.
 
 ```{r example}
-library(mixturesnpcutoff)
+library(mxsure)
 ## basic example code
 x <- simulate_mixsnp_data(1, 0.8)
 y <- simulate_mixsnp_data(1, 0, n=1000)

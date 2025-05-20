@@ -66,6 +66,7 @@ Estimates for the related SNP threshold, substitution rate, proportion related, 
 Estimates the substitution rate from SNP distances from a mixed related and an unrelated data set with a mixture distribution approach. Uses these rates to produce a threshold of SNP distances to be considered related or not.
 }
 \examples{
+library(mxsure)
 x <- simulate_mixsnp_data(1, 0.8)
 y<- simulate_mixsnp_data(1, 0, n=1000)
 mxsure_estimate(x$snp_dist, y$snp_dist, x$time_dist)
