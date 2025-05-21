@@ -45,7 +45,7 @@ mxsure_ci(
 \item{intercept_bounds}{bounds of intercept estimation}
 }
 \value{
-Confidence intervals for all esitimates produced by mxsure_esitimate.
+Confidence intervals for all estimates produced by mxsure_estimate.
 }
 \description{
 Creates confidence intervals for outputs from mxsure_estimate using bootstrapping. Utilises the furrr package to allow for parallel computation, to enable use the plan() function from the future package.

@@ -71,7 +71,7 @@ data <- data |>
     lambda <- mix_res$lambda*mean(mixed_sites) #convert snp/year/site to snp/year/genome
     predictive_intervals <- tibble(time_dist=0:max(c(max(data$time_dist), time_limits[2]), na.rm=TRUE))
     predictive_intervals <- predictive_intervals|>
-      mutate(estimate=qpois(0.5, (time_dist/365.25)*lambda))
+      mutate(estimate=qpois(0.5, (time_dist/365.25)*lambda+result$par[[3]]))
 
   if(!anyNA(ci_data)){
     ci <- c(ci_data$confidence_intervals$lambda[1]*mean(mixed_sites),
@@ -79,8 +79,8 @@ data <- data |>
     }
 
     predictive_intervals <- predictive_intervals|>
-      mutate(low_ci=qpois(0.025, (time_dist/365.25)*lambda),
-             high_ci=qpois(0.975, (time_dist/365.25)*lambda))
+      mutate(low_ci=qpois(0.025, (time_dist/365.25)*lambda+result$par[[3]]),
+             high_ci=qpois(0.975, (time_dist/365.25)*lambda+result$par[[3]]))
 
 
 

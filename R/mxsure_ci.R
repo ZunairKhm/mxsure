@@ -20,7 +20,7 @@
 #' @importFrom tibble tibble
 #' @importFrom stats complete.cases
 #'
-#' @return Confidence intervals for all esitimates produced by mxsure_esitimate.
+#' @return Confidence intervals for all estimates produced by mxsure_estimate.
 #'
 #' @export
 mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA,
