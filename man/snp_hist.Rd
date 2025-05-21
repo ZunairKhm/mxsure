@@ -18,7 +18,7 @@ snp_hist(
 
 \item{unrelated_snp_dist}{list of SNP distances from an unrelated data set}
 
-\item{snp_threshold}{a threshold to overlay on the graph (calculated with mixture_snp_cutoff)}
+\item{snp_threshold}{a threshold to overlay on the graph (calculated with mxsure_estimate)}
 
 \item{limits}{snp distance/x axis limits}
 

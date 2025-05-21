@@ -4,7 +4,7 @@
 #'
 #' @param mixed_snp_dist list of SNP distances from a mixed transmission data set
 #' @param unrelated_snp_dist list of SNP distances from an unrelated data set
-#' @param snp_threshold a threshold to overlay on the graph (calculated with mixture_snp_cutoff)
+#' @param snp_threshold a threshold to overlay on the graph (calculated with mxsure_estimate)
 #' @param limits snp distance/x axis limits
 #' @param title title to pass to ggplot
 #' @param scales scales to pass to facet_wrap

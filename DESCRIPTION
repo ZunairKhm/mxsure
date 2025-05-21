@@ -1,5 +1,5 @@
 Package: mxsure
-Title: MxSure
+Title: MxSure: Substituiton rate estimation using a mixture distribution approach
 Version: 1.0
 Authors@R: 
     person("Zunair", "Khurram", , "zunairkhurram@gmail.com", role = c("aut", "cre"),
