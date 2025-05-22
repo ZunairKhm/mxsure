@@ -23,6 +23,8 @@
 threshold_comparison_plot <- function(mixed_snp_dist, unrelated_snp_dist, snp_thresholds, method_names, show_related=FALSE,
                                  identity=FALSE, percent_dist_mixed, percent_dist_distant, identity_thresh=99.99,
                                  k_est=NULL, title=NULL,labels=TRUE, dataset_names=c("Mixed", "Distant")) {
+
+  method<- n_mixed<- tot_mixed<- n_distant<- tot_distant<- p_mixed<- dataset<- n<- tot<- p<- label<- snp_threshold<- p_distant <- NULL
   data <- tibble(method = method_names, snp_threshold = snp_thresholds)
 
   data <- data |>

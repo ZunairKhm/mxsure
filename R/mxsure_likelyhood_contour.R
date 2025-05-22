@@ -1,35 +1,3 @@
-log_sum_exp <- function(log_a, log_b) {
-  # Ensure log_a is the max
-  if (log_a < log_b) {
-    tmp <- log_a
-    log_a <- log_b
-    log_b <- tmp
-  }
-  # Return the sum in log space
-  return(log_a + log(1 + exp(log_b - log_a)))
-}
-
-negllk <- function(k, lambda, x, t, s, intercept, nbfitmu, nbfitsize,truncation_point, prior_k, prior_lambda){
-
-  -log(-sum(pmap_dbl(list(x, t,s), ~ {log_sum_exp(log(k) + dpois(x = ..1,
-                                                                 lambda =  lambda*..2*(..3/1000000)+intercept, #gives rate esimate per day time per million bp
-                                                                 log = TRUE) -
-                                                    ppois(truncation_point,
-                                                          lambda =  lambda*..2*(..3/1000000),
-                                                          log = TRUE ),
-                                                  log(1-k) + dnbinom(x = ..1,
-                                                                     size = nbfitsize,
-                                                                     mu = nbfitmu,
-                                                                     log = TRUE)-
-                                                    pnbinom(truncation_point,
-                                                            size = nbfitsize,
-                                                            mu = nbfitmu,
-                                                            log = TRUE))+
-      ifelse(!anyNA(prior_k),  dbeta(k, prior_k[1], prior_k[2], log = TRUE), 0)+
-      ifelse(!anyNA(prior_lambda), dgamma(lambda, prior_lambda[1], prior_lambda[2], log = TRUE),0)
-  })))
-}
-
 #' Contour plot for likelyhood estimation of mixture distribution mutation rate estimation
 #'
 #' @param mixed_snp_dist list of SNP distances from a mixed transmission data set
@@ -59,6 +27,41 @@ mxsure_likelyhood_contour <- function(mixed_snp_dist, unrelated_snp_dist, mixed_
                                        prior_lambda=NA, prior_k=NA, lambda_bounds=c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf),
                                        resolution=100, lambda_limits=c(1e-8, 1e-4), k_limits=c(0.2,0.99), low_ci=NULL, high_ci=NULL,
                                        bins=NULL, title="Likelihood Contour Plot"){
+
+  likelyhood<- ".x" <- NULL
+
+  log_sum_exp <- function(log_a, log_b) {
+    # Ensure log_a is the max
+    if (log_a < log_b) {
+      tmp <- log_a
+      log_a <- log_b
+      log_b <- tmp
+    }
+    # Return the sum in log space
+    return(log_a + log(1 + exp(log_b - log_a)))
+  }
+
+  negllk <- function(k, lambda, x, t, s, intercept, nbfitmu, nbfitsize,truncation_point, prior_k, prior_lambda){
+
+    -log(-sum(pmap_dbl(list(x, t,s), ~ {log_sum_exp(log(k) + dpois(x = ..1,
+                                                                   lambda =  lambda*..2*(..3/1000000)+intercept, #gives rate esimate per day time per million bp
+                                                                   log = TRUE) -
+                                                      ppois(truncation_point,
+                                                            lambda =  lambda*..2*(..3/1000000),
+                                                            log = TRUE ),
+                                                    log(1-k) + dnbinom(x = ..1,
+                                                                       size = nbfitsize,
+                                                                       mu = nbfitmu,
+                                                                       log = TRUE)-
+                                                      pnbinom(truncation_point,
+                                                              size = nbfitsize,
+                                                              mu = nbfitmu,
+                                                              log = TRUE))+
+        ifelse(!anyNA(prior_k),  dbeta(k, prior_k[1], prior_k[2], log = TRUE), 0)+
+        ifelse(!anyNA(prior_lambda), dgamma(lambda, prior_lambda[1], prior_lambda[2], log = TRUE),0)
+    })))
+  }
+
 
   lambda_limits <- lambda_limits*1e6/365.25
 

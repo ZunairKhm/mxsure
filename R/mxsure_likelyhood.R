@@ -16,6 +16,8 @@
 #' @export
 mxsure_likelyhood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point=2000){
 
+  snp_dist<- time_dist<- rel_loglh<- unrel_loglh<- logLHR <-  NULL
+
   unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
   mix_res <- suppressWarnings(mxsure_estimate(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point = 2000))
 

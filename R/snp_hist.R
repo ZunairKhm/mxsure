@@ -15,6 +15,8 @@
 #'
 #' @export
 snp_hist <- function(mixed_snp_dist, unrelated_snp_dist=NULL, snp_threshold=NULL, limits=c(NA,100), title="SNP Distance Histogram", scales="fixed"){
+
+    SNP_Distance <- NULL
     # Combine the datasets into a data frame
     data <- data.frame(
       SNP_Distance = c(unrelated_snp_dist, mixed_snp_dist),

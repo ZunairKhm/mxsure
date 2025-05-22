@@ -27,6 +27,8 @@ mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mi
                                   sample_size=length(mixed_snp_dist),truncation_point=NA, sample_n=100, confidence_level=0.95, start_params=NA, #"Efficient",
                                   lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf)){
 
+  snp_dist <-NULL
+
   if(is.na(truncation_point)){
     truncation_point <- Inf
   }

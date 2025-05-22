@@ -139,7 +139,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
       nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size), fix.arg = list(truncation_point=truncation_point), discrete = TRUE)
 
       #mixed data fitting
-      llk <- function(params, x){
+      llk1 <- function(params, x){
         k <- params[[1]]
         lambda <- params[[2]]
         intercept <- params[[3]]
@@ -171,7 +171,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
                                 function(k, lambda, intercept) {
                                   nlminb(
                                     start = c(k, lambda, intercept),
-                                    objective = llk,
+                                    objective = llk1,
                                     x = mixed_snp_dist,
                                     lower = c(k_bounds[1], lambda_bounds[1], 0),
                                     upper = c(k_bounds[2], lambda_bounds[2], 1e-10),
@@ -186,7 +186,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
         best_result_name <- names(result_attempts)[[which.min(sapply(result_attempts, `[[`, "objective"))]]
       }
       else{
-        result <- nlminb(start=start_params, objective=llk, x = mixed_snp_dist,,
+        result <- nlminb(start=start_params, objective=llk1, x = mixed_snp_dist,,
                          lower = c(k_bounds[1], lambda_bounds[1], 0),
                          upper = c(k_bounds[2], lambda_bounds[2], 1e-10),
                          control = list(trace = trace))
@@ -259,7 +259,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
       nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size), fix.arg = list(truncation_point=truncation_point), discrete = TRUE)
 
       #mixed data fitting
-      llk <- function(params, x, t){
+      llk2 <- function(params, x, t){
         k <- params[[1]]
         lambda <- params[[2]]
         intercept <- params[[3]]
@@ -296,7 +296,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
                                 function(k, lambda, intercept) {
                                   nlminb(
                                     start = c(k, lambda, intercept),
-                                    objective = llk,
+                                    objective = llk2,
                                     x = mixed_snp_dist,
                                     t = mixed_time_dist,
                                     lower = c(k_bounds[1], lambda_bounds[1], intercept_bounds[1]),
@@ -311,7 +311,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
       }
       else{
         start_params[2] <- start_params[2]/365.25
-        result <- nlminb(start=c(start_params), objective=llk, x = mixed_snp_dist, t = mixed_time_dist,
+        result <- nlminb(start=c(start_params), objective=llk2, x = mixed_snp_dist, t = mixed_time_dist,
                          lower = c(k_bounds[1], lambda_bounds[1], intercept_bounds[1]),
                          upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2]),
                          control = list(trace = trace))
@@ -396,7 +396,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
       nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size), fix.arg = list(truncation_point=truncation_point), discrete = TRUE)
 
       #mixed dataset fitting
-      llk <- function(params, x, t, s){
+      llk3 <- function(params, x, t, s){
         k <- params[[1]]
         lambda <- params[[2]]
         intercept <- params[[3]]
@@ -431,7 +431,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
                                 function(k, lambda, intercept) {
                                   nlminb(
                                     start = c(k, lambda, intercept),
-                                    objective = llk,
+                                    objective = llk3,
                                     x = mixed_snp_dist,
                                     t = mixed_time_dist,
                                     s = mixed_sites,# method="SANN",
@@ -449,7 +449,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
       }
       else{
         start_params[2] <- (as.numeric(start_params[2])*1e6)/(365.25)
-        result <- nlminb(start=start_params, objective=llk, x = mixed_snp_dist, t = mixed_time_dist, s = mixed_sites,# method="SANN",
+        result <- nlminb(start=start_params, objective=llk3, x = mixed_snp_dist, t = mixed_time_dist, s = mixed_sites,# method="SANN",
                          lower = c(k_bounds[1], lambda_bounds[1], intercept_bounds[1]),
                          upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2]),
                          control = list(trace = trace))
