@@ -23,11 +23,11 @@ This package implements a mixture distribution approach to estimating mutation r
 
 ## Installation
 
-You can install the development version of mixturesnpcutoff from [GitHub](https://github.com/) with:
+You can install the development version of mxsure from [GitHub](https://github.com/) with:
 
 ``` r
 install.packages("pak")
-pak::pak("ZunairKhm/mixturesnpcutoff")
+pak::pak("ZunairKhm/mxsure")
 ```
 
 ## Example
@@ -43,4 +43,4 @@ y <- simulate_mixsnp_data(1, 0, n=1000)
 mxsure_estimate(x$snp_dist, y$snp_dist, x$time_dist)
 ```
 
-mxsure_estimate will produce a mutation rate in SNPs/year or SNPs/year/site if sites considered is provided. It will also produce a cutoff that considers a max time for SNP distances that can be considered related/transmitted or unrelated.
+mxsure_estimate will produce a mutation rate in SNPs/year or SNPs/year/site if sites considered is provided. It will also produce a threshold that considers a max time for SNP distances that can be considered related/transmitted or unrelated.

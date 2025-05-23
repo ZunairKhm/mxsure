@@ -13,12 +13,12 @@ provides some plotting functions and simulation functions.
 
 ## Installation
 
-You can install the development version of mixturesnpcutoff from
+You can install the development version of mxsure from
 [GitHub](https://github.com/) with:
 
 ``` r
 install.packages("pak")
-pak::pak("ZunairKhm/mixturesnpcutoff")
+pak::pak("ZunairKhm/mxsure")
 ```
 
 ## Example
@@ -36,10 +36,10 @@ mxsure_estimate(x$snp_dist, y$snp_dist, x$time_dist)
 #> # A tibble: 1 × 8
 #>   snp_threshold lambda     k intercept estimated_fp lambda_units   nb_size nb_mu
 #>           <dbl>  <dbl> <dbl>     <dbl>        <dbl> <chr>            <dbl> <dbl>
-#> 1             3   1.02 0.809  -0.00150        0.009 SNPs per year…    4.35  25.2
+#> 1             3  0.938 0.819  -0.00619        0.006 SNPs per year…    3.95  25.6
 ```
 
 mxsure_estimate will produce a mutation rate in SNPs/year or
 SNPs/year/site if sites considered is provided. It will also produce a
-cutoff that considers a max time for SNP distances that can be
+threshold that considers a max time for SNP distances that can be
 considered related/transmitted or unrelated.
