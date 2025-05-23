@@ -325,7 +325,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
       snp_threshold <- qpois(upper.tail, lambda=result$par[[2]]*(max_time)+result$par[[3]])
       if(threshold_range==TRUE & !is.na(snp_threshold)){
         threshold_range_df <- data.frame(years=seq(0.5, 10, 0.5), threshold=NA, estimated_fp=NA, prop_pos=NA)
-        threshold_range_df$threshold <- modify(threshold_range_df$years, ~{qpois(upper.tail, lambda=result$par[[2]]*365.25*.x+result$par[[3]])})
+        threshold_range_df$threshold <- modify(threshold_range_df$years, ~{qpois(upper.tail, lambda=(result$par[[2]]*365.25*.x)+result$par[[3]])})
         threshold_range_df$estimated_fp <-modify(threshold_range_df$threshold, ~{sum(unrelated_snp_dist<=.x)/length(unrelated_snp_dist)})
         threshold_range_df$prop_pos <-modify(threshold_range_df$threshold, ~{sum(mixed_snp_dist<=.x)/length(mixed_snp_dist)})
       }
@@ -464,7 +464,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
 
       if(threshold_range==TRUE & !is.na(snp_threshold)){
         threshold_range_df <- data.frame(years=seq(0.5, 10, 0.5), threshold=NA, estimated_fp=NA, prop_pos=NA)
-        threshold_range_df$threshold <- modify(threshold_range_df$years, ~{qpois(upper.tail, lambda=result$par[[2]]*.x*365.25*(mean(mixed_sites))+result$par[[3]])})
+        threshold_range_df$threshold <- modify(threshold_range_df$years, ~{qpois(upper.tail, lambda=(result$par[[2]]*.x*365.25*(mean(mixed_sites)/1e6))+result$par[[3]])})
         threshold_range_df$estimated_fp <-modify(threshold_range_df$threshold, ~{sum(unrelated_snp_dist<=.x)/length(unrelated_snp_dist)})
         threshold_range_df$prop_pos <-modify(threshold_range_df$threshold, ~{sum(mixed_snp_dist<=.x)/length(mixed_snp_dist)})
       }
