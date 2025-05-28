@@ -62,7 +62,7 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
 
 
   if(anyNA(ci_data)){
-    original_ci <- mxsure_ci(original_data$snp_dist,unrelated_snp_dist, original_data$time_dist,original_data$sites, truncation_point=truncation_point,
+    original_ci <- mxsure_ci(original_data$snp_dist,unrelated_snp_dist, original_data$time_dist,original_data$sites, truncation_point=truncation_point, quiet=quiet,
                                        sample_size=sample_size, sample_n=sample_n, confidence_level=confidence_level,
                                        start_params = c(original_result[3], original_result[2], original_result[4]), lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds)
   } else{

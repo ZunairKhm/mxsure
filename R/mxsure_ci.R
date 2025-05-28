@@ -25,7 +25,7 @@
 #' @export
 mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA,
                                   sample_size=length(mixed_snp_dist),truncation_point=NA, sample_n=100, confidence_level=0.95, start_params=NA, #"Efficient",
-                                  lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf)){
+                                  lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf), quiet=FALSE){
 
   snp_dist <-NULL
 
@@ -74,7 +74,7 @@ mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mi
 
   return(z)
 
-  },.progress=TRUE, .options = furrr::furrr_options(seed = TRUE))
+  },.progress=!quiet, .options = furrr::furrr_options(seed = TRUE))
 
   bootstrapresults <- raw_bootstrapresults[complete.cases(raw_bootstrapresults), ] #removes failed results from optimisation failures
   bootstrapresults <- bootstrapresults[1:5]
