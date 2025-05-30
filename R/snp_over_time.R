@@ -113,7 +113,7 @@ data <- data |>
     theme_minimal()
   } else {
     ggplot(data, aes(x=time_dist, y=snp_dist, color=LHR_bin))+
-      scale_y_continuous(limits = c(0, NA), expand = c(0.01,0.01), transform = "pseudo_log", breaks = c(0, signif(exp(seq(0, log(truncation_point), length.out=10)), 1)))+
+      scale_y_continuous(limits = c(0, NA), expand = c(0.01,0.01), transform = scales::pseudo_log_trans(sigma=1, base=10), breaks = c(0, signif(exp(seq(0, log(truncation_point), length.out=10)), 1)))+
       scale_x_continuous(limits = c(0, NA), expand = c(0.01,0.01))+
       scale_color_manual(
         values = setNames(viridis::viridis(7, option = "C", direction = 1)[1:6], lhr_levels),
@@ -126,7 +126,7 @@ data <- data |>
       geom_step(data = predictive_intervals, aes(x=time_dist, y=estimate), color="black")+
       geom_step(data = predictive_intervals, aes(x=time_dist, y=low_ci), color="black", linetype="dotted")+
       geom_step(data = predictive_intervals, aes(x=time_dist, y=high_ci), color="black", linetype="dotted")+
-      geom_hline(yintercept=mix_res$snp_threshold, linetype="dashed", alpha=0.75, color="black")+
+      geom_hline(yintercept=mix_res$snp_threshold, linetype="dashed", alpha=0.75, color="red3")+
       guides(color = guide_legend(override.aes = list(shape = 15, size = 5))) +
       labs(title=title,
            y="SNP Distance",
