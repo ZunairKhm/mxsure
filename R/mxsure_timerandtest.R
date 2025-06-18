@@ -162,7 +162,7 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
     any_overlapping_lowci=sum(result$`95%`[result$method!="Original"]>=result$`5%`[1])>0,
     n_overlapping_lowci=sum(result$`95%`[result$method!="Original"]>=result$`5%`[1]),
     perc_overlapping_lowci=sum(result$`95%`[result$method!="Original"]>=result$`5%`[1])/length(result$`95%`[result$method!="Original"]),
-    prop=(sum(result$p_value_n, na.rm=TRUE)+1)/(sum(result$p_value_t, na.rm=TRUE)+1)
+    prop=(sum(result$p_value_n, na.rm=TRUE))/(sum(result$p_value_t, na.rm=TRUE))
   )
 
     plot <- ggplot(result, aes(x = method, y = point_est, colour = as.factor(overlapping_est))) +
