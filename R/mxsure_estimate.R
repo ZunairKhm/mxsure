@@ -486,7 +486,8 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
         message=result$message,
         iterations=result$iterations,
         nb_size=nb_fit$estimate["size"],
-        nb_mu=nb_fit$estimate["mu"]
+        nb_mu=nb_fit$estimate["mu"],
+        lambda_per_genome=((result$par[[2]]*365.25)/1e6)*mean(mixed_sites)
       )
     } else {
       warning("Insufficient data points to fit distributions!")
