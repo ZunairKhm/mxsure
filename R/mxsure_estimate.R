@@ -1,4 +1,4 @@
-#' mxsure
+#' mxsure estimate tree
 #'
 #' Estimates the substitution rate from SNP distances from a mixed related and an unrelated data set with a mixture distribution approach. Uses these rates to produce a threshold of SNP distances to be considered related or not.
 #'
@@ -29,18 +29,14 @@
 #' @return Estimates for the related SNP threshold, substitution rate, proportion related, and estimated false positive rate
 #'
 #' @examples
-#' library(mxsure)
-#' x <- simulate_mixsnp_data(1, 0.8)
-#' y<- simulate_mixsnp_data(1, 0, n=1000)
-#' mxsure_estimate(x$snp_dist, y$snp_dist, x$time_dist)
 #'
 #'
 #' @export
 mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA,truncation_point=2000,
                                youden=FALSE,threshold_range=FALSE, max_time= NA, start_params= NA,
+                            tree=NA, sampleA=NA, sampleB=NA,max_correction_factor=Inf, return_corrected=FALSE,
                               lambda_bounds=c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf), prior_lambda=NA, prior_k=NA,
                                upper.tail=0.95, max_false_positive=0.05, trace=FALSE){
-
 
 
   #correction to convert to snp/day(/MBp)
@@ -123,6 +119,57 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
     }
   }
 
+  #### tree time correction ####
+  if(!anyNA(tree)|!anyNA(sampleA)|!anyNA(sampleB)){
+  # Ensure tree is a list (even if single tree provided)
+  tree_list <- if (inherits(tree, "phylo")) list(tree) else tree
+
+  # Internal function to compute corrected time for a single pair
+  compute_corrected_time <- function(tip1, tip2, snp_dist, time_diff) {
+    for (tree_i in tree_list) {
+      tips <- tree_i$tip.label
+      if (tip1 %in% tips && tip2 %in% tips) {
+        mrca_node <- getMRCA(tree_i, c(tip1, tip2))
+        if (is.null(mrca_node)) return(time_diff)
+
+        # Get distances from MRCA to each tip
+        edge_dist <- dist.nodes(tree_i)
+        tip1_node <- which(tree_i$tip.label == tip1)
+        tip2_node <- which(tree_i$tip.label == tip2)
+
+        mrca_to_tip1 <- edge_dist[mrca_node, tip1_node]
+        mrca_to_tip2 <- edge_dist[mrca_node, tip2_node]
+        distance_since_sample <- abs(mrca_to_tip1 - mrca_to_tip2)
+        full_distance <- edge_dist[tip1_node, tip2_node]
+
+        if (is.na(distance_since_sample) || distance_since_sample == 0 ) return(NA)
+        if( full_distance / distance_since_sample > max_correction_factor) return(NA)
+
+        return(time_diff * full_distance / distance_since_sample)
+      }
+    }
+    # If no matching tree or MRCA, return original time
+    return(NA)
+  }
+
+  # Vectorised using pmap
+  corrected_time <- pmap_dbl(
+    list(sampleA, sampleB, mixed_snp_dist, mixed_time_dist),
+    compute_corrected_time
+  )
+  if(return_corrected){return(tibble(mixed_snp_dist, mixed_time_dist, corrected_time))}
+
+  if (is.na(max_time)) {
+    max_time <- max(mixed_time_dist)
+  }
+  mixed_time_dist <- corrected_time
+
+  mixed_snp_dist <- mixed_snp_dist[!is.na(mixed_time_dist)]
+  mixed_sites <- mixed_sites[!is.na(mixed_time_dist)]
+  sampleA <- sampleA[!is.na(mixed_time_dist)]
+  sampleB <- sampleB[!is.na(mixed_time_dist)]
+  mixed_time_dist <- mixed_time_dist[!is.na(mixed_time_dist)]
+}
   #### threshold without time or sites considered ####
   if((anyNA(mixed_time_dist) & anyNA(mixed_sites))){
     warning("No time data inputted, rate will still be estimated but consider whether this is appropriate")

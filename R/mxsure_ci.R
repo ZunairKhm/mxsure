@@ -25,6 +25,7 @@
 #' @export
 mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA,
                                   sample_size=length(mixed_snp_dist),truncation_point=NA, sample_n=100, confidence_level=0.95, start_params=NA, #"Efficient",
+                      tree=NA, sampleA=NA, sampleB=NA,max_correction_factor=Inf, return_corrected=FALSE,
                                   lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf), quiet=FALSE){
 
   snp_dist <-NULL
@@ -50,6 +51,7 @@ mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mi
   test_result <- suppressWarnings(
       mxsure_estimate(
         mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites, truncation_point=truncation_point, start_params = NA,
+        tree=tree, sampleA=sampleA, sampleB=sampleB,max_correction_factor=max_correction_factor, return_corrected=return_corrected,
         lambda_bounds = lambda_bounds, k_bounds=k_bounds,  intercept_bounds=intercept_bounds)
   , classes = "warning")
   start_params <- as.numeric(c(test_result[3], test_result[2], test_result[4]))
@@ -67,7 +69,9 @@ mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mi
     z <- plyr::try_default(
   suppressWarnings(
     mxsure_estimate(
-      x$snp_dist, y, x$time_dist, x$sites, truncation_point=truncation_point, start_params = start_params, lambda_bounds = lambda_bounds, k_bounds=k_bounds,  intercept_bounds=intercept_bounds
+      x$snp_dist, y, x$time_dist, x$sites, truncation_point=truncation_point,
+      tree=tree, sampleA=sampleA, sampleB=sampleB,max_correction_factor=max_correction_factor, return_corrected=return_corrected,
+      start_params = start_params, lambda_bounds = lambda_bounds, k_bounds=k_bounds,  intercept_bounds=intercept_bounds
     )
   , classes = "warning")
   ,data.frame(snp_threshold=NA, lambda=NA, k=NA,intercept=NA, estimated_fp=NA))
