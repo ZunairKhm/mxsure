@@ -119,13 +119,13 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
     }
   }
 
-  #### tree time correction ####
+  #### tree snp correction ####
   if(!anyNA(tree)|!anyNA(sampleA)|!anyNA(sampleB)){
   # Ensure tree is a list (even if single tree provided)
   tree_list <- if (inherits(tree, "phylo")) list(tree) else tree
 
   # Internal function to compute corrected time for a single pair
-  compute_corrected_time <- function(tip1, tip2, snp_dist, time_diff) {
+  compute_corrected_snps <- function(tip1, tip2, snp_dist, time_diff) {
     for (tree_i in tree_list) {
       tips <- tree_i$tip.label
       if (tip1 %in% tips && tip2 %in% tips) {
@@ -142,10 +142,10 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
         distance_since_sample <- abs(mrca_to_tip1 - mrca_to_tip2)
         full_distance <- edge_dist[tip1_node, tip2_node]
 
-        if (is.na(distance_since_sample) || distance_since_sample == 0 ) return(NA)
-        if( full_distance / distance_since_sample > max_correction_factor) return(NA)
+        if (is.na(distance_since_sample)  ) return(NA)
+        #if( full_distance / distance_since_sample > max_correction_factor) return(NA)
 
-        return(time_diff * full_distance / distance_since_sample)
+        return(distance_since_sample) #time_diff * full_distance / distance_since_sample)
       }
     }
     # If no matching tree or MRCA, return original time
@@ -153,22 +153,21 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
   }
 
   # Vectorised using pmap
-  corrected_time <- pmap_dbl(
+  corrected_snps <- pmap_dbl(
     list(sampleA, sampleB, mixed_snp_dist, mixed_time_dist),
-    compute_corrected_time
+    compute_corrected_snps
   )
-  if(return_corrected){return(tibble(mixed_snp_dist, mixed_time_dist, corrected_time))}
+  if(return_corrected){return(tibble(mixed_snp_dist, mixed_time_dist, corrected_snps))}
 
-  if (is.na(max_time)) {
-    max_time <- max(mixed_time_dist)
-  }
-  mixed_time_dist <- corrected_time
-
-  mixed_snp_dist <- mixed_snp_dist[!is.na(mixed_time_dist)]
-  mixed_sites <- mixed_sites[!is.na(mixed_time_dist)]
-  sampleA <- sampleA[!is.na(mixed_time_dist)]
-  sampleB <- sampleB[!is.na(mixed_time_dist)]
-  mixed_time_dist <- mixed_time_dist[!is.na(mixed_time_dist)]
+  # if (is.na(max_time)) {
+  #   max_time <- max(mixed_time_dist)
+  # }
+  mixed_snp_dist <- corrected_snps
+  mixed_time_dist <- mixed_time_dist[!is.na(mixed_snp_dist)]
+  mixed_sites <- mixed_sites[!is.na(mixed_snp_dist)]
+  sampleA <- sampleA[!is.na(mixed_snp_dist)]
+  sampleB <- sampleB[!is.na(mixed_snp_dist)]
+  mixed_snp_dist <- mixed_snp_dist[!is.na(mixed_snp_dist)]
 }
   #### threshold without time or sites considered ####
   if((anyNA(mixed_time_dist) & anyNA(mixed_sites))){
