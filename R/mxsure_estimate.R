@@ -157,7 +157,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
     list(sampleA, sampleB, mixed_snp_dist, mixed_time_dist),
     compute_corrected_snps
   )
-  if(return_corrected){return(tibble(mixed_snp_dist, mixed_time_dist, corrected_snps))}
+  if(return_corrected){return(tibble(sampleA, sampleB, mixed_snp_dist, mixed_time_dist, corrected_snps))}
 
   # if (is.na(max_time)) {
   #   max_time <- max(mixed_time_dist)
