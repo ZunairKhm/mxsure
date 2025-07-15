@@ -24,6 +24,7 @@ Imports:
     plyr,
     ggbeeswarm,
     future.apply,
-    geomtextpath
+    geomtextpath,
+    ape
 URL: https://github.com/ZunairKhm/msure
 BugReports: https://github.com/ZunairKhm/mixturesnpcutoff/issues

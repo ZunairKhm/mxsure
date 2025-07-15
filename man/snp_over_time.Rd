@@ -16,7 +16,16 @@ snp_over_time(
   p_value = NA,
   ci_data = NA,
   time_limits = c(0, NA),
-  under_threshold = FALSE
+  under_threshold = FALSE,
+  tree = NA,
+  sampleA = NA,
+  sampleB = NA,
+  max_correction_factor = Inf,
+  lambda_bounds = c(0, 1),
+  k_bounds = c(0, 1),
+  intercept_bounds = c(-Inf, Inf),
+  prior_lambda = NA,
+  prior_k = NA
 )
 }
 \arguments{

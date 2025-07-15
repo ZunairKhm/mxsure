@@ -13,10 +13,16 @@ mxsure_ci(
   truncation_point = NA,
   sample_n = 100,
   confidence_level = 0.95,
-  start_params = NA,
+  start_params = "Efficient",
+  tree = NA,
+  sampleA = NA,
+  sampleB = NA,
   lambda_bounds = c(0, 1),
   k_bounds = c(0, 1),
-  intercept_bounds = c(-Inf, Inf)
+  intercept_bounds = c(-Inf, Inf),
+  shared_snp_lambda_bounds = c(0, Inf),
+  shared_snp_intercept_bounds = c(0, Inf),
+  quiet = FALSE
 )
 }
 \arguments{

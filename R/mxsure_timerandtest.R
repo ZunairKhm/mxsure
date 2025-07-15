@@ -32,8 +32,9 @@
 #'
 mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA, truncation_point=NA,
                                   sample_size=length(mixed_snp_dist), sample_n=100, permutations=5, quiet=FALSE, confidence_level=0.95,
-                                tree=NA, sampleA=NA, sampleB=NA,max_correction_factor=Inf, return_corrected=FALSE,
-                                start_params=NA, ci_data=NA, title=NULL, lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf),
+                                tree=NA, sampleA=NA, sampleB=NA,
+                                start_params=NA, ci_data=NA, title=NULL,
+                                lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf),shared_snp_lambda_bounds = c(0, Inf), shared_snp_intercept_bounds= c(0, Inf),
                                   within_individual=FALSE, subjectA_id, subjectB_id,
                                   clustered=FALSE, prop_type="above_estimate"
                                 ){
@@ -42,8 +43,8 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
   #unadjusted result
   original_data <- tibble(snp_dist=mixed_snp_dist, time_dist=mixed_time_dist, sites=mixed_sites)
   original_result <- mxsure_estimate(original_data$snp_dist,unrelated_snp_dist, original_data$time_dist,original_data$sites, truncation_point=truncation_point,
-                                     tree=tree, sampleA=sampleA, sampleB=sampleB,max_correction_factor=max_correction_factor, return_corrected=return_corrected,
-                                     lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds)
+                                     tree=tree, sampleA=sampleA, sampleB=sampleB,
+                                     lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, shared_snp_lambda_bounds = shared_snp_lambda_bounds, shared_snp_intercept_bounds= shared_snp_intercept_bounds)
 
   if (sample_n==0){
     return(list(
@@ -66,9 +67,10 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
 
   if(anyNA(ci_data)){
     original_ci <- mxsure_ci(original_data$snp_dist,unrelated_snp_dist, original_data$time_dist,original_data$sites, truncation_point=truncation_point, quiet=quiet,
-                             tree=tree, sampleA=sampleA, sampleB=sampleB,max_correction_factor=max_correction_factor, return_corrected=return_corrected,
+                             tree=tree, sampleA=sampleA, sampleB=sampleB,
                                        sample_size=sample_size, sample_n=sample_n, confidence_level=confidence_level,
-                                       start_params = c(original_result[3], original_result[2], original_result[4]), lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds)
+                                       start_params = c(original_result[3], original_result[2], original_result[4], original_result[7], original_result[8]),
+                             lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, shared_snp_intercept_bounds= shared_snp_intercept_bounds)
   } else{
     original_ci <- ci_data
   }
@@ -116,18 +118,18 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
       }
 
   timerand_result <- mxsure_estimate(timerand_data$snp_dist,unrelated_snp_dist, timerand_data$time_dist, timerand_data$sites, truncation_point=truncation_point,
-                                     tree=tree, sampleA=sampleA, sampleB=sampleB,max_correction_factor=max_correction_factor, return_corrected=return_corrected,
-                                        lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, start_params = start_params_timerand)
+                                     tree=tree, sampleA=sampleA, sampleB=sampleB,
+                                        lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, start_params = start_params_timerand, shared_snp_intercept_bounds= shared_snp_intercept_bounds)
 
   if(!anyNA(start_params)){
   if (any(start_params=="Efficient")){
-    start_params_timerand <-as.numeric(c(timerand_result[3], timerand_result[2], timerand_result[4]))
+    start_params_timerand <-as.numeric(c(timerand_result[3], timerand_result[2], timerand_result[4], timerand_result[7], timerand_result[8]))
   }}
 
   timerand_ci <- mxsure_ci(timerand_data$snp_dist, unrelated_snp_dist, timerand_data$time_dist, timerand_data$sites,
                                        sample_size=sample_size, sample_n=sample_n, confidence_level=confidence_level, truncation_point=truncation_point,
-                           tree=tree, sampleA=sampleA, sampleB=sampleB,max_correction_factor=max_correction_factor, return_corrected=return_corrected,
-                                       lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds
+                           tree=tree, sampleA=sampleA, sampleB=sampleB,
+                                       lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, shared_snp_intercept_bounds= shared_snp_intercept_bounds
                                        ,start_params = start_params_timerand
                                        )
   if(prop_type=="above_estimate"){

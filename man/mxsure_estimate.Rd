@@ -2,7 +2,7 @@
 % Please edit documentation in R/mxsure_estimate.R
 \name{mxsure_estimate}
 \alias{mxsure_estimate}
-\title{mxsure}
+\title{mxsure estimate tree}
 \usage{
 mxsure_estimate(
   mixed_snp_dist,
@@ -14,11 +14,15 @@ mxsure_estimate(
   threshold_range = FALSE,
   max_time = NA,
   start_params = NA,
+  tree = NA,
+  sampleA = NA,
+  sampleB = NA,
+  return_tree_data = FALSE,
   lambda_bounds = c(0, 1),
   k_bounds = c(0, 1),
   intercept_bounds = c(-Inf, Inf),
-  prior_lambda = NA,
-  prior_k = NA,
+  shared_snp_lambda_bounds = c(0, Inf),
+  shared_snp_intercept_bounds = c(0, Inf),
   upper.tail = 0.95,
   max_false_positive = 0.05,
   trace = FALSE
@@ -49,10 +53,6 @@ mxsure_estimate(
 
 \item{intercept_bounds}{bounds of intercept estimation}
 
-\item{prior_lambda}{parameters for a gamma prior distribution for rate estimation, if set to "default" will use default parameters}
-
-\item{prior_k}{parameters for a beta prior distribution for related proportion estimation, if set to "default" will use default parameters}
-
 \item{upper.tail}{percentile to calculate SNP thresholds}
 
 \item{max_false_positive}{if the false positive rate from calculated threshold is higher than this value a warning is produced}
@@ -64,12 +64,4 @@ Estimates for the related SNP threshold, substitution rate, proportion related, 
 }
 \description{
 Estimates the substitution rate from SNP distances from a mixed related and an unrelated data set with a mixture distribution approach. Uses these rates to produce a threshold of SNP distances to be considered related or not.
-}
-\examples{
-library(mxsure)
-x <- simulate_mixsnp_data(1, 0.8)
-y<- simulate_mixsnp_data(1, 0, n=1000)
-mxsure_estimate(x$snp_dist, y$snp_dist, x$time_dist)
-
-
 }

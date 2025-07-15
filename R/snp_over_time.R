@@ -25,13 +25,32 @@
 #' @return a plot of SNP distance over time using ggplot
 #'
 #' @export
-snp_over_time <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites=NA, truncation_point=2000, max_time=NA, title="SNP Distance Over Time", jitter=TRUE, p_value=NA, ci_data=NA, time_limits=c(0,NA), under_threshold=FALSE){
+snp_over_time <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites=NA, truncation_point=2000,
+                          max_time=NA, title="SNP Distance Over Time", jitter=TRUE, p_value=NA, ci_data=NA, time_limits=c(0,NA), under_threshold=FALSE,
+                          tree=NA, sampleA=NA, sampleB=NA,max_correction_factor=Inf,
+                          lambda_bounds=c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf), prior_lambda=NA, prior_k=NA){
 
 
   snp_dist <- time_dist <-rel_lh <- unrel_lh <-LHR <-LHR_bin <- result <- estimate <- low_ci <- high_ci <- rel_loglh <- unrel_logLH <- logLH <- NULL
+
+  if(anyNA(tree)){
   mix_res <- suppressWarnings(
-    mxsure_estimate(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point = truncation_point, max_time = max_time)
-    )
+    mxsure_estimate(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point = truncation_point, max_time = max_time,
+                    lambda_bounds=lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, prior_lambda=prior_lambda, prior_k=prior_k))
+  } else{
+    mix_res <- suppressWarnings(mxsure_estimate(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point = truncation_point, max_time = max_time,
+                                                lambda_bounds=lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, prior_lambda=prior_lambda, prior_k=prior_k,
+                                                tree=tree, sampleA=sampleA, sampleB=sampleB,max_correction_factor=max_correction_factor, return_corrected = FALSE))
+      x <- suppressWarnings(mxsure_estimate(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point = truncation_point, max_time = max_time,
+                      lambda_bounds=lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, prior_lambda=prior_lambda, prior_k=prior_k,
+                      tree=tree, sampleA=sampleA, sampleB=sampleB,max_correction_factor=max_correction_factor, return_corrected = TRUE))
+    mixed_snp_dist <- x$corrected_snps[!is.na(x$corrected_snps)]
+    mixed_time_dist <- x$mixed_time_dist[!is.na(x$corrected_snps)]
+    if(!anyNA(mixed_sites)){
+    mixed_sites <- mixed_sites[!is.na(x$corrected_snps)]
+    }
+    #return(tibble(mixed_snp_dist,mixed_time_dist,mixed_sites))
+    }
 
   if(is.na(mean(mixed_sites, na.rm=TRUE))){
     mixed_sites <- 1

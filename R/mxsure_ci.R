@@ -24,9 +24,10 @@
 #'
 #' @export
 mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA,
-                                  sample_size=length(mixed_snp_dist),truncation_point=NA, sample_n=100, confidence_level=0.95, start_params=NA, #"Efficient",
-                      tree=NA, sampleA=NA, sampleB=NA,max_correction_factor=Inf, return_corrected=FALSE,
-                                  lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf), quiet=FALSE){
+                      sample_size=length(mixed_snp_dist),truncation_point=NA, sample_n=100, confidence_level=0.95, start_params="Efficient",
+                      tree=NA, sampleA=NA, sampleB=NA,
+                      lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf), shared_snp_lambda_bounds = c(0, Inf), shared_snp_intercept_bounds= c(0, Inf),
+                      quiet=FALSE){
 
   snp_dist <-NULL
 
@@ -45,21 +46,27 @@ mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mi
 
   mix_data <- tibble(snp_dist=mixed_snp_dist, time_dist=mixed_time_dist, sites=mixed_sites)
 
-  if (anyNA(start_params)){
-    start_params <- NA
-    } else if(all(start_params=="Efficient")){
-  test_result <- suppressWarnings(
-      mxsure_estimate(
-        mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites, truncation_point=truncation_point, start_params = NA,
-        tree=tree, sampleA=sampleA, sampleB=sampleB,max_correction_factor=max_correction_factor, return_corrected=return_corrected,
-        lambda_bounds = lambda_bounds, k_bounds=k_bounds,  intercept_bounds=intercept_bounds)
-  , classes = "warning")
-  start_params <- as.numeric(c(test_result[3], test_result[2], test_result[4]))
-  }
-
+  mix_data$sampleA <- sampleA
+  mix_data$sampleB <- sampleB
 
   mix_data <- filter(mix_data, snp_dist<truncation_point)
   unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
+
+
+
+  if (anyNA(start_params)){
+    start_params <- NA
+    } else if(all(start_params=="Efficient")){
+  test_result <- #suppressWarnings(
+      mxsure_estimate(
+        mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites, truncation_point=truncation_point, start_params = NA,
+        tree=tree, sampleA=mix_data$sampleA, sampleB=mix_data$sampleB,
+        lambda_bounds = lambda_bounds, k_bounds=k_bounds,  intercept_bounds=intercept_bounds,
+        shared_snp_lambda_bounds = shared_snp_lambda_bounds, shared_snp_intercept_bounds= shared_snp_intercept_bounds)
+  #, classes = "warning")
+  start_params <- as.numeric(c(test_result[3], test_result[2], test_result[4], test_result[7], test_result[8]))
+    }
+
 
   raw_data <- list()
   #bootstrapping both close and distant data sets allowing for parallelisation
@@ -70,8 +77,8 @@ mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mi
   suppressWarnings(
     mxsure_estimate(
       x$snp_dist, y, x$time_dist, x$sites, truncation_point=truncation_point,
-      tree=tree, sampleA=sampleA, sampleB=sampleB,max_correction_factor=max_correction_factor, return_corrected=return_corrected,
-      start_params = start_params, lambda_bounds = lambda_bounds, k_bounds=k_bounds,  intercept_bounds=intercept_bounds
+      tree=tree, sampleA=x$sampleA, sampleB=x$sampleB,
+      start_params = start_params, lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, shared_snp_lambda_bounds = shared_snp_lambda_bounds, shared_snp_intercept_bounds= shared_snp_intercept_bounds
     )
   , classes = "warning")
   ,data.frame(snp_threshold=NA, lambda=NA, k=NA,intercept=NA, estimated_fp=NA))
@@ -79,6 +86,7 @@ mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mi
   return(z)
 
   },.progress=!quiet, .options = furrr::furrr_options(seed = TRUE))
+
 
   bootstrapresults <- raw_bootstrapresults[complete.cases(raw_bootstrapresults), ] #removes failed results from optimisation failures
   bootstrapresults <- bootstrapresults[1:5]
