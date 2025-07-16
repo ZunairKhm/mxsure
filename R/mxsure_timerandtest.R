@@ -33,7 +33,7 @@
 mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA, truncation_point=NA,
                                   sample_size=length(mixed_snp_dist), sample_n=100, permutations=5, quiet=FALSE, confidence_level=0.95,
                                 tree=NA, sampleA=NA, sampleB=NA,
-                                start_params=NA, ci_data=NA, title=NULL,
+                                start_params='Efficient', ci_data=NA, title=NULL,
                                 lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf),shared_snp_lambda_bounds = c(0, Inf), shared_snp_intercept_bounds= c(0, Inf),
                                   within_individual=FALSE, subjectA_id, subjectB_id,
                                   clustered=FALSE, prop_type="above_estimate"
@@ -173,6 +173,7 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
     prop=(sum(result$p_value_n, na.rm=TRUE))/(sum(result$p_value_t, na.rm=TRUE))
   )
 
+  if(original_result$lambda_units=="SNPs per year per site"){
     plot <- ggplot(result, aes(x = method, y = point_est, colour = as.factor(overlapping_est))) +
       scale_color_manual(values=c("FALSE"="black", "TRUE"="red3"))+
       geom_hline(yintercept = result$point_est[1], color="grey60")+
@@ -186,6 +187,21 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
            subtitle = paste0("prop.=",format(round(outcome$prop, 4)))) +
       theme_bw()+
       theme(legend.position="none")
+  }else{
+    plot <- ggplot(result, aes(x = method, y = point_est, colour = as.factor(overlapping_est))) +
+      scale_color_manual(values=c("FALSE"="black", "TRUE"="red3"))+
+      geom_hline(yintercept = result$point_est[1], color="grey60")+
+      ggbeeswarm::geom_quasirandom(data=rawtimerand,aes(x=method, y=lambda),color="grey50",size=1.1, alpha=0.4, stroke = 0)+
+      geom_errorbar(aes(ymin = `5%`, ymax = `95%`), width = 0.3) +
+      geom_point(size = 2, color = "red3") +  # Point estimate
+      #scale_y_continuous(expand = c(0,0), transform = scales::pseudo_log_trans(sigma=1e-10,base=10), breaks=c(0, 10^(-10:-1)))+
+      labs(title=title,
+           x = NULL,
+           y = paste0("Rate (",original_result$lambda_units, ")" ),
+           subtitle = paste0("prop.=",format(round(outcome$prop, 4)))) +
+      theme_bw()+
+      theme(legend.position="none")
+    }
 
   xres_timerand <- list(
     result=result,
