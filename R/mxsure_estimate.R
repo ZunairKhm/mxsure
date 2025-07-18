@@ -22,7 +22,7 @@
 #' @importFrom dplyr filter
 #' @importFrom fitdistrplus fitdist
 #' @importFrom tibble tibble
-#' @importFrom purrr map_dbl modify pmap_dbl pmap
+#' @importFrom purrr map_dbl modify pmap_dbl pmap pmap_dfr
 #' @importFrom ape getMRCA dist.nodes
 #'
 #' @return Estimates for the related SNP threshold, substitution rate, proportion related, and estimated false positive rate
@@ -144,7 +144,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
     }
 
     # Vectorised using pmap
-    branch_lengths <- pmap_dfr(
+    branch_lengths <- purrr::pmap_dfr(
       list(sampleA, sampleB, mixed_snp_dist, mixed_time_dist),
       compute_shared_snps
     )
