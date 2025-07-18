@@ -25,6 +25,7 @@ Imports:
     ggbeeswarm,
     future.apply,
     geomtextpath,
-    ape
+    ape,
+    skellam
 URL: https://github.com/ZunairKhm/msure
 BugReports: https://github.com/ZunairKhm/mixturesnpcutoff/issues

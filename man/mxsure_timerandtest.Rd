@@ -18,7 +18,7 @@ mxsure_timerandtest(
   tree = NA,
   sampleA = NA,
   sampleB = NA,
-  start_params = NA,
+  start_params = "Efficient",
   ci_data = NA,
   title = NULL,
   lambda_bounds = c(0, 1),
