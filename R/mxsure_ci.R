@@ -26,7 +26,7 @@
 mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA,
                       sample_size=length(mixed_snp_dist),truncation_point=NA, sample_n=100, confidence_level=0.95, start_params="Efficient",
                       tree=NA, sampleA=NA, sampleB=NA,
-                      lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf), shared_snp_lambda_bounds = c(0, Inf), shared_snp_intercept_bounds= c(0, Inf),
+                      lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(0, Inf), shared_snp_lambda_bounds = c(0, Inf), shared_snp_intercept_bounds= c(0, Inf),
                       quiet=FALSE){
 
   snp_dist <-NULL

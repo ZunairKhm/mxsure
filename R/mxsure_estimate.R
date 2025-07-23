@@ -34,7 +34,7 @@
 mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA,truncation_point=2000,
                             youden=FALSE,threshold_range=FALSE, max_time= NA, start_params= NA,
                             tree=NA, sampleA=NA, sampleB=NA, return_tree_data=FALSE,
-                            lambda_bounds=c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf), shared_snp_lambda_bounds = c(0, Inf), shared_snp_intercept_bounds= c(0, Inf),
+                            lambda_bounds=c(0, 1), k_bounds=c(0,1), intercept_bounds=c(0, Inf), shared_snp_lambda_bounds = c(0, Inf), shared_snp_intercept_bounds= c(0, Inf),
                             upper.tail=0.95, max_false_positive=0.05, trace=FALSE){
 
 
@@ -203,9 +203,9 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
           -sum(pmap_dbl(list(x, t, c1, c2), ~ {suppressWarnings(log_sum_exp(log(k) + #dpois(x = ..1,
                                                                                 #      lambda =  lambda*(..2) + intercept+ shared_snp_intercept*(..3), #gives rate esimate per day
                                                                                 #      log = TRUE)
-                                                                       skellam::dskellam(x= (..3 - ..4),
-                                                                                         lambda1 = shared_snp_intercept*..4+ lambda*..2 + intercept,
-                                                                                         lambda2 = shared_snp_intercept*..4,
+                                                                       skellam::dskellam(x= (..3 - ..4) ,
+                                                                                         lambda1 = shared_snp_intercept*..4+ lambda*..2 + intercept +1000,
+                                                                                         lambda2 = shared_snp_intercept*..4 +1000,
                                                                                          log=TRUE)
                                                                        + dpois(x = ..4,
                                                                                lambda = shared_snp_lambda,
@@ -262,7 +262,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
         }
 
         if (is.na(max_time)) {
-          max_time <- max(mixed_time_dist)
+          max_time <- max(abs(mixed_time_dist))
         }
 
         snp_threshold <- qpois(upper.tail, lambda=result$par[[2]]*(max_time)+result$par[[3]])

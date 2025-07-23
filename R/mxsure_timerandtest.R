@@ -30,11 +30,11 @@
 #' @return list of overall outcomes, results from each time randomisation, raw results, and a plot comparing point estimates and confidence levels between original data and time randomised data
 #' @export
 #'
-mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA, truncation_point=NA,
+mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA, truncation_point=2000,
                                   sample_size=length(mixed_snp_dist), sample_n=100, permutations=5, quiet=FALSE, confidence_level=0.95,
                                 tree=NA, sampleA=NA, sampleB=NA,
                                 start_params='Efficient', ci_data=NA, title=NULL,
-                                lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf),shared_snp_lambda_bounds = c(0, Inf), shared_snp_intercept_bounds= c(0, Inf),
+                                lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(0, Inf),shared_snp_lambda_bounds = c(0, Inf), shared_snp_intercept_bounds= c(0, Inf),
                                   within_individual=FALSE, subjectA_id, subjectB_id,
                                   clustered=FALSE, prop_type="above_estimate"
                                 ){
@@ -118,8 +118,8 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
       }
 
   timerand_result <- mxsure_estimate(timerand_data$snp_dist,unrelated_snp_dist, timerand_data$time_dist, timerand_data$sites, truncation_point=truncation_point,
-                                     tree=tree, sampleA=sampleA, sampleB=sampleB,
-                                        lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, start_params = start_params_timerand, shared_snp_intercept_bounds= shared_snp_intercept_bounds)
+                                     tree=tree, sampleA=sampleA, sampleB=sampleB, trace = TRUE,
+                                        lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, start_params = start_params_timerand, shared_snp_intercept_bounds= shared_snp_intercept_bounds, shared_snp_lambda_bounds = shared_snp_lambda_bounds)
 
   if(!anyNA(start_params)){
   if (any(start_params=="Efficient")){
