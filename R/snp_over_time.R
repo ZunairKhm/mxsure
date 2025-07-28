@@ -44,9 +44,9 @@ snp_over_time <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, m
   }
 
   if(under_threshold){
-  data <- filter(data, mixed_snp_dist<=mix_res$snp_threshold+1)
+  data <- filter(data, snp_dist<=mix_res$snp_threshold+1)
   } else {
-    data <- filter(data, mixed_snp_dist<truncation_point)
+    data <- filter(data, snp_dist<truncation_point)
   }
   #data$LHR <- LH$LHR[match(paste(data$snp_dist, data$time_dist), paste(LH$snp_dist, LH$time_dist))]
   lhr_levels <- c("LHR < 0.01",
