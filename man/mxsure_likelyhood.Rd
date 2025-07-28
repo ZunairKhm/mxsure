@@ -9,7 +9,11 @@ mxsure_likelyhood(
   unrelated_snp_dist,
   mixed_time_dist,
   mixed_sites,
-  truncation_point = 2000
+  truncation_point = 2000,
+  tree = NA,
+  sampleA = NA,
+  sampleB = NA,
+  branch_intercept = NA
 )
 }
 \arguments{

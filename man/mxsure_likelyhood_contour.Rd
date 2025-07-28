@@ -10,8 +10,6 @@ mxsure_likelyhood_contour(
   mixed_time_dist,
   mixed_sites,
   truncation_point = NA,
-  prior_lambda = NA,
-  prior_k = NA,
   lambda_bounds = c(0, 1),
   k_bounds = c(0, 1),
   intercept_bounds = c(-Inf, Inf),
@@ -34,10 +32,6 @@ mxsure_likelyhood_contour(
 \item{mixed_sites}{list of sites considered for each SNP distance in mixed data set}
 
 \item{truncation_point}{a SNP distance limit for the data, if set to NA will estimate as if there is no limit}
-
-\item{prior_lambda}{parameters for a gamma prior distribution for rate estimation, if set to "default" will use some default parameters}
-
-\item{prior_k}{parameters for a beta prior distribution for related proportion estimation, if set to "default" will use some default parameters}
 
 \item{lambda_bounds}{bounds of rate estimation in SNPs/year/site if given time and site data}
 

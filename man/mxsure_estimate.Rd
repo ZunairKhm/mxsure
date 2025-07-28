@@ -18,11 +18,11 @@ mxsure_estimate(
   sampleA = NA,
   sampleB = NA,
   return_tree_data = FALSE,
+  branch_intercept = NA,
   lambda_bounds = c(0, 1),
   k_bounds = c(0, 1),
   intercept_bounds = c(-Inf, Inf),
-  shared_snp_lambda_bounds = c(0, Inf),
-  shared_snp_intercept_bounds = c(0, Inf),
+  single_branch_lambda_bounds = c(0, Inf),
   upper.tail = 0.95,
   max_false_positive = 0.05,
   trace = FALSE

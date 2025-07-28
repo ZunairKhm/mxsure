@@ -20,8 +20,8 @@ mxsure_ci(
   lambda_bounds = c(0, 1),
   k_bounds = c(0, 1),
   intercept_bounds = c(-Inf, Inf),
-  shared_snp_lambda_bounds = c(0, Inf),
-  shared_snp_intercept_bounds = c(0, Inf),
+  single_branch_lambda_bounds = c(0, Inf),
+  branch_intercept = NA,
   quiet = FALSE
 )
 }

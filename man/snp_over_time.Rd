@@ -20,12 +20,10 @@ snp_over_time(
   tree = NA,
   sampleA = NA,
   sampleB = NA,
-  max_correction_factor = Inf,
+  branch_intercept = NA,
   lambda_bounds = c(0, 1),
   k_bounds = c(0, 1),
-  intercept_bounds = c(-Inf, Inf),
-  prior_lambda = NA,
-  prior_k = NA
+  intercept_bounds = c(-Inf, Inf)
 )
 }
 \arguments{
