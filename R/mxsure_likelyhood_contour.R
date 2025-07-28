@@ -10,8 +10,6 @@
 #' @param bins number of bins to pass to ggplot contour function
 #' @param title title to pass to ggplot title
 #' @param truncation_point a SNP distance limit for the data, if set to NA will estimate as if there is no limit
-#' @param prior_lambda parameters for a gamma prior distribution for rate estimation, if set to "default" will use some default parameters
-#' @param prior_k parameters for a beta prior distribution for related proportion estimation, if set to "default" will use some default parameters
 #' @param lambda_bounds bounds of rate estimation in SNPs/year/site if given time and site data
 #' @param k_bounds bounds of related proportion estimation
 #' @param intercept_bounds bounds of intercept estimation
@@ -24,7 +22,7 @@
 #' @return ggplot contour map of likelyhood space
 #' @export
 mxsure_likelyhood_contour <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point=NA,
-                                       prior_lambda=NA, prior_k=NA, lambda_bounds=c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf),
+                                       lambda_bounds=c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf),
                                        resolution=100, lambda_limits=c(1e-8, 1e-4), k_limits=c(0.2,0.99), low_ci=NULL, high_ci=NULL,
                                        bins=NULL, title="Likelihood Contour Plot"){
 
@@ -41,7 +39,7 @@ mxsure_likelyhood_contour <- function(mixed_snp_dist, unrelated_snp_dist, mixed_
     return(log_a + log(1 + exp(log_b - log_a)))
   }
 
-  negllk <- function(k, lambda, x, t, s, intercept, nbfitmu, nbfitsize,truncation_point, prior_k, prior_lambda){
+  negllk <- function(k, lambda, x, t, s, intercept, nbfitmu, nbfitsize,truncation_point){
 
     -log(-sum(pmap_dbl(list(x, t,s), ~ {log_sum_exp(log(k) + dpois(x = ..1,
                                                                    lambda =  lambda*..2*(..3/1000000)+intercept, #gives rate esimate per day time per million bp
@@ -56,9 +54,7 @@ mxsure_likelyhood_contour <- function(mixed_snp_dist, unrelated_snp_dist, mixed_
                                                       pnbinom(truncation_point,
                                                               size = nbfitsize,
                                                               mu = nbfitmu,
-                                                              log = TRUE))+
-        ifelse(!anyNA(prior_k),  dbeta(k, prior_k[1], prior_k[2], log = TRUE), 0)+
-        ifelse(!anyNA(prior_lambda), dgamma(lambda, prior_lambda[1], prior_lambda[2], log = TRUE),0)
+                                                              log = TRUE))
     })))
   }
 
@@ -84,15 +80,6 @@ mxsure_likelyhood_contour <- function(mixed_snp_dist, unrelated_snp_dist, mixed_
   mixed_sites <- x$mixed_sites
   unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
 
-  #setting priors
-  if(length(prior_lambda)==1){
-    if(is.element(prior_lambda, "default")){
-      prior_lambda <- c(1.06, 0.44)
-    }}
-  if(length(prior_k)==1){
-    if(is.element(prior_k, "default")){
-      prior_k <- c(1.60, 1.25)
-    }}
 
   lambda <- exp(seq(log(lambda_limits[1]),log(lambda_limits[2]), length.out = resolution))
   k=seq(k_limits[1],k_limits[2],length.out=resolution)
@@ -113,9 +100,7 @@ mxsure_likelyhood_contour <- function(mixed_snp_dist, unrelated_snp_dist, mixed_
            intercept = result$intercept,
            nbfitmu = result$nb_mu,
            nbfitsize = result$nb_size,
-           truncation_point=truncation_point,
-           prior_k=prior_k,
-           prior_lambda=prior_lambda)
+           truncation_point=truncation_point)
   })
 
   # Plot the results using ggplot

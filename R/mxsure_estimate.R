@@ -33,7 +33,7 @@
 #' @export
 mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA,truncation_point=2000,
                             youden=FALSE,threshold_range=FALSE, max_time= NA, start_params= NA,
-                            tree=NA, sampleA=NA, sampleB=NA, return_tree_data=FALSE, br=NA,
+                            tree=NA, sampleA=NA, sampleB=NA, return_tree_data=FALSE, branch_intercept=NA,
                             lambda_bounds=c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf), single_branch_lambda_bounds = c(0, Inf),
                             upper.tail=0.95, max_false_positive=0.05, trace=FALSE){
 
@@ -160,8 +160,8 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
     mixed_sites <- mixed_sites[!anyNA(branch_lengths)]
     sampleA <- sampleA[!anyNA(branch_lengths)]
     sampleB <- sampleB[!anyNA(branch_lengths)]
-    if(!is.na(br)){
-      branch_lengths$root_to_mrca <- br
+    if(!is.na(branch_intercept)){
+      branch_lengths$root_to_mrca <- branch_intercept
     }
 
 
@@ -356,33 +356,38 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
         nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size), fix.arg = list(truncation_point=truncation_point), discrete = TRUE)
 
         #mixed dataset fitting
-        llk3 <- function(params, x, t, s, c){
+        llk2 <- function(params, x, t, c1, c2, b,s){
           k <- params[[1]]
           lambda <- params[[2]]
           intercept <- params[[3]]
           single_branch_lambda <- params[[4]]
-          shared_snp_intercept <- params[[5]]
 
-          log(-sum(pmap_dbl(list(x, t, s, c), ~ {suppressWarnings(log_sum_exp(log(k) + dpois(x = ..1,
-                                                                                             lambda =  lambda*(..2)*(..3/1e6) + intercept + shared_snp_intercept*(..4), #gives rate estimate per day per bp
-                                                                                             log = TRUE)
-                                                                              + ifelse(single_branch_lambda==-1,0, dpois(x = ..3,
-                                                                                                                      lambda = single_branch_lambda,
-                                                                                                                      log=TRUE))
-                                                                              # -ppois(truncation_point,
-                                                                              #       lambda =  lambda*..2*(..3) + intercept,
-                                                                              #       log = TRUE )
-                                                                              ,
-                                                                              log(1-k) + dnbinom(x = ..1,
-                                                                                                 size = nb_fit$estimate["size"],
-                                                                                                 mu = nb_fit$estimate["mu"],
-                                                                                                 log = TRUE)-
-                                                                                pnbinom(truncation_point,
-                                                                                        size = nb_fit$estimate["size"],
-                                                                                        mu = nb_fit$estimate["mu"],
-                                                                                        log = TRUE)))
-
-          })))
+          -sum(pmap_dbl(list(x, t, c1, c2, b,s), ~ {suppressWarnings(log_sum_exp(log(k) + #dpois(x = ..1,
+                                                                                 #      lambda =  lambda*(..2) + intercept+ shared_snp_intercept*(..3), #gives rate esimate per day
+                                                                                 #      log = TRUE)
+                                                                                 skellam::dskellam(x= (..3 - ..4) ,
+                                                                                                   lambda1 =  lambda*..2*..6 + ..4 + intercept + ..5,
+                                                                                                   lambda2 = ..4 + ..5,
+                                                                                                   log=TRUE)
+                                                                               + dpois(x = ..4,
+                                                                                       lambda = single_branch_lambda,
+                                                                                       log=TRUE)
+                                                                               # -
+                                                                               #     ppois(truncation_point,
+                                                                               #           lambda =  lambda*..2 + intercept,
+                                                                               #           log = TRUE )
+                                                                               ,
+                                                                               log((1-k)) + dnbinom(x = ..1,
+                                                                                                    size = nb_fit$estimate["size"],
+                                                                                                    mu = nb_fit$estimate["mu"],
+                                                                                                    log = TRUE)
+                                                                               -
+                                                                                 pnbinom(truncation_point,
+                                                                                         size = nb_fit$estimate["size"],
+                                                                                         mu = nb_fit$estimate["mu"],
+                                                                                         log = TRUE)
+          ))
+          }))
         }
 
         if(anyNA(start_params)){
@@ -398,9 +403,11 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
                                       x = mixed_snp_dist,
                                       t = mixed_time_dist,
                                       s = mixed_sites,# method="SANN",
-                                      c = shared_snps,
-                                      lower = c(k_bounds[1], lambda_bounds[1], intercept_bounds[1], single_branch_lambda_bounds[1], shared_snp_intercept_bounds[1]),
-                                      upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2], single_branch_lambda_bounds[2], shared_snp_intercept_bounds[2]),
+                                      c1 = branch_lengths$mrca_to_tip1,
+                                      c2 = branch_lengths$mrca_to_tip2,
+                                      b = branch_lengths$root_to_mrca,
+                                      lower = c(k_bounds[1], lambda_bounds[1], intercept_bounds[1], single_branch_lambda_bounds[1]),
+                                      upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2], single_branch_lambda_bounds[2]),
                                       control = list(trace = trace)
                                     )})
           #return(result_attempts)
@@ -413,9 +420,9 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
         }
         else{
           start_params[2] <- (as.numeric(start_params[2])*1e6)/(365.25)
-          result <- nlminb(start=start_params, objective=llk3, x = mixed_snp_dist, t = mixed_time_dist, s = mixed_sites, c=shared_snps,# method="SANN",
-                           lower = c(k_bounds[1], lambda_bounds[1], intercept_bounds[1], single_branch_lambda_bounds[1], shared_snp_intercept_bounds[1]),
-                           upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2], single_branch_lambda_bounds[2], shared_snp_intercept_bounds[2]),
+          result <- nlminb(start=start_params, objective=llk3, x = mixed_snp_dist, t = mixed_time_dist, s = mixed_sites, c1 = branch_lengths$mrca_to_tip1, c2 = branch_lengths$mrca_to_tip2,b = branch_lengths$root_to_mrca,# method="SANN",
+                           lower = c(k_bounds[1], lambda_bounds[1], intercept_bounds[1], single_branch_lambda_bounds[1]),
+                           upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2], single_branch_lambda_bounds[2]),
                            control = list(trace = trace))
 
         }

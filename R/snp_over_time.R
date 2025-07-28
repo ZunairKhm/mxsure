@@ -27,49 +27,28 @@
 #' @export
 snp_over_time <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites=NA, truncation_point=2000,
                           max_time=NA, title="SNP Distance Over Time", jitter=TRUE, p_value=NA, ci_data=NA, time_limits=c(0,NA), under_threshold=FALSE,
-                          tree=NA, sampleA=NA, sampleB=NA,max_correction_factor=Inf,
-                          lambda_bounds=c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf), prior_lambda=NA, prior_k=NA){
+                          tree=NA, sampleA=NA, sampleB=NA,branch_intercept=NA,
+                          lambda_bounds=c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf)){
 
 
   snp_dist <- time_dist <-rel_lh <- unrel_lh <-LHR <-LHR_bin <- result <- estimate <- low_ci <- high_ci <- rel_loglh <- unrel_logLH <- logLH <- NULL
 
-  if(anyNA(tree)){
-  mix_res <- suppressWarnings(
-    mxsure_estimate(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point = truncation_point, max_time = max_time,
-                    lambda_bounds=lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, prior_lambda=prior_lambda, prior_k=prior_k))
-  } else{
-    mix_res <- suppressWarnings(mxsure_estimate(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point = truncation_point, max_time = max_time,
-                                                lambda_bounds=lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, prior_lambda=prior_lambda, prior_k=prior_k,
-                                                tree=tree, sampleA=sampleA, sampleB=sampleB,max_correction_factor=max_correction_factor, return_corrected = FALSE))
-      x <- suppressWarnings(mxsure_estimate(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point = truncation_point, max_time = max_time,
-                      lambda_bounds=lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, prior_lambda=prior_lambda, prior_k=prior_k,
-                      tree=tree, sampleA=sampleA, sampleB=sampleB,max_correction_factor=max_correction_factor, return_corrected = TRUE))
-    mixed_snp_dist <- x$corrected_snps[!is.na(x$corrected_snps)]
-    mixed_time_dist <- x$mixed_time_dist[!is.na(x$corrected_snps)]
-    if(!anyNA(mixed_sites)){
-    mixed_sites <- mixed_sites[!is.na(x$corrected_snps)]
-    }
-    #return(tibble(mixed_snp_dist,mixed_time_dist,mixed_sites))
-    }
+  data <- mxsure_likelyhood(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point=truncation_point,
+                    tree=tree, sampleA=sampleA, sampleB=sampleB, branch_intercept=branch_intercept)
+
+  mix_res <- suppressWarnings(mxsure_estimate(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point = 2000,
+                                              tree=tree, sampleA=sampleA, sampleB=sampleB, branch_intercept=branch_intercept))
 
   if(is.na(mean(mixed_sites, na.rm=TRUE))){
     mixed_sites <- 1
   }
 
-  LH <-  distinct(tibble(snp_dist=mixed_snp_dist, time_dist=mixed_time_dist))
-  LH <- LH |>
-    mutate(rel_lh = (dpois(snp_dist, (mix_res$lambda*(time_dist/365.25)*mean(mixed_sites)+mix_res$intercept), log=TRUE) #/ ppois(truncation_point, (mix_res$lambda*(time_dist/365.25)*mean(mixed_sites)+mix_res$intercept))
-                     ),
-           unrel_lh = (dnbinom(snp_dist, mu = mix_res$nb_mu, size = mix_res$nb_size, log = TRUE) - pnbinom(truncation_point, mu = mix_res$nb_mu, size = mix_res$nb_size, log.p=TRUE)))|>
-    mutate(LHR = (rel_lh-unrel_lh))
-
-  data <- data.frame(snp_dist=mixed_snp_dist, time_dist=mixed_time_dist)
   if(under_threshold){
   data <- filter(data, mixed_snp_dist<=mix_res$snp_threshold+1)
   } else {
     data <- filter(data, mixed_snp_dist<truncation_point)
   }
-  data$LHR <- LH$LHR[match(paste(data$snp_dist, data$time_dist), paste(LH$snp_dist, LH$time_dist))]
+  #data$LHR <- LH$LHR[match(paste(data$snp_dist, data$time_dist), paste(LH$snp_dist, LH$time_dist))]
   lhr_levels <- c("LHR < 0.01",
                 "0.01 \u2264 LHR < 0.1",
                 "0.1 \u2264 LHR < 1",
@@ -78,7 +57,7 @@ snp_over_time <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, m
                 "LHR \u2264 100")
 
 data <- data |>
-  mutate(LHR_bin = cut(LHR,
+  mutate(LHR_bin = cut(logLHR,
                        breaks = c(-Inf, -2, -1, 0, 1, 2, Inf),
                        labels = lhr_levels,
                        right = FALSE)) |>
@@ -90,7 +69,7 @@ data <- data |>
   data$time_dist <- abs(jitter(data$time_dist))
   }
     lambda <- mix_res$lambda*mean(mixed_sites) #convert snp/year/site to snp/year/genome
-    predictive_intervals <- tibble(time_dist=0:max(c(max(data$time_dist), time_limits[2]), na.rm=TRUE))
+    predictive_intervals <- tibble(time_dist=1:max(c(max(data$time_dist), time_limits[2]), na.rm=TRUE))
     predictive_intervals <- predictive_intervals|>
       mutate(estimate=qpois(0.5, (time_dist/365.25)*lambda+mix_res$intercept))
 
@@ -102,7 +81,6 @@ data <- data |>
     predictive_intervals <- predictive_intervals|>
       mutate(low_ci=qpois(0.025, (time_dist/365.25)*lambda+mix_res$intercept),
              high_ci=qpois(0.975, (time_dist/365.25)*lambda+mix_res$intercept))
-
 
 
   if(under_threshold){

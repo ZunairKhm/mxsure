@@ -26,7 +26,7 @@
 mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA,
                       sample_size=length(mixed_snp_dist),truncation_point=NA, sample_n=100, confidence_level=0.95, start_params="Efficient",
                       tree=NA, sampleA=NA, sampleB=NA,
-                      lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf), single_branch_lambda_bounds = c(0, Inf), br=NA,
+                      lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf), single_branch_lambda_bounds = c(0, Inf), branch_intercept=NA,
                       quiet=FALSE){
 
   snp_dist <-NULL
@@ -60,7 +60,7 @@ mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mi
   test_result <- #suppressWarnings(
       mxsure_estimate(
         mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites, truncation_point=truncation_point, start_params = NA,
-        tree=tree, sampleA=mix_data$sampleA, sampleB=mix_data$sampleB, br=br,
+        tree=tree, sampleA=mix_data$sampleA, sampleB=mix_data$sampleB, branch_intercept=branch_intercept,
         lambda_bounds = lambda_bounds, k_bounds=k_bounds,  intercept_bounds=intercept_bounds,
         single_branch_lambda_bounds = single_branch_lambda_bounds)
   #, classes = "warning")
@@ -77,7 +77,7 @@ mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mi
   suppressWarnings(
     mxsure_estimate(
       x$snp_dist, y, x$time_dist, x$sites, truncation_point=truncation_point,
-      tree=tree, sampleA=x$sampleA, sampleB=x$sampleB, br=br,
+      tree=tree, sampleA=x$sampleA, sampleB=x$sampleB, branch_intercept=branch_intercept,
       start_params = start_params, lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, single_branch_lambda_bounds = single_branch_lambda_bounds
     )
   , classes = "warning")
