@@ -47,11 +47,17 @@ mxsure_estimate(
 
 \item{start_params}{initial parameters for lambda, k, and intercept parameters for optimisation. If NA (as default) will try a range of different start parameters and produce the highest likelyhood result}
 
+\item{sampleA}{tip labels for sampleA; must be in the correct order with respect to sampleB such that the time distance is calculated as SampleA date-SampleB date (even if this allows for negative numbers)}
+
+\item{sampleB}{tip labels for sampleB;see above}
+
 \item{lambda_bounds}{bounds of rate estimation in SNPs/year/site if given time and site data}
 
 \item{k_bounds}{bounds of related proportion estimation}
 
 \item{intercept_bounds}{bounds of intercept estimation}
+
+\item{single_branch_lambda_bounds}{}
 
 \item{upper.tail}{percentile to calculate SNP thresholds}
 

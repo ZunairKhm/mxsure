@@ -64,6 +64,7 @@ data <- data |>
   mutate(LHR_bin = factor(LHR_bin, levels = lhr_levels))
 
 
+
   if(jitter==TRUE){
   data$snp_dist <- abs(jitter(data$snp_dist))
   data$time_dist <- abs(jitter(data$time_dist))
@@ -84,7 +85,7 @@ data <- data |>
 
 
   if(under_threshold){
-  ggplot(data, aes(x=time_dist, y=snp_dist, color=LHR))+
+  ggplot(data, aes(x=time_dist, y=snp_dist, color=LHR_bin))+
     scale_y_continuous(limits = c(0, mix_res$snp_threshold+1), expand = c(0.01,0.01))+
     scale_x_continuous(limits = c(0, NA), expand = c(0.01,0.01))+
       scale_color_manual(

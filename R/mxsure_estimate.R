@@ -17,6 +17,12 @@
 #' @param lambda_bounds bounds of rate estimation in SNPs/year/site if given time and site data
 #' @param k_bounds bounds of related proportion estimation
 #' @param intercept_bounds bounds of intercept estimation
+#' @param tree
+#' @param sampleA tip labels for sampleA; must be in the correct order with respect to sampleB such that the time distance is calculated as SampleA date-SampleB date (even if this allows for negative numbers)
+#' @param sampleB tip labels for sampleB;see above
+#' @param return_tree_data
+#' @param branch_intercept
+#' @param single_branch_lambda_bounds
 #'
 #' @importFrom stats qpois rnbinom nlminb var
 #' @importFrom dplyr filter
@@ -112,6 +118,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
 
   #### tree snp correction ####
   if(!anyNA(tree)|!anyNA(sampleA)|!anyNA(sampleB)){
+    mixed_snp_dist <- abs(mixed_snp_dist) #ensuring snp distance is still absolute for the distant dataset fitting
     # Ensure tree is a list (even if single tree provided)
     tree_list <- if (inherits(tree, "phylo")) list(tree) else tree
 
@@ -277,7 +284,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
           max_time <- max(abs(mixed_time_dist))
         }
 
-        snp_threshold <- qpois(upper.tail, lambda=result$par[[2]]*(max_time)+result$par[[3]])
+        snp_threshold <- qpois(upper.tail, result$par[[2]]*(max_time)+result$par[[3]]+2*result$par[[4]])
         if(!is.nan(snp_threshold)){
 
         if(threshold_range==TRUE & !is.na(snp_threshold)){
@@ -431,7 +438,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
           max_time <- max(mixed_time_dist)
         }
 
-        snp_threshold <- qpois(upper.tail, lambda=result$par[[2]]*(max_time)*(mean(mixed_sites)/1e6)+result$par[[3]])
+        snp_threshold <- skellam::qskellam(upper.tail, result$par[[2]]*(max_time)+result$par[[3]]+result$par[[4]], result$par[[4]])
 
         if(threshold_range==TRUE & !is.na(snp_threshold)){
           threshold_range_df <- data.frame(years=seq(0.5, 10, 0.5), threshold=NA, estimated_fp=NA, prop_pos=NA)

@@ -128,12 +128,12 @@ mxsure_likelyhood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dis
 
 #### non tree likelyhood #####
 }else{
-  LH <-  distinct(
+  LH <-
     tibble(
       snp_dist = mixed_snp_dist,
       time_dist = mixed_time_dist
     )
-  )
+
 
   LH <- LH |>
     mutate(rel_loglh = (
