@@ -284,7 +284,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
           max_time <- max(abs(mixed_time_dist))
         }
 
-        snp_threshold <- qpois(upper.tail, result$par[[2]]*(max_time)+result$par[[3]]+2*result$par[[4]])
+        snp_threshold <-  qpois(upper.tail, lambda=result$par[[2]]*(max_time)+result$par[[3]])
         if(!is.nan(snp_threshold)){
 
         if(threshold_range==TRUE & !is.na(snp_threshold)){
