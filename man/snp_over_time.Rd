@@ -20,7 +20,7 @@ snp_over_time(
   tree = NA,
   sampleA = NA,
   sampleB = NA,
-  branch_intercept = NA,
+  branch_offset = NA,
   lambda_bounds = c(0, 1),
   k_bounds = c(0, 1),
   intercept_bounds = c(-Inf, Inf)

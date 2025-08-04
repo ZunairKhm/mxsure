@@ -18,7 +18,7 @@ mxsure_estimate(
   sampleA = NA,
   sampleB = NA,
   return_tree_data = FALSE,
-  branch_intercept = NA,
+  branch_offset = NA,
   lambda_bounds = c(0, 1),
   k_bounds = c(0, 1),
   intercept_bounds = c(-Inf, Inf),
@@ -47,9 +47,15 @@ mxsure_estimate(
 
 \item{start_params}{initial parameters for lambda, k, and intercept parameters for optimisation. If NA (as default) will try a range of different start parameters and produce the highest likelyhood result}
 
+\item{tree}{SNp scaled phylogenetic tree or list of trees with pairs of tips labelled with sampleA and sampleB}
+
 \item{sampleA}{tip labels for sampleA; must be in the correct order with respect to sampleB such that the time distance is calculated as SampleA date-SampleB date (even if this allows for negative numbers)}
 
 \item{sampleB}{tip labels for sampleB;see above}
+
+\item{return_tree_data}{return data used for tree models}
+
+\item{branch_offset}{overides branch offset to each skellam parameter for tree models}
 
 \item{lambda_bounds}{bounds of rate estimation in SNPs/year/site if given time and site data}
 
@@ -57,7 +63,7 @@ mxsure_estimate(
 
 \item{intercept_bounds}{bounds of intercept estimation}
 
-\item{single_branch_lambda_bounds}{}
+\item{single_branch_lambda_bounds}{bounds of single branch fitting used in tree models}
 
 \item{upper.tail}{percentile to calculate SNP thresholds}
 

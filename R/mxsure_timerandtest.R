@@ -34,7 +34,7 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
                                   sample_size=length(mixed_snp_dist), sample_n=100, permutations=5, quiet=FALSE, confidence_level=0.95,
                                 tree=NA, sampleA=NA, sampleB=NA,
                                 start_params='Efficient', ci_data=NA, title=NULL,
-                                lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf),single_branch_lambda_bounds = c(0, Inf), branch_intercept=NA,
+                                lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf),single_branch_lambda_bounds = c(0, Inf), branch_offset=NA,
                                   within_individual=FALSE, subjectA_id, subjectB_id,
                                   clustered=FALSE, prop_type="above_estimate"
                                 ){
@@ -43,7 +43,7 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
   #unadjusted result
   original_data <- tibble(snp_dist=mixed_snp_dist, time_dist=mixed_time_dist, sites=mixed_sites)
   original_result <- mxsure_estimate(original_data$snp_dist,unrelated_snp_dist, original_data$time_dist,original_data$sites, truncation_point=truncation_point,
-                                     tree=tree, sampleA=sampleA, sampleB=sampleB, branch_intercept=branch_intercept,
+                                     tree=tree, sampleA=sampleA, sampleB=sampleB, branch_offset=branch_offset,
                                      lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, single_branch_lambda_bounds = single_branch_lambda_bounds)
 
   if (sample_n==0){
@@ -67,7 +67,7 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
 
   if(anyNA(ci_data)){
     original_ci <- mxsure_ci(original_data$snp_dist,unrelated_snp_dist, original_data$time_dist,original_data$sites, truncation_point=truncation_point, quiet=quiet,
-                             tree=tree, sampleA=sampleA, sampleB=sampleB,branch_intercept=branch_intercept,
+                             tree=tree, sampleA=sampleA, sampleB=sampleB,branch_offset=branch_offset,
                                        sample_size=sample_size, sample_n=sample_n, confidence_level=confidence_level,
                                        start_params = c(original_result[3], original_result[2], original_result[4], original_result[7], original_result[8]),
                              lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds)
@@ -118,7 +118,7 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
       }
 
   timerand_result <- mxsure_estimate(timerand_data$snp_dist,unrelated_snp_dist, timerand_data$time_dist, timerand_data$sites, truncation_point=truncation_point,
-                                     tree=tree, sampleA=sampleA, sampleB=sampleB,branch_intercept=branch_intercept,
+                                     tree=tree, sampleA=sampleA, sampleB=sampleB,branch_offset=branch_offset,
                                         lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, start_params = start_params_timerand,  single_branch_lambda_bounds = single_branch_lambda_bounds)
 
   if(!anyNA(start_params)){
@@ -128,7 +128,7 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
 
   timerand_ci <- mxsure_ci(timerand_data$snp_dist, unrelated_snp_dist, timerand_data$time_dist, timerand_data$sites,
                                        sample_size=sample_size, sample_n=sample_n, confidence_level=confidence_level, truncation_point=truncation_point,
-                           tree=tree, sampleA=sampleA, sampleB=sampleB,branch_intercept=branch_intercept,
+                           tree=tree, sampleA=sampleA, sampleB=sampleB,branch_offset=branch_offset,
                                        lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds
                                        ,start_params = start_params_timerand
                                        )

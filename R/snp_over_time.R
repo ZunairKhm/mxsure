@@ -27,17 +27,17 @@
 #' @export
 snp_over_time <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites=NA, truncation_point=2000,
                           max_time=NA, title="SNP Distance Over Time", jitter=TRUE, p_value=NA, ci_data=NA, time_limits=c(0,NA), under_threshold=FALSE,
-                          tree=NA, sampleA=NA, sampleB=NA,branch_intercept=NA,
+                          tree=NA, sampleA=NA, sampleB=NA,branch_offset=NA,
                           lambda_bounds=c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf)){
 
 
   snp_dist <- time_dist <-rel_lh <- unrel_lh <-LHR <-LHR_bin <- result <- estimate <- low_ci <- high_ci <- rel_loglh <- unrel_logLH <- logLH <- NULL
 
   data <- mxsure_likelyhood(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point=truncation_point,
-                    tree=tree, sampleA=sampleA, sampleB=sampleB, branch_intercept=branch_intercept)
+                    tree=tree, sampleA=sampleA, sampleB=sampleB, branch_offset=branch_offset)
 
   mix_res <- suppressWarnings(mxsure_estimate(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point = 2000,
-                                              tree=tree, sampleA=sampleA, sampleB=sampleB, branch_intercept=branch_intercept))
+                                              tree=tree, sampleA=sampleA, sampleB=sampleB, branch_offset=branch_offset))
 
   if(is.na(mean(mixed_sites, na.rm=TRUE))){
     mixed_sites <- 1
@@ -72,7 +72,7 @@ data <- data |>
     lambda <- mix_res$lambda*mean(mixed_sites) #convert snp/year/site to snp/year/genome
     predictive_intervals <- tibble(time_dist=1:max(c(max(data$time_dist), time_limits[2]), na.rm=TRUE))
     predictive_intervals <- predictive_intervals|>
-      mutate(estimate=qpois(0.5, (time_dist/365.25)*lambda+mix_res$intercept))
+      mutate(estimate=qpois(0.5, (time_dist/365.25)*lambda+mix_res$intercept +ifelse(is.null(mix_res$single_branch_lambda), 0, 2*mix_res$single_branch_lambda) ))
 
   if(!anyNA(ci_data)){
     ci <- c(ci_data$confidence_intervals$lambda[1]*mean(mixed_sites),
@@ -80,8 +80,8 @@ data <- data |>
     }
 
     predictive_intervals <- predictive_intervals|>
-      mutate(low_ci=qpois(0.025, (time_dist/365.25)*lambda+mix_res$intercept),
-             high_ci=qpois(0.975, (time_dist/365.25)*lambda+mix_res$intercept))
+      mutate(low_ci=qpois(0.025, (time_dist/365.25)*lambda+mix_res$intercept +ifelse(is.null(mix_res$single_branch_lambda), 0, 2*mix_res$single_branch_lambda)),
+             high_ci=qpois(0.975, (time_dist/365.25)*lambda+mix_res$intercept +ifelse(is.null(mix_res$single_branch_lambda), 0, 2*mix_res$single_branch_lambda)))
 
 
   if(under_threshold){

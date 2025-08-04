@@ -21,7 +21,7 @@ mxsure_ci(
   k_bounds = c(0, 1),
   intercept_bounds = c(-Inf, Inf),
   single_branch_lambda_bounds = c(0, Inf),
-  branch_intercept = NA,
+  branch_offset = NA,
   quiet = FALSE
 )
 }

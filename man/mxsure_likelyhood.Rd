@@ -13,7 +13,7 @@ mxsure_likelyhood(
   tree = NA,
   sampleA = NA,
   sampleB = NA,
-  branch_intercept = NA
+  branch_offset = NA
 )
 }
 \arguments{

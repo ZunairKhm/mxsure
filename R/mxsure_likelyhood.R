@@ -15,13 +15,13 @@
 #' @return a dataframe with SNP distances, time differences, sites considered and the likeyhoods of related and unrelated models fitting for each datapoint
 #' @export
 mxsure_likelyhood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point=2000,
-                              tree=NA, sampleA=NA, sampleB=NA,  branch_intercept=NA){
+                              tree=NA, sampleA=NA, sampleB=NA,  branch_offset=NA){
 
   snp_dist<- time_dist<- rel_loglh<- unrel_loglh<- logLHR <-  NULL
 
   unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
   mix_res <- suppressWarnings(mxsure_estimate(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point = 2000,
-                                              tree=tree, sampleA=sampleA, sampleB=sampleB, branch_intercept=branch_intercept))
+                                              tree=tree, sampleA=sampleA, sampleB=sampleB, branch_offset=branch_offset))
 
 
 
@@ -79,8 +79,8 @@ mxsure_likelyhood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dis
     mixed_sites <- mixed_sites[!anyNA(branch_lengths)]
     sampleA <- sampleA[!anyNA(branch_lengths)]
     sampleB <- sampleB[!anyNA(branch_lengths)]
-    if(!is.na(br)){
-      branch_lengths$root_to_mrca <- br
+    if(!is.na(branch_offset)){
+      branch_lengths$root_to_mrca <- branch_offset
     }
 
     LH <-  distinct(
@@ -99,7 +99,7 @@ mxsure_likelyhood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dis
           (mix_res$lambda * (time_dist / 365.25) * mean(mixed_sites) )+ mix_res$intercept + mrca_to_tip2 + root_to_mrca,
           mrca_to_tip2+ root_to_mrca,
           log = TRUE) +
-          dpois(x = mrcas_to_tip2,
+          dpois(x = mrca_to_tip2,
                 lambda = mix_res$single_branch_lambda,
                 log=TRUE)
       ),
