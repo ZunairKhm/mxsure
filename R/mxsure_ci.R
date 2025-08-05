@@ -57,14 +57,14 @@ mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mi
   if (anyNA(start_params)){
     start_params <- NA
     } else if(all(start_params=="Efficient")){
-  test_result <- #suppressWarnings(
+  test_result <- suppressWarnings(
       mxsure_estimate(
         mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites, truncation_point=truncation_point, start_params = NA,
         tree=tree, sampleA=mix_data$sampleA, sampleB=mix_data$sampleB, branch_offset=branch_offset,
         lambda_bounds = lambda_bounds, k_bounds=k_bounds,  intercept_bounds=intercept_bounds,
         single_branch_lambda_bounds = single_branch_lambda_bounds)
-  #, classes = "warning")
-  start_params <- as.numeric(c(test_result[3], test_result[2], test_result[4], test_result[7], test_result[8]))
+  , classes = "warning")
+  start_params <- as.numeric(c(test_result[3], test_result[2], test_result[4], test_result[7]))
     }
 
 
