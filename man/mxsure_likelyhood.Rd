@@ -10,6 +10,8 @@ mxsure_likelyhood(
   mixed_time_dist,
   mixed_sites,
   truncation_point = 2000,
+  original_result = NA,
+  start_params = NA,
   tree = NA,
   sampleA = NA,
   sampleB = NA,

@@ -25,7 +25,7 @@
 #' @return a plot of SNP distance over time using ggplot
 #'
 #' @export
-snp_over_time <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites=NA, truncation_point=2000,
+snp_over_time <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites=NA, truncation_point=2000, original_result=NA, start_params=NA,
                           max_time=NA, title="SNP Distance Over Time", jitter=TRUE, p_value=NA, ci_data=NA, time_limits=c(0,NA), under_threshold=FALSE,
                           tree=NA, sampleA=NA, sampleB=NA,branch_offset=NA,
                           lambda_bounds=c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf)){
@@ -33,12 +33,23 @@ snp_over_time <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, m
 
   snp_dist <- time_dist <-rel_lh <- unrel_lh <-LHR <-LHR_bin <- result <- estimate <- low_ci <- high_ci <- rel_loglh <- unrel_logLH <- logLH <- NULL
 
-  data <- mxsure_likelyhood(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point=truncation_point,
-                    tree=tree, sampleA=sampleA, sampleB=sampleB, branch_offset=branch_offset)
+  if(is.na(truncation_point)){
+    truncation_point <- Inf
+  }
 
-  mix_res <- suppressWarnings(mxsure_estimate(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point = 2000,
+  data <- mxsure_likelyhood(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point =
+                              truncation_point, original_result = original_result, start_params = start_params, tree =
+                              tree, sampleA = sampleA, sampleB = sampleB, branch_offset = branch_offset)
+
+  data$time_dist <- abs(data$time_dist)
+
+
+if(anyNA(original_result)){
+  mix_res <- suppressWarnings(mxsure_estimate(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point = 2000, start_params=start_params,
                                               tree=tree, sampleA=sampleA, sampleB=sampleB, branch_offset=branch_offset))
-
+}else{
+  mix_res <- original_result
+}
   if(is.na(mean(mixed_sites, na.rm=TRUE))){
     mixed_sites <- 1
   }
@@ -54,7 +65,7 @@ snp_over_time <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, m
                 "0.1 \u2264 LHR < 1",
                 "1 \u2264 LHR < 10",
                 "10 \u2264 LHR < 100",
-                "LHR \u2264 100")
+                "100 \u2264 LHR")
 
 data <- data |>
   mutate(LHR_bin = cut(logLHR,
@@ -70,6 +81,8 @@ data <- data |>
   data$time_dist <- abs(jitter(data$time_dist))
   }
     lambda <- mix_res$lambda*mean(mixed_sites) #convert snp/year/site to snp/year/genome
+
+
     predictive_intervals <- tibble(time_dist=1:max(c(max(data$time_dist), time_limits[2]), na.rm=TRUE))
     predictive_intervals <- predictive_intervals|>
       mutate(estimate=qpois(0.5, (time_dist/365.25)*lambda+mix_res$intercept +ifelse(is.null(mix_res$single_branch_lambda), 0, 2*mix_res$single_branch_lambda) ))
@@ -89,7 +102,7 @@ data <- data |>
     scale_y_continuous(limits = c(0, mix_res$snp_threshold+1), expand = c(0.01,0.01))+
     scale_x_continuous(limits = c(0, NA), expand = c(0.01,0.01))+
       scale_color_manual(
-        values = setNames(viridis::viridis(7, option = "C", direction = 1)[1:6], lhr_levels),
+        values = setNames(viridis::viridis(8, option = "C", direction = 1)[1:6], lhr_levels),
         drop = FALSE
       ) +
     geom_point(show.legend = TRUE)+
@@ -111,10 +124,11 @@ data <- data |>
     theme_minimal()
   } else {
     ggplot(data, aes(x=time_dist, y=snp_dist, color=LHR_bin))+
-      scale_y_continuous(limits = c(0, NA), expand = c(0.01,0.01), transform = scales::pseudo_log_trans(sigma=1, base=10), breaks = c(0, signif(exp(seq(0, log(truncation_point), length.out=10)), 1)))+
+      scale_y_continuous(limits = c(0, NA), expand = c(0.01,0.01), transform = scales::pseudo_log_trans(sigma=1, base=10),
+                         breaks = c(0, signif(exp(seq(0, log(min(c(truncation_point, max(data$snp_dist)))), length.out=10)), 1)))+
       scale_x_continuous(limits = c(0, NA), expand = c(0.01,0.01))+
       scale_color_manual(
-        values = setNames(viridis::viridis(7, option = "C", direction = 1)[1:6], lhr_levels),
+        values = setNames(viridis::viridis(8, option = "C", direction = 1)[1:6], lhr_levels),
         drop = FALSE
       ) +
       geom_point(show.legend = TRUE)+
@@ -125,7 +139,7 @@ data <- data |>
       geom_step(data = predictive_intervals, aes(x=time_dist, y=low_ci), color="black", linetype="dotted")+
       geom_step(data = predictive_intervals, aes(x=time_dist, y=high_ci), color="black", linetype="dotted")+
       geom_hline(yintercept=mix_res$snp_threshold, linetype="dashed", alpha=0.75, color="red3")+
-      guides(color = guide_legend(override.aes = list(shape = 15, size = 5))) +
+      guides(color = guide_legend(override.aes = list(size = 3))) +
       labs(title=title,
            y="SNP Distance",
            x="Time (Days)",

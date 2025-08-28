@@ -10,6 +10,8 @@ snp_over_time(
   mixed_time_dist,
   mixed_sites = NA,
   truncation_point = 2000,
+  original_result = NA,
+  start_params = NA,
   max_time = NA,
   title = "SNP Distance Over Time",
   jitter = TRUE,

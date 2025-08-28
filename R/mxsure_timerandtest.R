@@ -33,18 +33,13 @@
 mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA, truncation_point=2000,
                                   sample_size=length(mixed_snp_dist), sample_n=100, permutations=5, quiet=FALSE, confidence_level=0.95,
                                 tree=NA, sampleA=NA, sampleB=NA,
-                                start_params='Efficient', ci_data=NA, title=NULL,
+                                start_params='Efficient', original_result=NA, ci_data=NA, title=NULL,
                                 lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf),single_branch_lambda_bounds = c(0, Inf), branch_offset=NA,
                                   within_individual=FALSE, subjectA_id, subjectB_id,
                                   clustered=FALSE, prop_type="above_estimate"
                                 ){
 
   subject_id<- time_dist<- method<- point_est<- overlapping_est<- lambda<- "5%" <- "95%" <- NULL
-  #unadjusted result
-  original_data <- tibble(snp_dist=mixed_snp_dist, time_dist=mixed_time_dist, sites=mixed_sites)
-  original_result <- mxsure_estimate(original_data$snp_dist,unrelated_snp_dist, original_data$time_dist,original_data$sites, truncation_point=truncation_point,
-                                     tree=tree, sampleA=sampleA, sampleB=sampleB, branch_offset=branch_offset,
-                                     lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, single_branch_lambda_bounds = single_branch_lambda_bounds)
 
   if (sample_n==0){
     return(list(
@@ -63,6 +58,18 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
       plot=tibble(NA)
     ))
   }
+
+
+  #unadjusted result
+  original_data <- tibble(snp_dist=mixed_snp_dist, time_dist=mixed_time_dist, sites=mixed_sites)
+
+  if(anyNA(original_result)){
+    cat("Fitting base result")
+  original_result <- mxsure_estimate(original_data$snp_dist,unrelated_snp_dist, original_data$time_dist,original_data$sites, truncation_point=truncation_point,
+                                     tree=tree, sampleA=sampleA, sampleB=sampleB, branch_offset=branch_offset, start_params=ifelse(all(start_params=="Efficient"), NA, start_params),
+                                     lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, single_branch_lambda_bounds = single_branch_lambda_bounds)
+  }
+
 
 
   if(anyNA(ci_data)){
@@ -123,7 +130,7 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
 
   if(!anyNA(start_params)){
   if (any(start_params=="Efficient")){
-    start_params_timerand <-as.numeric(c(timerand_result[3], timerand_result[2], timerand_result[4], timerand_result[7], timerand_result[8]))
+    start_params_timerand <-as.numeric(c(timerand_result[3], timerand_result[2], timerand_result[4], timerand_result[7]))
   }}
 
   timerand_ci <- mxsure_ci(timerand_data$snp_dist, unrelated_snp_dist, timerand_data$time_dist, timerand_data$sites,

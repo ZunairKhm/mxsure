@@ -14,15 +14,23 @@
 #'
 #' @return a dataframe with SNP distances, time differences, sites considered and the likeyhoods of related and unrelated models fitting for each datapoint
 #' @export
-mxsure_likelyhood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point=2000,
+mxsure_likelyhood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point=2000,original_result=NA,start_params=NA,
                               tree=NA, sampleA=NA, sampleB=NA,  branch_offset=NA){
 
   snp_dist<- time_dist<- rel_loglh<- unrel_loglh<- logLHR <-  NULL
 
-  unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
-  mix_res <- suppressWarnings(mxsure_estimate(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point = 2000,
-                                              tree=tree, sampleA=sampleA, sampleB=sampleB, branch_offset=branch_offset))
 
+  if(is.na(truncation_point)){
+    truncation_point <- Inf
+  }
+  unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
+
+  if(anyNA(original_result)){
+  mix_res <- suppressWarnings(mxsure_estimate(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point = 2000,start_params=start_params,
+                                              tree=tree, sampleA=sampleA, sampleB=sampleB, branch_offset=branch_offset))
+  }else{
+  mix_res <- original_result
+}
 
 
   if(is.na(mean(mixed_sites, na.rm=TRUE))){
@@ -87,6 +95,7 @@ mxsure_likelyhood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dis
       tibble(
         snp_dist = mixed_snp_dist,
         time_dist = mixed_time_dist,
+        sites = mixed_sites,
         mrca_to_tip1 = branch_lengths$mrca_to_tip1,
         mrca_to_tip2 = branch_lengths$mrca_to_tip2,
         root_to_mrca = branch_lengths$root_to_mrca
@@ -94,11 +103,15 @@ mxsure_likelyhood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dis
     )
 
     LH <- LH |>
+      rowwise()|>
       mutate(rel_loglh = (
         skellam::dskellam(mrca_to_tip1 - mrca_to_tip2,
-          (mix_res$lambda * (time_dist / 365.25) * mean(mixed_sites) )+ mix_res$intercept + mrca_to_tip2 + root_to_mrca,
+          (mix_res$lambda * (time_dist / 365.25) * sites )+ mix_res$intercept + mrca_to_tip2 + root_to_mrca,
           mrca_to_tip2+ root_to_mrca,
           log = TRUE) +
+          dpois(x = mrca_to_tip1,
+                lambda = mix_res$single_branch_lambda,
+                log=TRUE)+
           dpois(x = mrca_to_tip2,
                 lambda = mix_res$single_branch_lambda,
                 log=TRUE)
@@ -131,14 +144,15 @@ mxsure_likelyhood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dis
   LH <-
     tibble(
       snp_dist = mixed_snp_dist,
-      time_dist = mixed_time_dist
+      time_dist = mixed_time_dist,
+      sites = mixed_sites
     )
 
 
   LH <- LH |>
     mutate(rel_loglh = (
       dpois(snp_dist, (
-        mix_res$lambda * (time_dist / 365.25) * mean(mixed_sites) + mix_res$intercept
+        mix_res$lambda * (time_dist / 365.25) * sites + mix_res$intercept
       ), log = TRUE) #/ ppois(truncation_point, (mix_res$lambda*(time_dist/365.25)*mean(mixed_sites)+mix_res$intercept))
     ),
     unrel_loglh = (

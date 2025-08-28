@@ -198,7 +198,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
                                                                                          lambda1 =  lambda*..2 + ..4 + intercept + ..5,
                                                                                          lambda2 = ..4 + ..5,
                                                                                          log=TRUE)
-                                                                       + dpois(x = ..4,
+                                                                       + dpois(x = ..1,
                                                                                lambda = single_branch_lambda,
                                                                                log=TRUE)
                                                                        # -
@@ -357,7 +357,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
                                                                                                    lambda1 =  lambda*..2*(..6/1e6) + ..4 + intercept + ..5,
                                                                                                    lambda2 = ..4 + ..5,
                                                                                                    log=TRUE)
-                                                                               + dpois(x = ..4,
+                                                                               + dpois(x = ..1,
                                                                                        lambda = single_branch_lambda,
                                                                                        log=TRUE)
                                                                                # -

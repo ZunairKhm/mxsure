@@ -18,14 +18,14 @@ NULL
 #' @importFrom stats dnbinom pnbinom
 #' @export
 dtruncnbinom <- function(x, mu, size, truncation_point){
-  dnbinom(x = x, size = size, mu = mu) / pnbinom(truncation_point, size = size, mu = mu)
+  dnbinom(x = x, size = size, mu = mu) / (pnbinom(truncation_point, size = size, mu = mu))
 }
 
 #' @rdname truncnbinom
 #' @importFrom stats pnbinom
 #' @export
 ptruncnbinom <- function(q, mu, size, truncation_point){
-  pnbinom(q = q, size = size, mu = mu) / pnbinom(truncation_point, size = size, mu = mu)
+  pnbinom(q = q, size = size, mu = mu) / (pnbinom(truncation_point, size = size, mu = mu))
 }
 
 #' @rdname truncnbinom

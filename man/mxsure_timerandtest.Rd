@@ -19,6 +19,7 @@ mxsure_timerandtest(
   sampleA = NA,
   sampleB = NA,
   start_params = "Efficient",
+  original_result = NA,
   ci_data = NA,
   title = NULL,
   lambda_bounds = c(0, 1),
