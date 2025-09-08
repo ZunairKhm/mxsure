@@ -67,7 +67,10 @@ threshold_comparison_plot <- function(mixed_snp_dist, unrelated_snp_dist, snp_th
 
     )|>
     mutate(dataset=factor(dataset, levels=dataset_names))|>
-    mutate(label = paste0(n, "/", tot, " (", round(p*100, 2), "%)"))
+    rowwise()|>
+    mutate(label = ifelse(method==paste0(identity_thresh, "% Identity"),
+                                 paste0(n, "/", tot, " (", round(p*100, 2), "%)"),
+                                 paste0("SNP Threshold: ", snp_threshold, "\n" ,n, "/", tot, " (", round(p*100, 2), "%)")))
 
  #return(data)
 
@@ -93,7 +96,7 @@ threshold_comparison_plot <- function(mixed_snp_dist, unrelated_snp_dist, snp_th
   }else{
     ggplot(filter(data,dataset==dataset_names[2]), aes(x = p, y = method, fill = method)) +
       geom_bar(stat = "identity", position = "dodge", width=0.9) +
-      scale_x_continuous(limits=c(0,1), expand = c(0,0))+
+      scale_x_continuous(limits=c(0,1), expand = expansion(mult = c(0,0.05)))+
       geom_vline(xintercept=k_est, linetype="solid", colour="grey20", alpha=0.6)+
       geom_text(aes(label = if (labels) label else NA, x = 0.5),
                 position = position_dodge(width = 0.9),
