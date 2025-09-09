@@ -2,7 +2,7 @@
 % Please edit documentation in R/mxsure_estimate.R
 \name{mxsure_estimate}
 \alias{mxsure_estimate}
-\title{mxsure estimate tree}
+\title{mxsure estimate}
 \usage{
 mxsure_estimate(
   mixed_snp_dist,
