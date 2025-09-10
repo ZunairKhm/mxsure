@@ -8,20 +8,20 @@
 #' @param mixed_sites list of sites considered for each SNP distance in mixed data set
 #' @param youden whether to produce additional SNP thresholds using the Youden method
 #' @param threshold_range whether to produce a dataset of threshold considering a range of times (from 0.5 to 10 years)
-#' @param max_time the time (in days) utilised to calculate SNP thresholds, only applicable when time differences are provided, if not provided will utilise maximum of supplied times
+#' @param threshold_time the time (in days) utilised to calculate SNP thresholds, only applicable when time differences are provided, if not provided will utilise maximum of supplied times
 #' @param upper.tail percentile to calculate SNP thresholds
 #' @param max_false_positive if the false positive rate from calculated threshold is higher than this value a warning is produced
 #' @param trace trace parameter to pass to nlminb
 #' @param start_params initial parameters for lambda, k, and intercept parameters for optimisation. If NA (as default) will try a range of different start parameters and produce the highest likelyhood result
-#' @param truncation_point a SNP distance limit for the data, if set to NA will estimate as if there is no limit. Will be faster with a lower truncation point.
+#' @param right_truncation a SNP distance limit for the data, if set to NA will estimate as if there is no limit. Will be faster with a lower truncation point.
 #' @param lambda_bounds bounds of rate estimation in SNPs/year/site if given time and site data
 #' @param k_bounds bounds of related proportion estimation
 #' @param intercept_bounds bounds of intercept estimation
-#' @param tree SNp scaled phylogenetic tree or list of trees with pairs of tips labelled with sampleA and sampleB
+#' @param tree SNP-scaled phylogenetic tree or list of trees with pairs of tips labelled with sampleA and sampleB. If this is supplied a different model for related SNP distances will be fit that takes into account branch length differences to the MRCA for any given pair of samples provided in sampleA and sampleB.
 #' @param sampleA tip labels for sampleA; must be in the correct order with respect to sampleB such that the time distance is calculated as SampleA date-SampleB date (even if this allows for negative numbers)
 #' @param sampleB tip labels for sampleB;see above
-#' @param return_tree_data return data used for tree models
-#' @param branch_offset overides branch offset to each skellam parameter for tree models
+#' @param return_tree_data return data used for tree models instead of fitting model
+#' @param branch_offset overide to branch offset to each skellam parameter for divergence correction model
 #' @param single_branch_lambda_bounds bounds of single branch fitting used in tree models
 #'
 #' @importFrom stats qpois rnbinom nlminb var
@@ -34,14 +34,19 @@
 #' @return Estimates for the related SNP threshold, substitution rate, proportion related, and estimated false positive rate
 #'
 #' @examples
+#' mixed_distances <- simulate_mixsnp_data(lambda=5, k=0.8, n=100)
+#' distant_distances <- simulate_mixsnp_data(lambda=5, k=0, n=1000)
+#' mxsure_estimate(mixed_snp_dist = mixed_data$snp_dist,
+#' unrelated_snp_dist = distant_data$snp_dist,
+#' mixed_time_dist = mixed_data$time_dist)
 #'
 #'
 #' @export
-mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA,truncation_point=2000,
-                            youden=FALSE,threshold_range=FALSE, max_time= NA, start_params= NA,
+mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA, right_truncation=2000,threshold_time= NA,
+                            youden=FALSE, threshold_range=FALSE,
                             tree=NA, sampleA=NA, sampleB=NA, return_tree_data=FALSE, branch_offset=NA,
                             lambda_bounds=c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf), single_branch_lambda_bounds = c(0, Inf),
-                            upper.tail=0.95, max_false_positive=0.05, trace=FALSE){
+                            upper.tail=0.95, max_false_positive=0.05,start_params= NA, trace=FALSE){
 
 
   #correction to convert to snp/day(/MBp)
@@ -68,15 +73,15 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
 
 
   #truncating data
-  if(is.na(truncation_point)){
-    truncation_point <- Inf
+  if(is.na(right_truncation)){
+    right_truncation <- Inf
   }
 
   unrelated_snp_dist_orig <- unrelated_snp_dist
-  unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
+  unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<right_truncation]
 
     x <- tibble(mixed_snp_dist, mixed_time_dist, mixed_sites, sampleA, sampleB)
-    x <- filter(x, mixed_snp_dist<truncation_point)
+    x <- filter(x, mixed_snp_dist<right_truncation)
     mixed_snp_dist <- x$mixed_snp_dist
     mixed_time_dist <- x$mixed_time_dist
     mixed_sites <- x$mixed_sites
@@ -122,6 +127,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
 
   #### tree snp correction ####
   if(!anyNA(tree)|!anyNA(sampleA)|!anyNA(sampleB)){
+    cat("Tree supplied: fitting divergence correction model")
     mixed_snp_dist <- abs(mixed_snp_dist) #ensuring snp distance is still absolute for the distant dataset fitting
     # Ensure tree is a list (even if single tree provided)
     tree_list <- if (inherits(tree, "phylo")) list(tree) else tree
@@ -182,7 +188,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
           m^2/(v - m)
         }else{100}
 
-        nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size), fix.arg = list(truncation_point=truncation_point), discrete = TRUE)
+        nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size), fix.arg = list(right_truncation=right_truncation), discrete = TRUE)
 
         #mixed data fitting
         llk2 <- function(params, x, t, c1, c2, b){
@@ -202,7 +208,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
                                                                                lambda = single_branch_lambda,
                                                                                log=TRUE)
                                                                        # -
-                                                                       #     ppois(truncation_point,
+                                                                       #     ppois(right_truncation,
                                                                        #           lambda =  lambda*..2 + intercept,
                                                                        #           log = TRUE )
                                                                        ,
@@ -211,7 +217,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
                                                                                             mu = nb_fit$estimate["mu"],
                                                                                             log = TRUE)
                                                                        -
-                                                                         pnbinom(truncation_point,
+                                                                         pnbinom(right_truncation,
                                                                                  size = nb_fit$estimate["size"],
                                                                                  mu = nb_fit$estimate["mu"],
                                                                                  log = TRUE)
@@ -261,11 +267,11 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
 
         }
 
-        if (is.na(max_time)) {
-          max_time <- max(abs(mixed_time_dist))
+        if (is.na(threshold_time)) {
+          threshold_time <- max(abs(mixed_time_dist))
         }
 
-        snp_threshold <- qpois(upper.tail, result$par[[2]]*(max_time)+result$par[[3]]+2*result$par[[4]])
+        snp_threshold <- qpois(upper.tail, result$par[[2]]*(threshold_time)+result$par[[3]]+2*result$par[[4]])
         if(!is.nan(snp_threshold)){
 
         if(threshold_range==TRUE & !is.na(snp_threshold)){
@@ -341,7 +347,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
           m^2/(v - m)
         }else{100}
 
-        nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size), fix.arg = list(truncation_point=truncation_point), discrete = TRUE)
+        nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size), fix.arg = list(right_truncation=right_truncation), discrete = TRUE)
 
         #mixed dataset fitting
         llk3 <- function(params, x, t, c1, c2, b,s){
@@ -361,7 +367,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
                                                                                        lambda = single_branch_lambda,
                                                                                        log=TRUE)
                                                                                # -
-                                                                               #     ppois(truncation_point,
+                                                                               #     ppois(right_truncation,
                                                                                #           lambda =  lambda*..2 + intercept,
                                                                                #           log = TRUE )
                                                                                ,
@@ -370,7 +376,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
                                                                                                     mu = nb_fit$estimate["mu"],
                                                                                                     log = TRUE)
                                                                                -
-                                                                                 pnbinom(truncation_point,
+                                                                                 pnbinom(right_truncation,
                                                                                          size = nb_fit$estimate["size"],
                                                                                          mu = nb_fit$estimate["mu"],
                                                                                          log = TRUE)
@@ -415,11 +421,11 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
 
         }
 
-        if (is.na(max_time)) {
-          max_time <- max(mixed_time_dist)
+        if (is.na(threshold_time)) {
+          threshold_time <- max(mixed_time_dist)
         }
 
-        snp_threshold <- skellam::qskellam(upper.tail, result$par[[2]]*(max_time)+result$par[[3]]+result$par[[4]], result$par[[4]])
+        snp_threshold <- skellam::qskellam(upper.tail, result$par[[2]]*(threshold_time)+result$par[[3]]+result$par[[4]], result$par[[4]])
 
         if(threshold_range==TRUE & !is.na(snp_threshold)){
           threshold_range_df <- data.frame(years=seq(0.5, 10, 0.5), threshold=NA, estimated_fp=NA, prop_pos=NA)
@@ -479,8 +485,6 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
         return(results)
       }
     }
-  } else{
-    warning("No valid tree supplied: fitting base mxsure model")
   }
 
   #### estimates without time or sites considered ####
@@ -496,7 +500,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
         m^2/(v - m)
       }else{100}
 
-      nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size), fix.arg = list(truncation_point=truncation_point), discrete = TRUE)
+      nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size), fix.arg = list(right_truncation=right_truncation), discrete = TRUE)
 
       #mixed data fitting
       llk1 <- function(params, x){
@@ -507,14 +511,14 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
         -sum(pmap_dbl(list(x), ~ {suppressWarnings(log_sum_exp(log(k) + dpois(x = ..1,
                                                                   lambda =  lambda + intercept, #gives rate esimate per average time of the dataset
                                                                   log = TRUE) -
-                                                     ppois(truncation_point,
+                                                     ppois(right_truncation,
                                                            lambda =  lambda + intercept,
                                                            log = TRUE ),
                                                    log(1-k) + dnbinom(x = ..1,
                                                                       size = nb_fit$estimate["size"],
                                                                       mu = nb_fit$estimate["mu"],
                                                                       log = TRUE)-
-                                                     pnbinom(truncation_point,
+                                                     pnbinom(right_truncation,
                                                              size = nb_fit$estimate["size"],
                                                              mu = nb_fit$estimate["mu"],
                                                              log = TRUE)))
@@ -616,7 +620,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
         m^2/(v - m)
       }else{100}
 
-      nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size), fix.arg = list(truncation_point=truncation_point), discrete = TRUE)
+      nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size), fix.arg = list(right_truncation=right_truncation), discrete = TRUE)
 
       #mixed data fitting
       llk2 <- function(params, x, t){
@@ -628,7 +632,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
                                                                   lambda =  lambda*(..2) + intercept, #gives rate esimate per day
                                                                   log = TRUE)
                                                  # -
-                                                 #     ppois(truncation_point,
+                                                 #     ppois(right_truncation,
                                                  #           lambda =  lambda*..2 + intercept,
                                                  #           log = TRUE )
                                                  ,
@@ -637,7 +641,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
                                                                       mu = nb_fit$estimate["mu"],
                                                                       log = TRUE)
                                                  -
-                                                     pnbinom(truncation_point,
+                                                     pnbinom(right_truncation,
                                                              size = nb_fit$estimate["size"],
                                                              mu = nb_fit$estimate["mu"],
                                                              log = TRUE)
@@ -676,11 +680,11 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
 
       }
 
-      if (is.na(max_time)) {
-        max_time <- max(mixed_time_dist)
+      if (is.na(threshold_time)) {
+        threshold_time <- max(mixed_time_dist)
       }
 
-      snp_threshold <- qpois(upper.tail, lambda=result$par[[2]]*(max_time)+result$par[[3]])
+      snp_threshold <- qpois(upper.tail, lambda=result$par[[2]]*(threshold_time)+result$par[[3]])
       if(threshold_range==TRUE & !is.na(snp_threshold)){
         threshold_range_df <- data.frame(years=seq(0.5, 10, 0.5), threshold=NA, estimated_fp=NA, prop_pos=NA)
         threshold_range_df$threshold <- modify(threshold_range_df$years, ~{qpois(upper.tail, lambda=(result$par[[2]]*365.25*.x)+result$par[[3]])})
@@ -751,7 +755,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
         m^2/(v - m)
       }else{100}
 
-      nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size), fix.arg = list(truncation_point=truncation_point), discrete = TRUE)
+      nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size), fix.arg = list(right_truncation=right_truncation), discrete = TRUE)
 
       #mixed dataset fitting
       llk3 <- function(params, x, t, s){
@@ -762,7 +766,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
         log(-sum(pmap_dbl(list(x, t, s), ~ {suppressWarnings(log_sum_exp(log(k) + dpois(x = ..1,
                                                                   lambda =  lambda*(..2)*(..3/1e6) + intercept, #gives rate estimate per day per bp
                                                                   log = TRUE)
-                                                     # -ppois(truncation_point,
+                                                     # -ppois(right_truncation,
                                                      #       lambda =  lambda*..2*(..3) + intercept,
                                                      #       log = TRUE )
                                                      ,
@@ -770,7 +774,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
                                                                       size = nb_fit$estimate["size"],
                                                                       mu = nb_fit$estimate["mu"],
                                                                       log = TRUE)-
-                                                     pnbinom(truncation_point,
+                                                     pnbinom(right_truncation,
                                                              size = nb_fit$estimate["size"],
                                                              mu = nb_fit$estimate["mu"],
                                                              log = TRUE)))
@@ -812,11 +816,11 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
 
       }
 
-      if (is.na(max_time)) {
-        max_time <- max(mixed_time_dist)
+      if (is.na(threshold_time)) {
+        threshold_time <- max(mixed_time_dist)
       }
 
-      snp_threshold <- qpois(upper.tail, lambda=result$par[[2]]*(max_time)*(mean(mixed_sites)/1e6)+result$par[[3]])
+      snp_threshold <- qpois(upper.tail, lambda=result$par[[2]]*(threshold_time)*(mean(mixed_sites)/1e6)+result$par[[3]])
 
       if(threshold_range==TRUE & !is.na(snp_threshold)){
         threshold_range_df <- data.frame(years=seq(0.5, 10, 0.5), threshold=NA, estimated_fp=NA, prop_pos=NA)

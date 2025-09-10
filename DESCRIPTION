@@ -9,7 +9,6 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
-Depends: 
 Imports: 
     fitdistrplus,
     dplyr,
@@ -29,3 +28,7 @@ Imports:
     skellam
 URL: https://github.com/ZunairKhm/msure
 BugReports: https://github.com/ZunairKhm/mixturesnpcutoff/issues
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

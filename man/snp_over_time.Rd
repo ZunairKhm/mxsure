@@ -9,7 +9,7 @@ snp_over_time(
   unrelated_snp_dist,
   mixed_time_dist,
   mixed_sites = NA,
-  truncation_point = 2000,
+  right_truncation = 2000,
   original_result = NA,
   start_params = NA,
   max_time = NA,
@@ -37,7 +37,7 @@ snp_over_time(
 
 \item{mixed_sites}{list of sites considered for each SNP distance in mixed data set}
 
-\item{truncation_point}{a SNP distance limit for the data, if set to NA will estimate as if there is no limit}
+\item{right_truncation}{a SNP distance limit for the data, if set to NA will estimate as if there is no limit}
 
 \item{max_time}{the time (in days) utilised to calculate SNP thresholds, only applicable when time differences are provided, if not provided will utilise maximum of supplied times}
 

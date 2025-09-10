@@ -10,7 +10,7 @@
 #' @param ci_data optional input for previously calculated CI data (mxsure_ci) for computational efficiency
 #' @param confidence_level confidence level for CIs
 #' @param title title for ggplot
-#' @param truncation_point SNP distances to truncate at
+#' @param right_truncation SNP distances to truncate at
 #' @param permutations number of time permutation to run
 #' @param quiet if false will print progress bar for each permutation
 #' @param within_individual permute time data within each individuals (requires indiviudal ID codes that must be the exact same)
@@ -30,7 +30,7 @@
 #' @return list of overall outcomes, results from each time randomisation, raw results, and a plot comparing point estimates and confidence levels between original data and time randomised data
 #' @export
 #'
-mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA, truncation_point=2000,
+mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA, right_truncation=2000,
                                   sample_size=length(mixed_snp_dist), sample_n=100, permutations=5, quiet=FALSE, confidence_level=0.95,
                                 tree=NA, sampleA=NA, sampleB=NA,
                                 start_params='Efficient', original_result=NA, ci_data=NA, title=NULL,
@@ -65,7 +65,7 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
 
   if(anyNA(original_result)){
     cat("Fitting base result")
-  original_result <- mxsure_estimate(original_data$snp_dist,unrelated_snp_dist, original_data$time_dist,original_data$sites, truncation_point=truncation_point,
+  original_result <- mxsure_estimate(original_data$snp_dist,unrelated_snp_dist, original_data$time_dist,original_data$sites, right_truncation=right_truncation,
                                      tree=tree, sampleA=sampleA, sampleB=sampleB, branch_offset=branch_offset, start_params=ifelse(all(start_params=="Efficient"), NA, start_params),
                                      lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, single_branch_lambda_bounds = single_branch_lambda_bounds)
   }
@@ -73,7 +73,7 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
 
 
   if(anyNA(ci_data)){
-    original_ci <- mxsure_ci(original_data$snp_dist,unrelated_snp_dist, original_data$time_dist,original_data$sites, truncation_point=truncation_point, quiet=quiet,
+    original_ci <- mxsure_ci(original_data$snp_dist,unrelated_snp_dist, original_data$time_dist,original_data$sites, right_truncation=right_truncation, quiet=quiet,
                              tree=tree, sampleA=sampleA, sampleB=sampleB,branch_offset=branch_offset,
                                        sample_size=sample_size, sample_n=sample_n, confidence_level=confidence_level,
                                        start_params = c(original_result[3], original_result[2], original_result[4], original_result[7], original_result[8]),
@@ -124,7 +124,7 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
         start_params_timerand <- start_params
       }
 
-  timerand_result <- mxsure_estimate(timerand_data$snp_dist,unrelated_snp_dist, timerand_data$time_dist, timerand_data$sites, truncation_point=truncation_point,
+  timerand_result <- mxsure_estimate(timerand_data$snp_dist,unrelated_snp_dist, timerand_data$time_dist, timerand_data$sites, right_truncation=right_truncation,
                                      tree=tree, sampleA=sampleA, sampleB=sampleB,branch_offset=branch_offset,
                                         lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, start_params = start_params_timerand,  single_branch_lambda_bounds = single_branch_lambda_bounds)
 
@@ -134,7 +134,7 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
   }}
 
   timerand_ci <- mxsure_ci(timerand_data$snp_dist, unrelated_snp_dist, timerand_data$time_dist, timerand_data$sites,
-                                       sample_size=sample_size, sample_n=sample_n, confidence_level=confidence_level, truncation_point=truncation_point,
+                                       sample_size=sample_size, sample_n=sample_n, confidence_level=confidence_level, right_truncation=right_truncation,
                            tree=tree, sampleA=sampleA, sampleB=sampleB,branch_offset=branch_offset,
                                        lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds
                                        ,start_params = start_params_timerand

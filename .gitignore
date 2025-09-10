@@ -6,3 +6,4 @@
 .quarto
 .github
 mxsure.Rproj
+inst/doc

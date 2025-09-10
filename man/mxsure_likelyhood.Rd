@@ -9,7 +9,7 @@ mxsure_likelyhood(
   unrelated_snp_dist,
   mixed_time_dist,
   mixed_sites,
-  truncation_point = 2000,
+  right_truncation = 2000,
   original_result = NA,
   start_params = NA,
   tree = NA,
@@ -27,7 +27,7 @@ mxsure_likelyhood(
 
 \item{mixed_sites}{vector of sites considered for each SNP distance in the mixed dataset}
 
-\item{truncation_point}{maximum limit of SNP distances to consider}
+\item{right_truncation}{maximum limit of SNP distances to consider}
 }
 \value{
 a dataframe with SNP distances, time differences, sites considered and the likeyhoods of related and unrelated models fitting for each datapoint

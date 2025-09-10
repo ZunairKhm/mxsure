@@ -9,7 +9,7 @@ mxsure_timerandtest(
   unrelated_snp_dist,
   mixed_time_dist = NA,
   mixed_sites = NA,
-  truncation_point = 2000,
+  right_truncation = 2000,
   sample_size = length(mixed_snp_dist),
   sample_n = 100,
   permutations = 5,
@@ -43,7 +43,7 @@ mxsure_timerandtest(
 
 \item{mixed_sites}{list of sites considered for each SNP distance in mixed data set}
 
-\item{truncation_point}{SNP distances to truncate at}
+\item{right_truncation}{SNP distances to truncate at}
 
 \item{sample_size}{size of each bootstrap sample}
 

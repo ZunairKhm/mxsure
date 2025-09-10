@@ -8,7 +8,7 @@
 #' @param unrelated_snp_dist list of SNP distances from an unrelated data set
 #' @param mixed_time_dist list of time differences between samples from each SNP distance in the mixed data set (in days)
 #' @param mixed_sites list of sites considered for each SNP distance in mixed data set
-#' @param truncation_point a SNP distance limit for the data, if set to NA will estimate as if there is no limit
+#' @param right_truncation a SNP distance limit for the data, if set to NA will estimate as if there is no limit
 #' @param max_time the time (in days) utilised to calculate SNP thresholds, only applicable when time differences are provided, if not provided will utilise maximum of supplied times
 #' @param ci_data optional input for previously calculated CI data (mxsure_ci) to display
 #' @param time_limits x axis limits passed to ggplot
@@ -25,7 +25,7 @@
 #' @return a plot of SNP distance over time using ggplot
 #'
 #' @export
-snp_over_time <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites=NA, truncation_point=2000, original_result=NA, start_params=NA,
+snp_over_time <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites=NA, right_truncation=2000, original_result=NA, start_params=NA,
                           max_time=NA, title="SNP Distance Over Time", jitter=TRUE, p_value=NA, ci_data=NA, time_limits=c(0,NA), under_threshold=FALSE,
                           tree=NA, sampleA=NA, sampleB=NA,branch_offset=NA,
                           lambda_bounds=c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf)){
@@ -33,19 +33,19 @@ snp_over_time <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, m
 
   snp_dist <- time_dist <-rel_lh <- unrel_lh <-LHR <-LHR_bin <- result <- estimate <- low_ci <- high_ci <- rel_loglh <- unrel_logLH <- logLH <- NULL
 
-  if(is.na(truncation_point)){
-    truncation_point <- Inf
+  if(is.na(right_truncation)){
+    right_truncation <- Inf
   }
 
-  data <- mxsure_likelyhood(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point =
-                              truncation_point, original_result = original_result, start_params = start_params, tree =
+  data <- mxsure_likelyhood(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, right_truncation =
+                              right_truncation, original_result = original_result, start_params = start_params, tree =
                               tree, sampleA = sampleA, sampleB = sampleB, branch_offset = branch_offset)
 
   data$time_dist <- abs(data$time_dist)
 
 
 if(anyNA(original_result)){
-  mix_res <- suppressWarnings(mxsure_estimate(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point = 2000, start_params=start_params,
+  mix_res <- suppressWarnings(mxsure_estimate(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, right_truncation = 2000, start_params=start_params,
                                               tree=tree, sampleA=sampleA, sampleB=sampleB, branch_offset=branch_offset))
 }else{
   mix_res <- original_result
@@ -57,7 +57,7 @@ if(anyNA(original_result)){
   if(under_threshold){
   data <- filter(data, snp_dist<=mix_res$snp_threshold+1)
   } else {
-    data <- filter(data, snp_dist<truncation_point)
+    data <- filter(data, snp_dist<right_truncation)
   }
   #data$LHR <- LH$LHR[match(paste(data$snp_dist, data$time_dist), paste(LH$snp_dist, LH$time_dist))]
   lhr_levels <- c("LHR < 0.01",
@@ -125,7 +125,7 @@ data <- data |>
   } else {
     ggplot(data, aes(x=time_dist, y=snp_dist, color=LHR_bin))+
       scale_y_continuous(limits = c(0, NA), expand = c(0.01,0.01), transform = scales::pseudo_log_trans(sigma=1, base=10),
-                         breaks = c(0, signif(exp(seq(0, log(min(c(truncation_point, max(data$snp_dist)))), length.out=10)), 1)))+
+                         breaks = c(0, signif(exp(seq(0, log(min(c(right_truncation, max(data$snp_dist)))), length.out=10)), 1)))+
       scale_x_continuous(limits = c(0, NA), expand = c(0.01,0.01))+
       scale_color_manual(
         values = setNames(viridis::viridis(8, option = "C", direction = 1)[1:6], lhr_levels),

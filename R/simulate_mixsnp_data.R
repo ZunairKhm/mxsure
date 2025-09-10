@@ -6,7 +6,7 @@
 #' @param n size of dataset to simulate
 #' @param rel_timemax maximum time allowed between samples in years (calculates time difference from uniform dist.)
 #' @param rel_timemin minimum time allowed between samples in years
-#' @param truncation_point maximum allowed SNP distances, if set too low can cause all SNP distances to be 0
+#' @param right_truncation maximum allowed SNP distances, if set too low can cause all SNP distances to be 0
 #' @param unrel_mean mean of gamma distribution for which the evolutionary time for the unrelated datapoints are chosen
 #' @param unrel_sd sd of gamma distribution for which the evolutionary time for the unrelated datapoints are chosen
 #'
@@ -19,25 +19,25 @@
 #' @examples
 #' simulate_mixsnp_data(1, 0.8)
 #'
-simulate_mixsnp_data <- function(lambda, k, unrel_mean=25, unrel_sd=12.5, error_param=NA, n=100, rel_timemax=1, rel_timemin=0, truncation_point=NA){
+simulate_mixsnp_data <- function(lambda, k, unrel_mean=25, unrel_sd=12.5, error_param=NA, n=100, rel_timemax=1, rel_timemin=0, right_truncation=NA){
 
-  # n <- n/dpois(truncation_point, lambda*(unrel_shape/unrel_rate))
+  # n <- n/dpois(right_truncation, lambda*(unrel_shape/unrel_rate))
   unrel_shape <- (unrel_mean/unrel_sd)^2
   unrel_rate <- unrel_mean/(unrel_sd^2)
 
   mix_snp_dist <- map_dfr(1:n, ~{
 
-    if(is.na(truncation_point)){
-      truncation_point <- Inf
+    if(is.na(right_truncation)){
+      right_truncation <- Inf
     }
     tt <- runif(1, rel_timemin*365.25, rel_timemax*365.25)
     td <- rgamma(1, unrel_shape,rate= unrel_rate)*365.25
     if (runif(1) <k) {
-      truncation_correction <- ifelse(ppois(truncation_point, tt*lambda/365.25)>(1/n), ppois(truncation_point, tt*lambda/365.25), NA)
+      truncation_correction <- ifelse(ppois(right_truncation, tt*lambda/365.25)>(1/n), ppois(right_truncation, tt*lambda/365.25), NA)
       dd <- qpois(runif(1)*truncation_correction, tt*lambda/365.25)
       rr <- "Related"
     } else {
-      truncation_correction <- ifelse(ppois(truncation_point, td*lambda/365.25)>(1/n), ppois(truncation_point, td*lambda/365.25), NA)
+      truncation_correction <- ifelse(ppois(right_truncation, td*lambda/365.25)>(1/n), ppois(right_truncation, td*lambda/365.25), NA)
       dd <- qpois(runif(1)*truncation_correction, td*lambda/365.25)
       rr <- "Unrelated"
     }
@@ -47,7 +47,7 @@ simulate_mixsnp_data <- function(lambda, k, unrel_mean=25, unrel_sd=12.5, error_
     return(tibble(snp_dist=dd, time_dist=tt, relation=rr))
   })
 
-  # mix_snp_dist <- filter(mix_snp_dist, snp_dist<=truncation_point)
+  # mix_snp_dist <- filter(mix_snp_dist, snp_dist<=right_truncation)
 
   mix_snp_dist <-  na.omit(mix_snp_dist)
     if(nrow(mix_snp_dist)==0){

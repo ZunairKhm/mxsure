@@ -9,11 +9,10 @@ mxsure_estimate(
   unrelated_snp_dist,
   mixed_time_dist = NA,
   mixed_sites = NA,
-  truncation_point = 2000,
+  right_truncation = 2000,
+  threshold_time = NA,
   youden = FALSE,
   threshold_range = FALSE,
-  max_time = NA,
-  start_params = NA,
   tree = NA,
   sampleA = NA,
   sampleB = NA,
@@ -25,6 +24,7 @@ mxsure_estimate(
   single_branch_lambda_bounds = c(0, Inf),
   upper.tail = 0.95,
   max_false_positive = 0.05,
+  start_params = NA,
   trace = FALSE
 )
 }
@@ -37,25 +37,23 @@ mxsure_estimate(
 
 \item{mixed_sites}{list of sites considered for each SNP distance in mixed data set}
 
-\item{truncation_point}{a SNP distance limit for the data, if set to NA will estimate as if there is no limit. Will be faster with a lower truncation point.}
+\item{right_truncation}{a SNP distance limit for the data, if set to NA will estimate as if there is no limit. Will be faster with a lower truncation point.}
+
+\item{threshold_time}{the time (in days) utilised to calculate SNP thresholds, only applicable when time differences are provided, if not provided will utilise maximum of supplied times}
 
 \item{youden}{whether to produce additional SNP thresholds using the Youden method}
 
 \item{threshold_range}{whether to produce a dataset of threshold considering a range of times (from 0.5 to 10 years)}
 
-\item{max_time}{the time (in days) utilised to calculate SNP thresholds, only applicable when time differences are provided, if not provided will utilise maximum of supplied times}
-
-\item{start_params}{initial parameters for lambda, k, and intercept parameters for optimisation. If NA (as default) will try a range of different start parameters and produce the highest likelyhood result}
-
-\item{tree}{SNp scaled phylogenetic tree or list of trees with pairs of tips labelled with sampleA and sampleB}
+\item{tree}{SNP-scaled phylogenetic tree or list of trees with pairs of tips labelled with sampleA and sampleB. If this is supplied a different model for related SNP distances will be fit that takes into account branch length differences to the MRCA for any given pair of samples provided in sampleA and sampleB.}
 
 \item{sampleA}{tip labels for sampleA; must be in the correct order with respect to sampleB such that the time distance is calculated as SampleA date-SampleB date (even if this allows for negative numbers)}
 
 \item{sampleB}{tip labels for sampleB;see above}
 
-\item{return_tree_data}{return data used for tree models}
+\item{return_tree_data}{return data used for tree models instead of fitting model}
 
-\item{branch_offset}{overides branch offset to each skellam parameter for tree models}
+\item{branch_offset}{overide to branch offset to each skellam parameter for divergence correction model}
 
 \item{lambda_bounds}{bounds of rate estimation in SNPs/year/site if given time and site data}
 
@@ -69,6 +67,8 @@ mxsure_estimate(
 
 \item{max_false_positive}{if the false positive rate from calculated threshold is higher than this value a warning is produced}
 
+\item{start_params}{initial parameters for lambda, k, and intercept parameters for optimisation. If NA (as default) will try a range of different start parameters and produce the highest likelyhood result}
+
 \item{trace}{trace parameter to pass to nlminb}
 }
 \value{
@@ -76,4 +76,13 @@ Estimates for the related SNP threshold, substitution rate, proportion related, 
 }
 \description{
 Estimates the substitution rate from SNP distances from a mixed related and an unrelated data set with a mixture distribution approach. Uses these rates to produce a threshold of SNP distances to be considered related or not.
+}
+\examples{
+mixed_distances <- simulate_mixsnp_data(lambda=5, k=0.8, n=100)
+distant_distances <- simulate_mixsnp_data(lambda=5, k=0, n=1000)
+mxsure_estimate(mixed_snp_dist = mixed_data$snp_dist,
+unrelated_snp_dist = distant_data$snp_dist,
+mixed_time_dist = mixed_data$time_dist)
+
+
 }

@@ -13,7 +13,7 @@ simulate_mixsnp_data(
   n = 100,
   rel_timemax = 1,
   rel_timemin = 0,
-  truncation_point = NA
+  right_truncation = NA
 )
 }
 \arguments{
@@ -33,7 +33,7 @@ simulate_mixsnp_data(
 
 \item{rel_timemin}{minimum time allowed between samples in years}
 
-\item{truncation_point}{maximum allowed SNP distances, if set too low can cause all SNP distances to be 0}
+\item{right_truncation}{maximum allowed SNP distances, if set too low can cause all SNP distances to be 0}
 }
 \value{
 SNP distance dataset with a mixture of related and unrelated pairs with time differences

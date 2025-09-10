@@ -10,7 +10,7 @@ mxsure_ci(
   mixed_time_dist = NA,
   mixed_sites = NA,
   sample_size = length(mixed_snp_dist),
-  truncation_point = NA,
+  right_truncation = NA,
   sample_n = 100,
   confidence_level = 0.95,
   start_params = "Efficient",
@@ -36,7 +36,7 @@ mxsure_ci(
 
 \item{sample_size}{size of each bootstrap sample}
 
-\item{truncation_point}{a SNP distance limit for the data, if set to NA will estimate as if there is no limit}
+\item{right_truncation}{a SNP distance limit for the data, if set to NA will estimate as if there is no limit}
 
 \item{sample_n}{number of bootstrap sampling to conduct}
 

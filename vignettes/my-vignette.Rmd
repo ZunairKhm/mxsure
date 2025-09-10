@@ -1,0 +1,70 @@
+---
+title: "MxSure Vignette"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{my-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+# Basic Operation
+MxSure in an R package designed to estimate substitution rates and infer SNP thresholds from longitudinally collected pairwise SNP comparison data. This data is likely to contain a mixture of related pairs (from longitudinal samples of the same microbe showing evolution over time) and unrelated pairs (co-captured samples from the same strain/species).
+
+To demonstrate its use we can first simulate some example data using the simulate_mixsnp_data() command. Here we simulate 100 data points (each representing a pairwise SNP comparison between two sequences) with a true substitution rate of 5 SNPs/year with each data point having an 80% chance to be a related data point. By default sampling time differences for each of these data points are between 0 and 1 year.
+
+```{r setup}
+library(mxsure)
+set.seed(123)
+mixed_data <- simulate_mixsnp_data(lambda=5, k=0.8, n=100)
+head(mixed_data, 5)
+```
+
+MxSure's methodology is to fit a mixture distribution, which describes the related and unrelated SNP distances in separate models, to this dataset. However, to do this we need to fit the unrelated SNP distance model (a right truncated negative binomial distribution) on another dataset of pairwise SNP comparisons that has no related pairs. This could be comparisons between different individuals and ideally individuals that are geographically separated to exclude transmission events. Here we again simulate the data using the same true substitution rate but with related proportion, k, set to 0.
+
+```{r}
+distant_data <- simulate_mixsnp_data(lambda=5, k=0, n=1000)
+head(distant_data, 5)
+```
+
+We can then use mxsure_estimate() to estimate the substitution rate, estimate the related proportion, and infer a SNP threshold.
+
+```{r}
+result <- mxsure_estimate(
+  mixed_snp_dist = mixed_data$snp_dist,
+  unrelated_snp_dist = distant_data$snp_dist,
+  mixed_time_dist = mixed_data$time_dist
+)
+result
+```
+
+Here lambda is the estimated substitution rate and k is the estimated related proportion. Intercept is a time independent parameter that describes the expected SNPs at time 0, which can be used to model sequencing error. Estimated fp displayed the proportion of the distant dataset that has a SNP distance below the inferred SNP threshold. nb_size and nb_mu are the parameters of the unrealted SNP distance model.
+
+As in this example, if sites considered are not supplied for each comparison in the mixed dataset the estimated rate will have units SNPs/year/genome. We can display what this by simulating some amount of sites.
+
+```{r}
+mixed_data_sites <- mixed_data
+mixed_data_sites$sites <- runif(100, 0.5e6, 1.5e6)
+
+result_sites <- mxsure_estimate(
+  mixed_snp_dist = mixed_data_sites$snp_dist,
+  unrelated_snp_dist = distant_data$snp_dist,
+  mixed_time_dist = mixed_data_sites$time_dist,
+  mixed_sites = mixed_data_sites$sites
+)
+result_sites
+```
+
+#Confidence Intervals and Time Randomisation Test
+Confidence intervals for substitution rate estimation are produced via bootstrapping. This can be made more computationally efficient with multithreading using the future package.
+```{r}
+ci <- mxsure_ci( mixed_snp_dist = mixed_data$snp_dist,
+  unrelated_snp_dist = distant_data$snp_dist,
+  mixed_time_dist = mixed_data$time_dist
+  )
+```

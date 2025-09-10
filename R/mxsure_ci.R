@@ -9,7 +9,7 @@
 #' @param sample_size size of each bootstrap sample
 #' @param sample_n number of bootstrap sampling to conduct
 #' @param start_params initial parametrs for optim, if NA (as default) will try 3 different start parameters and produce the highest likelyhood result. Specifying the start parameters minimises computing time.
-#' @param truncation_point a SNP distance limit for the data, if set to NA will estimate as if there is no limit
+#' @param right_truncation a SNP distance limit for the data, if set to NA will estimate as if there is no limit
 #' @param confidence_level confidence level to produce confidence intervals
 #' @param lambda_bounds bounds of rate estimation in SNPs/year/site if given time and site data
 #' @param k_bounds bounds of related proportion estimation
@@ -24,15 +24,15 @@
 #'
 #' @export
 mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA,
-                      sample_size=length(mixed_snp_dist),truncation_point=NA, sample_n=100, confidence_level=0.95, start_params="Efficient",
+                      sample_size=length(mixed_snp_dist),right_truncation=NA, sample_n=100, confidence_level=0.95, start_params="Efficient",
                       tree=NA, sampleA=NA, sampleB=NA,
                       lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf), single_branch_lambda_bounds = c(0, Inf), branch_offset=NA,
                       quiet=FALSE){
 
   snp_dist <-NULL
 
-  if(is.na(truncation_point)){
-    truncation_point <- Inf
+  if(is.na(right_truncation)){
+    right_truncation <- Inf
   }
 
   if (sample_n==0){
@@ -49,8 +49,8 @@ mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mi
   mix_data$sampleA <- sampleA
   mix_data$sampleB <- sampleB
 
-  mix_data <- filter(mix_data, snp_dist<truncation_point)
-  unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
+  mix_data <- filter(mix_data, snp_dist<right_truncation)
+  unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<right_truncation]
 
 
 
@@ -59,7 +59,7 @@ mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mi
     } else if(all(start_params=="Efficient")){
   test_result <- suppressWarnings(
       mxsure_estimate(
-        mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites, truncation_point=truncation_point, start_params = NA,
+        mix_data$snp_dist,unrelated_snp_dist, mix_data$time_dist, mix_data$sites, right_truncation=right_truncation, start_params = NA,
         tree=tree, sampleA=mix_data$sampleA, sampleB=mix_data$sampleB, branch_offset=branch_offset,
         lambda_bounds = lambda_bounds, k_bounds=k_bounds,  intercept_bounds=intercept_bounds,
         single_branch_lambda_bounds = single_branch_lambda_bounds)
@@ -76,7 +76,7 @@ mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mi
     z <- plyr::try_default(
   suppressWarnings(
     mxsure_estimate(
-      x$snp_dist, y, x$time_dist, x$sites, truncation_point=truncation_point,
+      x$snp_dist, y, x$time_dist, x$sites, right_truncation=right_truncation,
       tree=tree, sampleA=x$sampleA, sampleB=x$sampleB, branch_offset=branch_offset,
       start_params = start_params, lambda_bounds = lambda_bounds, k_bounds=k_bounds, intercept_bounds=intercept_bounds, single_branch_lambda_bounds = single_branch_lambda_bounds
     )

@@ -7,11 +7,11 @@
 \alias{qtruncnbinom}
 \title{Right truncated negative binomial distribution}
 \usage{
-dtruncnbinom(x, mu, size, truncation_point)
+dtruncnbinom(x, mu, size, right_truncation)
 
-ptruncnbinom(q, mu, size, truncation_point)
+ptruncnbinom(q, mu, size, right_truncation)
 
-qtruncnbinom(p, mu, size, truncation_point)
+qtruncnbinom(p, mu, size, right_truncation)
 }
 \arguments{
 \item{x}{vector of (non-negative integer) quantiles.}
@@ -20,7 +20,7 @@ qtruncnbinom(p, mu, size, truncation_point)
 
 \item{size}{target for number of successful trials, or dispersion parameter (the shape parameter of the gamma mixing distribution). Must be strictly positive, need not be integer.}
 
-\item{truncation_point}{right censoring point}
+\item{right_truncation}{right censoring point}
 
 \item{q}{vector of quantiles.}
 

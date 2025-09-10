@@ -9,7 +9,7 @@
 #' @param k_limits bounds of k axis
 #' @param bins number of bins to pass to ggplot contour function
 #' @param title title to pass to ggplot title
-#' @param truncation_point a SNP distance limit for the data, if set to NA will estimate as if there is no limit
+#' @param right_truncation a SNP distance limit for the data, if set to NA will estimate as if there is no limit
 #' @param lambda_bounds bounds of rate estimation in SNPs/year/site if given time and site data
 #' @param k_bounds bounds of related proportion estimation
 #' @param intercept_bounds bounds of intercept estimation
@@ -21,7 +21,7 @@
 #'
 #' @return ggplot contour map of likelyhood space
 #' @export
-mxsure_likelyhood_contour <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point=NA,
+mxsure_likelyhood_contour <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, right_truncation=NA,
                                        lambda_bounds=c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf),
                                        resolution=100, lambda_limits=c(1e-8, 1e-4), k_limits=c(0.2,0.99), low_ci=NULL, high_ci=NULL,
                                        bins=NULL, title="Likelihood Contour Plot"){
@@ -39,19 +39,19 @@ mxsure_likelyhood_contour <- function(mixed_snp_dist, unrelated_snp_dist, mixed_
     return(log_a + log(1 + exp(log_b - log_a)))
   }
 
-  negllk <- function(k, lambda, x, t, s, intercept, nbfitmu, nbfitsize,truncation_point){
+  negllk <- function(k, lambda, x, t, s, intercept, nbfitmu, nbfitsize,right_truncation){
 
     -log(-sum(pmap_dbl(list(x, t,s), ~ {log_sum_exp(log(k) + dpois(x = ..1,
                                                                    lambda =  lambda*..2*(..3/1000000)+intercept, #gives rate esimate per day time per million bp
                                                                    log = TRUE) -
-                                                      ppois(truncation_point,
+                                                      ppois(right_truncation,
                                                             lambda =  lambda*..2*(..3/1000000),
                                                             log = TRUE ),
                                                     log(1-k) + dnbinom(x = ..1,
                                                                        size = nbfitsize,
                                                                        mu = nbfitmu,
                                                                        log = TRUE)-
-                                                      pnbinom(truncation_point,
+                                                      pnbinom(right_truncation,
                                                               size = nbfitsize,
                                                               mu = nbfitmu,
                                                               log = TRUE))
@@ -63,22 +63,22 @@ mxsure_likelyhood_contour <- function(mixed_snp_dist, unrelated_snp_dist, mixed_
 
   result <- suppressWarnings(
     mxsure_estimate(
-      mixed_snp_dist,unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point=truncation_point, start_params = NA,
+      mixed_snp_dist,unrelated_snp_dist, mixed_time_dist, mixed_sites, right_truncation=right_truncation, start_params = NA,
       lambda_bounds = lambda_bounds, k_bounds=k_bounds,  intercept_bounds=intercept_bounds)
     , classes = "warning")
 
 
   #truncating data
-  if(is.na(truncation_point)){
-    truncation_point <- Inf
+  if(is.na(right_truncation)){
+    right_truncation <- Inf
   }
   unrelated_snp_dist_orig <- unrelated_snp_dist
   x <- tibble(mixed_snp_dist, mixed_time_dist, mixed_sites)
-  x <- filter(x, mixed_snp_dist<truncation_point)
+  x <- filter(x, mixed_snp_dist<right_truncation)
   mixed_snp_dist <- x$mixed_snp_dist
   mixed_time_dist <- x$mixed_time_dist
   mixed_sites <- x$mixed_sites
-  unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
+  unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<right_truncation]
 
 
   lambda <- exp(seq(log(lambda_limits[1]),log(lambda_limits[2]), length.out = resolution))
@@ -100,7 +100,7 @@ mxsure_likelyhood_contour <- function(mixed_snp_dist, unrelated_snp_dist, mixed_
            intercept = result$intercept,
            nbfitmu = result$nb_mu,
            nbfitsize = result$nb_size,
-           truncation_point=truncation_point)
+           right_truncation=right_truncation)
   })
 
   # Plot the results using ggplot

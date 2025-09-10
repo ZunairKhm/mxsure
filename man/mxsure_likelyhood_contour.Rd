@@ -9,7 +9,7 @@ mxsure_likelyhood_contour(
   unrelated_snp_dist,
   mixed_time_dist,
   mixed_sites,
-  truncation_point = NA,
+  right_truncation = NA,
   lambda_bounds = c(0, 1),
   k_bounds = c(0, 1),
   intercept_bounds = c(-Inf, Inf),
@@ -31,7 +31,7 @@ mxsure_likelyhood_contour(
 
 \item{mixed_sites}{list of sites considered for each SNP distance in mixed data set}
 
-\item{truncation_point}{a SNP distance limit for the data, if set to NA will estimate as if there is no limit}
+\item{right_truncation}{a SNP distance limit for the data, if set to NA will estimate as if there is no limit}
 
 \item{lambda_bounds}{bounds of rate estimation in SNPs/year/site if given time and site data}
 

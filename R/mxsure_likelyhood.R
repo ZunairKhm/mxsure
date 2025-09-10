@@ -6,7 +6,7 @@
 #' @param unrelated_snp_dist vector of SNP distances from unrelated dataset
 #' @param mixed_time_dist vector of time differences for each SNP distacne in the mixed dataset
 #' @param mixed_sites vector of sites considered for each SNP distance in the mixed dataset
-#' @param truncation_point maximum limit of SNP distances to consider
+#' @param right_truncation maximum limit of SNP distances to consider
 #'
 #' @importFrom dplyr distinct mutate
 #' @importFrom tibble tibble
@@ -14,19 +14,19 @@
 #'
 #' @return a dataframe with SNP distances, time differences, sites considered and the likeyhoods of related and unrelated models fitting for each datapoint
 #' @export
-mxsure_likelyhood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point=2000,original_result=NA,start_params=NA,
+mxsure_likelyhood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, right_truncation=2000,original_result=NA,start_params=NA,
                               tree=NA, sampleA=NA, sampleB=NA,  branch_offset=NA){
 
   snp_dist<- time_dist<- rel_loglh<- unrel_loglh<- logLHR <-  NULL
 
 
-  if(is.na(truncation_point)){
-    truncation_point <- Inf
+  if(is.na(right_truncation)){
+    right_truncation <- Inf
   }
-  unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<truncation_point]
+  unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<right_truncation]
 
   if(anyNA(original_result)){
-  mix_res <- suppressWarnings(mxsure_estimate(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, truncation_point = 2000,start_params=start_params,
+  mix_res <- suppressWarnings(mxsure_estimate(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, right_truncation = 2000,start_params=start_params,
                                               tree=tree, sampleA=sampleA, sampleB=sampleB, branch_offset=branch_offset))
   }else{
   mix_res <- original_result
@@ -123,7 +123,7 @@ mxsure_likelyhood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dis
           size = mix_res$nb_size,
           log = TRUE
         ) - pnbinom(
-          truncation_point,
+          right_truncation,
           mu = mix_res$nb_mu,
           size = mix_res$nb_size,
           log.p = TRUE
@@ -153,7 +153,7 @@ mxsure_likelyhood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dis
     mutate(rel_loglh = (
       dpois(snp_dist, (
         mix_res$lambda * (time_dist / 365.25) * sites + mix_res$intercept
-      ), log = TRUE) #/ ppois(truncation_point, (mix_res$lambda*(time_dist/365.25)*mean(mixed_sites)+mix_res$intercept))
+      ), log = TRUE) #/ ppois(right_truncation, (mix_res$lambda*(time_dist/365.25)*mean(mixed_sites)+mix_res$intercept))
     ),
     unrel_loglh = (
       dnbinom(
@@ -162,7 +162,7 @@ mxsure_likelyhood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dis
         size = mix_res$nb_size,
         log = TRUE
       ) - pnbinom(
-        truncation_point,
+        right_truncation,
         mu = mix_res$nb_mu,
         size = mix_res$nb_size,
         log.p = TRUE
