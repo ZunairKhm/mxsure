@@ -1,20 +1,26 @@
-#' Reports Likelyhoods for related and unrelated distributions for each datapoint provided
+#' mxsure likelihood estimation
 #'
-#'
+#' Reports likelihoods for related and unrelated distributions for each data point provided
 #'
 #' @param mixed_snp_dist vector of SNP distances from mixed dataset
 #' @param unrelated_snp_dist vector of SNP distances from unrelated dataset
 #' @param mixed_time_dist vector of time differences for each SNP distacne in the mixed dataset
 #' @param mixed_sites vector of sites considered for each SNP distance in the mixed dataset
 #' @param right_truncation maximum limit of SNP distances to consider
+#' @param original_result optional input to provide original mxsure_likelyhood() result instead of computing it again
+#' @param start_params initial parameters for lambda, k, and intercept parameters for optimisation. If NA (as default) will try a range of different start parameters and produce the highest likelihood result
+#' @param tree SNP-scaled phylogenetic tree or list of trees with pairs of tips labelled with sampleA and sampleB. If this is supplied a different model for related SNP distances will be fit that takes into account branch length differences to the MRCA for any given pair of samples provided in sampleA and sampleB.
+#' @param sampleA tip labels for sampleA; must be in the correct order with respect to sampleB such that the time distance is calculated as SampleA date-SampleB date (even if this allows for negative numbers)
+#' @param sampleB tip labels for sampleB; see above
+#' @param branch_offset overide to branch offset to each skellam parameter for divergence correction model
 #'
 #' @importFrom dplyr distinct mutate
-#' @importFrom tibble tibble
+#' @importFrom tidyr tibble
 #' @importFrom stats dpois dnbinom
 #'
 #' @return a dataframe with SNP distances, time differences, sites considered and the likeyhoods of related and unrelated models fitting for each datapoint
 #' @export
-mxsure_likelyhood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites, right_truncation=2000,original_result=NA,start_params=NA,
+mxsure_likelihood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites=NA, right_truncation=2000,original_result=NA,start_params=NA,
                               tree=NA, sampleA=NA, sampleB=NA,  branch_offset=NA){
 
   snp_dist<- time_dist<- rel_loglh<- unrel_loglh<- logLHR <-  NULL
@@ -37,7 +43,7 @@ mxsure_likelyhood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dis
     mixed_sites <- 1
   }
 
-  #### tree likelyhood ####
+  #### tree likelihood ####
   if(!anyNA(tree)|!anyNA(sampleA)|!anyNA(sampleB)){
     # Ensure tree is a list (even if single tree provided)
     tree_list <- if (inherits(tree, "phylo")) list(tree) else tree
@@ -110,10 +116,10 @@ mxsure_likelyhood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dis
           mrca_to_tip2+ root_to_mrca,
           log = TRUE) +
           dpois(x = mrca_to_tip1,
-                lambda = mix_res$single_branch_lambda,
+                lambda = mix_res$tree_fulldist_param,
                 log=TRUE)+
           dpois(x = mrca_to_tip2,
-                lambda = mix_res$single_branch_lambda,
+                lambda = mix_res$tree_fulldist_param,
                 log=TRUE)
       ),
       unrel_loglh = (
@@ -139,7 +145,7 @@ mxsure_likelyhood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dis
 
     return(LH)
 
-#### non tree likelyhood #####
+#### non tree likelihood #####
 }else{
   LH <-
     tibble(
