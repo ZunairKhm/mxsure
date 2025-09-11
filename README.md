@@ -18,8 +18,8 @@ You can install the development version of mxsure from
 [GitHub](https://github.com/) with:
 
 ``` r
-install.packages("pak")
-pak::pak("ZunairKhm/mxsure")
+install.packages("remotes")
+remotes::install_github("ZunairKhm/mxsure")
 ```
 
 ## Basic Operation
