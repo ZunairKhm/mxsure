@@ -2,7 +2,7 @@
 % Please edit documentation in R/snp_over_time.R
 \name{snp_over_time}
 \alias{snp_over_time}
-\title{SNP dist/time plot}
+\title{SNP distance/time plot}
 \usage{
 snp_over_time(
   mixed_snp_dist,
@@ -12,10 +12,10 @@ snp_over_time(
   right_truncation = 2000,
   original_result = NA,
   start_params = NA,
-  max_time = NA,
+  threshold_time = NA,
   title = "SNP Distance Over Time",
   jitter = TRUE,
-  p_value = NA,
+  failure_perc = NA,
   ci_data = NA,
   time_limits = c(0, NA),
   under_threshold = FALSE,
@@ -39,19 +39,37 @@ snp_over_time(
 
 \item{right_truncation}{a SNP distance limit for the data, if set to NA will estimate as if there is no limit}
 
-\item{max_time}{the time (in days) utilised to calculate SNP thresholds, only applicable when time differences are provided, if not provided will utilise maximum of supplied times}
+\item{original_result}{optional input to provide original mxsure_likelyhood() result instead of computing it again}
+
+\item{start_params}{initial parameters for lambda, k, and intercept parameters for optimisation. If NA (as default) will try a range of different start parameters and produce the highest likelihood result}
+
+\item{threshold_time}{the time (in days) utilised to calculate SNP thresholds, only applicable when time differences are provided, if not provided will utilise maximum of supplied times}
 
 \item{title}{title for graph passed to ggplot}
 
 \item{jitter}{whether to jitter data (keeps data above 0 SNPs and 0 time)}
 
-\item{p_value}{optional input to display time randomised p value from mxsure_timerand_test}
+\item{failure_perc}{optional input to display time randomised failure percentage from mxsure_timerand_test}
 
-\item{ci_data}{optional input for previously calculated CI data (mxsure_ci) to display}
+\item{ci_data}{optional input for previously calculated CI data (mxsure_ci) to display on subtitle}
 
 \item{time_limits}{x axis limits passed to ggplot}
 
 \item{under_threshold}{whether to only plot points below the calculated SNP threshold}
+
+\item{tree}{SNP-scaled phylogenetic tree or list of trees with pairs of tips labelled with sampleA and sampleB. If this is supplied a different model for related SNP distances will be fit that takes into account branch length differences to the MRCA for any given pair of samples provided in sampleA and sampleB.}
+
+\item{sampleA}{tip labels for sampleA; must be in the correct order with respect to sampleB such that the time distance is calculated as SampleA date-SampleB date (even if this allows for negative numbers)}
+
+\item{sampleB}{tip labels for sampleB; see above}
+
+\item{branch_offset}{overide to branch offset to each skellam parameter for divergence correction model}
+
+\item{lambda_bounds}{bounds of rate estimation in SNPs/year/site if given time and site data}
+
+\item{k_bounds}{bounds of related proportion estimation}
+
+\item{intercept_bounds}{bounds of intercept estimation}
 }
 \value{
 a plot of SNP distance over time using ggplot

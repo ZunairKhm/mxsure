@@ -16,14 +16,12 @@ Imports:
     ggplot2,
     purrr,
     stats,
-    tibble,
     tidyr,
     scales,
     viridis,
     plyr,
     ggbeeswarm,
-    future.apply,
-    geomtextpath,
+    phytools,
     ape,
     skellam
 URL: https://github.com/ZunairKhm/msure

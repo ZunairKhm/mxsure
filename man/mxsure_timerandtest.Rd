@@ -2,7 +2,7 @@
 % Please edit documentation in R/mxsure_timerandtest.R
 \name{mxsure_timerandtest}
 \alias{mxsure_timerandtest}
-\title{Time Randomisation Test for mixture distribution mutation rate estimation}
+\title{Time Randomisation Test for mixture distribution substituion rate estimation}
 \usage{
 mxsure_timerandtest(
   mixed_snp_dist,
@@ -10,8 +10,7 @@ mxsure_timerandtest(
   mixed_time_dist = NA,
   mixed_sites = NA,
   right_truncation = 2000,
-  sample_size = length(mixed_snp_dist),
-  sample_n = 100,
+  bootstraps = 100,
   permutations = 5,
   quiet = FALSE,
   confidence_level = 0.95,
@@ -25,13 +24,9 @@ mxsure_timerandtest(
   lambda_bounds = c(0, 1),
   k_bounds = c(0, 1),
   intercept_bounds = c(-Inf, Inf),
-  single_branch_lambda_bounds = c(0, Inf),
+  tree_fulldist_param_bounds = c(0, Inf),
   branch_offset = NA,
-  within_individual = FALSE,
-  subjectA_id,
-  subjectB_id,
-  clustered = FALSE,
-  prop_type = "above_estimate"
+  failure_criterion = "above_estimate"
 )
 }
 \arguments{
@@ -45,9 +40,7 @@ mxsure_timerandtest(
 
 \item{right_truncation}{SNP distances to truncate at}
 
-\item{sample_size}{size of each bootstrap sample}
-
-\item{sample_n}{number of bootstrap sampling to conduct for each time permutation}
+\item{bootstraps}{number of bootstrap sampling to conduct for each time permutation}
 
 \item{permutations}{number of time permutation to run}
 
@@ -55,7 +48,15 @@ mxsure_timerandtest(
 
 \item{confidence_level}{confidence level for CIs}
 
-\item{start_params}{initial parameters for optim, if NA (as default) will try 3 different start parameters and produce the highest likelihood result. Specifying the start parameters minimises computing time.}
+\item{tree}{SNP-scaled phylogenetic tree or list of trees with pairs of tips labelled with sampleA and sampleB. If this is supplied a different model for related SNP distances will be fit that takes into account branch length differences to the MRCA for any given pair of samples provided in sampleA and sampleB.}
+
+\item{sampleA}{tip labels for sampleA; must be in the correct order with respect to sampleB such that the time distance is calculated as SampleA date-SampleB date (even if this allows for negative numbers)}
+
+\item{sampleB}{tip labels for sampleB;see above}
+
+\item{start_params}{initial parameters for bootstrap estimates, if NA will try various different start parameters and produce the highest likelihood result. Specifying the start parameters minimises computing time. If "Efficient" (as default) will use original result as starting paramters.}
+
+\item{original_result}{if supplied the function will not re-estimate the original estimate}
 
 \item{ci_data}{optional input for previously calculated CI data (mxsure_ci) for computational efficiency}
 
@@ -67,19 +68,15 @@ mxsure_timerandtest(
 
 \item{intercept_bounds}{bounds of intercept estimation}
 
-\item{within_individual}{permute time data within each individuals (requires indiviudal ID codes that must be the exact same)}
+\item{tree_fulldist_param_bounds}{bounds of single branch fitting used in tree models}
 
-\item{subjectA_id}{needed for within individual permutation}
+\item{branch_offset}{overide to branch offset to each skellam parameter for divergence correction model}
 
-\item{subjectB_id}{needed for within individual permutation (must be the same as subject A)}
-
-\item{clustered}{permute between different time distances}
-
-\item{prop_type}{proportion of bootstraps either "above_estimate", "above_low_ci", or "within_ci"}
+\item{failure_criterion}{proportion of bootstraps either "above_estimate", "above_low_ci", or "within_ci"}
 }
 \value{
-list of overall outcomes, results from each time randomisation, raw results, and a plot comparing point estimates and confidence levels between original data and time randomised data
+list of overall outcomes, results from each time randomisation, raw results, and a plot comparing point estimates and confidence levels between original data and time randomised data. Failure bootstraps and failure percentages indicate the number and percentage of bootstrap estimates from time randomised datasets above the original estimate (if prop type is not adjusted)
 }
 \description{
-Time Randomisation Test for mixture distribution mutation rate estimation
+Time Randomisation Test for mixture distribution substituion rate estimation
 }

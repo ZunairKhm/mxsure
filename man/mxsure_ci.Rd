@@ -2,7 +2,7 @@
 % Please edit documentation in R/mxsure_ci.R
 \name{mxsure_ci}
 \alias{mxsure_ci}
-\title{Bootstrapped confidence intervals for mixture SNP cutoffs}
+\title{Bootstrapped confidence intervals for related/unrelated strain SNP cutoffs}
 \usage{
 mxsure_ci(
   mixed_snp_dist,
@@ -11,7 +11,7 @@ mxsure_ci(
   mixed_sites = NA,
   sample_size = length(mixed_snp_dist),
   right_truncation = NA,
-  sample_n = 100,
+  bootstraps = 100,
   confidence_level = 0.95,
   start_params = "Efficient",
   tree = NA,
@@ -20,7 +20,7 @@ mxsure_ci(
   lambda_bounds = c(0, 1),
   k_bounds = c(0, 1),
   intercept_bounds = c(-Inf, Inf),
-  single_branch_lambda_bounds = c(0, Inf),
+  tree_fulldist_param_bounds = c(0, Inf),
   branch_offset = NA,
   quiet = FALSE
 )
@@ -38,17 +38,29 @@ mxsure_ci(
 
 \item{right_truncation}{a SNP distance limit for the data, if set to NA will estimate as if there is no limit}
 
-\item{sample_n}{number of bootstrap sampling to conduct}
+\item{bootstraps}{number of bootstrap sampling to conduct}
 
 \item{confidence_level}{confidence level to produce confidence intervals}
 
-\item{start_params}{initial parametrs for optim, if NA (as default) will try 3 different start parameters and produce the highest likelyhood result. Specifying the start parameters minimises computing time.}
+\item{start_params}{initial parameters for bootstrap estimates, if NA will try various different start parameters and produce the highest likelihood result. Specifying the start parameters minimises computing time. If "Efficient" (as default) will use original result as starting paramters.}
+
+\item{tree}{SNP-scaled phylogenetic tree or list of trees with pairs of tips labelled with sampleA and sampleB. If this is supplied a different model for related SNP distances will be fit that takes into account branch length differences to the MRCA for any given pair of samples provided in sampleA and sampleB.}
+
+\item{sampleA}{tip labels for sampleA; must be in the correct order with respect to sampleB such that the time distance is calculated as SampleA date-SampleB date (even if this allows for negative numbers)}
+
+\item{sampleB}{tip labels for sampleB;see above}
 
 \item{lambda_bounds}{bounds of rate estimation in SNPs/year/site if given time and site data}
 
 \item{k_bounds}{bounds of related proportion estimation}
 
 \item{intercept_bounds}{bounds of intercept estimation}
+
+\item{tree_fulldist_param_bounds}{bounds of single branch fitting used in tree models}
+
+\item{branch_offset}{overide to branch offset to each skellam parameter for divergence correction model}
+
+\item{quiet}{if true will not display progress bar}
 }
 \value{
 Confidence intervals for all estimates produced by mxsure_estimate.

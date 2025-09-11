@@ -2,7 +2,7 @@
 % Please edit documentation in R/mxsure_estimate.R
 \name{mxsure_estimate}
 \alias{mxsure_estimate}
-\title{mxsure estimate}
+\title{Substituion rate estimation and SNP threshold inference}
 \usage{
 mxsure_estimate(
   mixed_snp_dist,
@@ -21,7 +21,7 @@ mxsure_estimate(
   lambda_bounds = c(0, 1),
   k_bounds = c(0, 1),
   intercept_bounds = c(-Inf, Inf),
-  single_branch_lambda_bounds = c(0, Inf),
+  tree_fulldist_param_bounds = c(0, Inf),
   upper.tail = 0.95,
   max_false_positive = 0.05,
   start_params = NA,
@@ -61,13 +61,13 @@ mxsure_estimate(
 
 \item{intercept_bounds}{bounds of intercept estimation}
 
-\item{single_branch_lambda_bounds}{bounds of single branch fitting used in tree models}
+\item{tree_fulldist_param_bounds}{bounds of single branch fitting used in tree models}
 
 \item{upper.tail}{percentile to calculate SNP thresholds}
 
 \item{max_false_positive}{if the false positive rate from calculated threshold is higher than this value a warning is produced}
 
-\item{start_params}{initial parameters for lambda, k, and intercept parameters for optimisation. If NA (as default) will try a range of different start parameters and produce the highest likelyhood result}
+\item{start_params}{initial parameters for lambda, k, and intercept parameters for optimisation. If NA (as default) will try a range of different start parameters and produce the highest likelihood result}
 
 \item{trace}{trace parameter to pass to nlminb}
 }
@@ -80,9 +80,9 @@ Estimates the substitution rate from SNP distances from a mixed related and an u
 \examples{
 mixed_distances <- simulate_mixsnp_data(lambda=5, k=0.8, n=100)
 distant_distances <- simulate_mixsnp_data(lambda=5, k=0, n=1000)
-mxsure_estimate(mixed_snp_dist = mixed_data$snp_dist,
-unrelated_snp_dist = distant_data$snp_dist,
-mixed_time_dist = mixed_data$time_dist)
+mxsure_estimate(mixed_snp_dist = mixed_distances$snp_dist,
+unrelated_snp_dist = distant_distances$snp_dist,
+mixed_time_dist = mixed_distances$time_dist)
 
 
 }
