@@ -127,7 +127,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
 
   #### tree snp correction ####
   if(!anyNA(tree)|!anyNA(sampleA)|!anyNA(sampleB)){
-    cat("Tree supplied: fitting divergence correction model")
+    cat("Tree supplied: fitting shared ancestry model")
     mixed_snp_dist <- abs(mixed_snp_dist) #ensuring snp distance is still absolute for the distant dataset fitting
     # Ensure tree is a list (even if single tree provided)
     tree_list <- if (inherits(tree, "phylo")) list(tree) else tree

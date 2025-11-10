@@ -8,7 +8,7 @@ Description: Substitution rate esitmation, transmission thresholds, and tracking
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Imports: 
     fitdistrplus,
     dplyr,
@@ -17,6 +17,7 @@ Imports:
     purrr,
     stats,
     tidyr,
+    data.table,
     scales,
     viridis,
     plyr,
