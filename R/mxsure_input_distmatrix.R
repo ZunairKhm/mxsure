@@ -13,7 +13,7 @@
 #' @return A data.table with columns: sampleA, sampleB, snp_dist,
 #'   and time_dist (if 'dates' was provided).
 #'
-#' @importFrom data.table ":="
+#' @importFrom data.table ":=" is.data.table copy fread
 #'
 #' @export
 mxsure_input_distmatrix <- function(input = NULL,
@@ -21,6 +21,7 @@ mxsure_input_distmatrix <- function(input = NULL,
                                     dates = NULL,
                                     dates_sample_col = "sample_id",
                                     dates_date_col = "date") {
+  library(data.table)
 
 
   # Input Handling

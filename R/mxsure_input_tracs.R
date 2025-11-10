@@ -12,7 +12,7 @@
 #'
 #' @return A data.table with columns: snp_dist, time_dist (if found or if sampling dates are provided), and sites (if found).
 #'
-#' @importFrom data.table ":="
+#' @importFrom data.table ":=" is.data.table copy fread
 #'
 #' @export
 mxsure_input_tracs <- function(input = NULL,
