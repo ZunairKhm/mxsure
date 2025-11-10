@@ -20,6 +20,7 @@ MxSure can input data from inStrain compare output, TRACS distance output, or fr
 ### TRACS distance output
 
 ```{r}
+library(mxsure)
 #loading example data provided with package
 tracs_example_path <- system.file("extdata", "example_tracs_output.csv", package = "mxsure")
 sample_dates <- readr::read_csv(system.file("extdata", "example_sampling_dates.csv", package = "mxsure"))

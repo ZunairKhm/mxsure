@@ -5,6 +5,10 @@
 
 <!-- badges: start -->
 
+[![R-CMD-check](https://github.com/zunairkhm/mxsure/workflows/R-CMD-check/badge.svg)](https://github.com/zunairkhm/mxsure/actions)
+
+<!-- [![DOI](https://zenodo.org/badge/XXXX.svg)](https://zenodo.org/badge/latestdoi/XXXX) -->
+
 <!-- badges: end -->
 
 This package implements a mixture distribution approach to estimating
@@ -20,6 +24,108 @@ You can install the development version of mxsure from
 ``` r
 install.packages("remotes")
 remotes::install_github("ZunairKhm/mxsure")
+```
+
+``` r
+library(mxsure)
+```
+
+## Loading in data
+
+MxSure can input data from inStrain compare output, TRACS distance
+output, or from a distance matrix. Either provide an R object or
+filepath to the respective function and the output will be an R object
+ready for inputting into MxSure. These examples only show loading in one
+dataset for each method however a mixed and distant dataset is required
+for MxSure.
+
+### TRACS distance output
+
+``` r
+#loading example data provided with package
+tracs_example_path <- system.file("extdata", "example_tracs_output.csv", package = "mxsure")
+sample_dates <- readr::read_csv(system.file("extdata", "example_sampling_dates.csv", package = "mxsure"))
+#> Rows: 30 Columns: 2
+#> ── Column specification ────────────────────────────────────────────────────────
+#> Delimiter: ","
+#> chr  (1): sample_id
+#> date (1): date
+#> 
+#> ℹ Use `spec()` to retrieve the full column specification for this data.
+#> ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+head(sample_dates)
+#> # A tibble: 6 × 2
+#>   sample_id date      
+#>   <chr>     <date>    
+#> 1 sample1   2025-01-01
+#> 2 sample2   2025-01-07
+#> 3 sample3   2025-01-13
+#> 4 sample4   2025-01-19
+#> 5 sample5   2025-01-25
+#> 6 sample6   2025-01-31
+
+#using function to ready data for input into mxsure
+mxsure_input_tracs <-  mxsure_input_tracs(file_path=tracs_example_path, dates=sample_dates, dates_sample_col = "sample_id", dates_date_col = "date")
+head(mxsure_input_tracs)
+#>   snp_dist time_dist   sites
+#> 1     1653       174  804627
+#> 2     2001         6 1660022
+#> 3     1557         6 1453158
+#> 4     1805         6 2079670
+#> 5     1598         6  858564
+#> 6     2125         6 1039812
+```
+
+### inStrain compare output
+
+``` r
+instrain_example_path <- system.file("extdata", "example_instrain_output.csv", package = "mxsure")
+sample_dates <- readr::read_csv(system.file("extdata", "example_sampling_dates.csv", package = "mxsure"))
+#> Rows: 30 Columns: 2
+#> ── Column specification ────────────────────────────────────────────────────────
+#> Delimiter: ","
+#> chr  (1): sample_id
+#> date (1): date
+#> 
+#> ℹ Use `spec()` to retrieve the full column specification for this data.
+#> ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+mxsure_input_instrain <-  mxsure_input_instrain(file_path=instrain_example_path, dates=sample_dates, dates_sample_col = "sample_id", dates_date_col = "date")
+head(mxsure_input_instrain)
+#>   snp_dist time_dist   sites
+#> 1        2       174 4074096
+#> 2     8851         6 4152305
+#> 3     6832         6 4104415
+#> 4     6029         6 4059303
+#> 5     7111         6 4113956
+#> 6     6171         6 4138456
+```
+
+### distance matrix
+
+note: this function does not allow for ‘sites considered’ or equivalent;
+this will need to be inputed manually
+
+``` r
+distmat_example_path <- system.file("extdata", "example_distance_matrix.csv", package = "mxsure")
+sample_dates <- readr::read_csv(system.file("extdata", "example_sampling_dates.csv", package = "mxsure"))
+#> Rows: 30 Columns: 2
+#> ── Column specification ────────────────────────────────────────────────────────
+#> Delimiter: ","
+#> chr  (1): sample_id
+#> date (1): date
+#> 
+#> ℹ Use `spec()` to retrieve the full column specification for this data.
+#> ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+mxsure_input_distmat <-  mxsure_input_distmatrix(file_path=distmat_example_path, dates=sample_dates, dates_sample_col = "sample_id", dates_date_col = "date")
+head(mxsure_input_distmat)
+#>    sampleA sampleB snp_dist time_dist
+#>     <char>  <char>    <int>     <num>
+#> 1: sample2 sample1      467         6
+#> 2: sample3 sample1      183        12
+#> 3: sample4 sample1       18        18
+#> 4: sample5 sample1      199        24
+#> 5: sample6 sample1      430        30
+#> 6: sample7 sample1      310        36
 ```
 
 ## Basic Operation
@@ -88,7 +194,7 @@ result
 #> # A tibble: 1 × 8
 #>   snp_threshold lambda     k intercept estimated_fp lambda_units   nb_size nb_mu
 #>           <dbl>  <dbl> <dbl>     <dbl>        <dbl> <chr>            <dbl> <dbl>
-#> 1            10   5.73 0.770    -0.146        0.002 SNPs per year…    4.07  125.
+#> 1            10   5.71 0.770    -0.146        0.002 SNPs per year…    4.07  125.
 ```
 
 Here lambda is the estimated substitution rate and k is the estimated
@@ -163,16 +269,16 @@ result$threshold_range
 #> 7    3.5        27        0.019     0.77
 #> 8    4.0        31        0.026     0.77
 #> 9    4.5        34        0.036     0.78
-#> 10   5.0        38        0.047     0.78
+#> 10   5.0        37        0.043     0.78
 #> 11   5.5        41        0.058     0.79
 #> 12   6.0        44        0.066     0.79
 #> 13   6.5        47        0.077     0.79
-#> 14   7.0        51        0.091     0.79
+#> 14   7.0        50        0.090     0.79
 #> 15   7.5        54        0.103     0.79
 #> 16   8.0        57        0.121     0.80
 #> 17   8.5        60        0.139     0.81
 #> 18   9.0        63        0.159     0.81
-#> 19   9.5        67        0.181     0.82
+#> 19   9.5        66        0.178     0.82
 #> 20  10.0        70        0.200     0.82
 ```
 
@@ -195,8 +301,8 @@ ci$confidence_intervals
 #> # A tibble: 2 × 5
 #>   snp_threshold lambda     k intercept estimated_fp
 #>           <dbl>  <dbl> <dbl>     <dbl>        <dbl>
-#> 1             9   5.22 0.754    -0.161       0     
-#> 2            10   6.08 0.823    -0.130       0.0041
+#> 1             9   5.21 0.760    -0.159       0     
+#> 2            10   6.07 0.820    -0.130       0.0041
 ```
 
 ## Time Randomisation Test
@@ -226,7 +332,7 @@ future::plan("future::sequential")
 timerand$plot
 ```
 
-<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
 
 ``` r
 timerand$outcome
@@ -253,11 +359,11 @@ head(likelihoods, 5)
 #> # A tibble: 5 × 9
 #>   snp_dist time_dist sites rel_loglh unrel_loglh  logLHR    rel_lh    unrel_lh
 #>      <dbl>     <dbl> <dbl>     <dbl>       <dbl>   <dbl>     <dbl>       <dbl>
-#> 1      181     105.      1  -692.          -5.76 -686.   4.80e-301 0.00315    
-#> 2        0      16.6     1    -0.115      -14.1    13.9  8.92e-  1 0.000000788
-#> 3        8     349.      1    -2.55        -9.12    6.58 7.83e-  2 0.000109   
-#> 4       34      89.9     1   -81.9         -6.02  -75.9  2.67e- 36 0.00242    
-#> 5        3     234.      1    -1.54       -11.1     9.57 2.15e-  1 0.0000149  
+#> 1      181     105.      1  -692.          -5.76 -686.   3.00e-301 0.00315    
+#> 2        0      16.6     1    -0.114      -14.1    13.9  8.92e-  1 0.000000788
+#> 3        8     349.      1    -2.55        -9.12    6.57 7.78e-  2 0.000109   
+#> 4       34      89.9     1   -82.0         -6.02  -76.0  2.46e- 36 0.00242    
+#> 5        3     234.      1    -1.54       -11.1     9.58 2.15e-  1 0.0000149  
 #> # ℹ 1 more variable: LHR <dbl>
 ```
 
@@ -280,4 +386,4 @@ snp_over_time(mixed_snp_dist = mixed_data$snp_dist,
 #> (`geom_step()`).
 ```
 
-<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />

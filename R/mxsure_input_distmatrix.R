@@ -13,7 +13,7 @@
 #' @return A data.table with columns: sampleA, sampleB, snp_dist,
 #'   and time_dist (if 'dates' was provided).
 #'
-#' @importFrom data.table ":=" is.data.table copy fread
+#' @import data.table
 #'
 #' @export
 mxsure_input_distmatrix <- function(input = NULL,
@@ -35,19 +35,19 @@ mxsure_input_distmatrix <- function(input = NULL,
     if (!is.null(input)) {
       warning("Both 'input' and 'file_path' provided. 'file_path' will override 'input'.")
     }
-    local_input <- data.table::fread(file=file_path, header = T)
+    local_input <- fread(file=file_path, header = T)
     setnames(local_input, 1, "sampleA")
   } else {
     if(sum(row.names(input)!=1:(nrow(input)))==0){ #detects if there are row names
-      local_input <- data.table::as.data.table(input)
+      local_input <- as.data.table(input)
       setnames(local_input, 1, "sampleA")
     }else{
-      local_input <- data.table::as.data.table(input, keep.rownames = "sampleA")
+      local_input <- as.data.table(input, keep.rownames = "sampleA")
       }
   }
 
   # Melt the matrix from wide to long
-  output_dt <- data.table::melt(local_input,
+  output_dt <- melt(local_input,
                                 id.vars = "sampleA",
                                 variable.name = "sampleB",
                                 value.name = "snp_dist",

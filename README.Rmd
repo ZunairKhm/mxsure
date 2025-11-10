@@ -17,6 +17,10 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 
+[![R-CMD-check](https://github.com/zunairkhm/mxsure/workflows/R-CMD-check/badge.svg)](https://github.com/zunairkhm/mxsure/actions)
+
+<!-- [![DOI](https://zenodo.org/badge/XXXX.svg)](https://zenodo.org/badge/latestdoi/XXXX) -->
+
 <!-- badges: end -->
 
 This package implements a mixture distribution approach to estimating substitution rates and SNP thresholds from pairwise SNP comparison data, in a longitudinal/within-host or transmission setting. It also provides some plotting and simulation functions.
@@ -25,9 +29,52 @@ This package implements a mixture distribution approach to estimating substituti
 
 You can install the development version of mxsure from [GitHub](https://github.com/) with:
 
-``` r
+```{r, eval=FALSE}
 install.packages("remotes")
 remotes::install_github("ZunairKhm/mxsure")
+
+```
+
+```{r}
+library(mxsure)
+```
+
+## Loading in data
+
+MxSure can input data from inStrain compare output, TRACS distance output, or from a distance matrix. Either provide an R object or filepath to the respective function and the output will be an R object ready for inputting into MxSure. These examples only show loading in one dataset for each method however a mixed and distant dataset is required for MxSure.
+
+### TRACS distance output
+
+```{r}
+#loading example data provided with package
+tracs_example_path <- system.file("extdata", "example_tracs_output.csv", package = "mxsure")
+sample_dates <- readr::read_csv(system.file("extdata", "example_sampling_dates.csv", package = "mxsure"))
+head(sample_dates)
+
+#using function to ready data for input into mxsure
+mxsure_input_tracs <-  mxsure_input_tracs(file_path=tracs_example_path, dates=sample_dates, dates_sample_col = "sample_id", dates_date_col = "date")
+head(mxsure_input_tracs)
+
+```
+
+### inStrain compare output
+
+```{r}
+instrain_example_path <- system.file("extdata", "example_instrain_output.csv", package = "mxsure")
+sample_dates <- readr::read_csv(system.file("extdata", "example_sampling_dates.csv", package = "mxsure"))
+mxsure_input_instrain <-  mxsure_input_instrain(file_path=instrain_example_path, dates=sample_dates, dates_sample_col = "sample_id", dates_date_col = "date")
+head(mxsure_input_instrain)
+```
+
+### distance matrix
+
+note: this function does not allow for 'sites considered' or equivalent; this will need to be inputed manually
+
+```{r}
+distmat_example_path <- system.file("extdata", "example_distance_matrix.csv", package = "mxsure")
+sample_dates <- readr::read_csv(system.file("extdata", "example_sampling_dates.csv", package = "mxsure"))
+mxsure_input_distmat <-  mxsure_input_distmatrix(file_path=distmat_example_path, dates=sample_dates, dates_sample_col = "sample_id", dates_date_col = "date")
+head(mxsure_input_distmat)
 ```
 
 ## Basic Operation
@@ -78,7 +125,7 @@ result_sites <- mxsure_estimate(
 result_sites
 ```
 
-## Youden and Threshold Range 
+## Youden and Threshold Range
 
 For threshold assessment it may be useful to compare the MxSure threshold with what would be inferred from the Youden method.
 
@@ -104,7 +151,7 @@ result <- mxsure_estimate(
 result$threshold_range
 ```
 
-## Confidence Intervals 
+## Confidence Intervals
 
 Confidence intervals for substitution rate estimation are produced via bootstrapping. This can be computed faster with multi-threading using the future package. 20 bootstraps is very likely too few, you would likely need at least 200 but ideally 500 or 1000.
 
@@ -119,7 +166,7 @@ future::plan("future::sequential")
 ci$confidence_intervals
 ```
 
-## Time Randomisation Test 
+## Time Randomisation Test
 
 This is a test that validates there is temporal signal in the underlying data. It achieves this by randomly permuting the time column in the mixed dataset and produces estimates and 95% CIs on this time randomised dataset. This is repeated on multiple time randomisation datasets, 10 is recommended, and if more than 5% of these bootstrap samples are above or equal to the original estimate this test is failed. Estimates should not be considered to be valid if this test fails. The output of this function is a graph showing this result and an outcome table.
 

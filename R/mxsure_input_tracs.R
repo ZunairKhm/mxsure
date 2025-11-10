@@ -12,7 +12,7 @@
 #'
 #' @return A data.table with columns: snp_dist, time_dist (if found or if sampling dates are provided), and sites (if found).
 #'
-#' @importFrom data.table ":=" is.data.table copy fread
+#' @import data.table
 #'
 #' @export
 mxsure_input_tracs <- function(input = NULL,
@@ -33,13 +33,13 @@ mxsure_input_tracs <- function(input = NULL,
     if (!is.null(input)) {
       warning("Both 'input' and 'file_path' provided. 'file_path' will override 'input'.")
     }
-    local_input <- data.table::fread(file=file_path)
+    local_input <- fread(file=file_path)
   } else {
-    if (!data.table::is.data.table(input)) {
-      local_input <- data.table::as.data.table(input)
+    if (!(is.data.table(input))) {
+      local_input <- as.data.table(input)
     } else {
       # Use a copy to avoid modifying the original data.table by reference
-      local_input <- data.table::copy(input)
+      local_input <- copy(input)
     }
   }
 
