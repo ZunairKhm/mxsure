@@ -23,10 +23,66 @@ You can install the development version of mxsure from
 
 ``` r
 install.packages("remotes")
+#> Installing package into '/private/var/folders/33/cwjjs_p15050x7snvl3x2w7hcdlk67/T/RtmpFvsL3m/temp_libpath6d3e6cec4720'
+#> (as 'lib' is unspecified)
+#> 
+#> The downloaded binary packages are in
+#>  /var/folders/33/cwjjs_p15050x7snvl3x2w7hcdlk67/T//RtmpIdhke7/downloaded_packages
 remotes::install_github("ZunairKhm/mxsure")
-```
-
-``` r
+#> Using GitHub PAT from the git credential store.
+#> Downloading GitHub repo ZunairKhm/mxsure@HEAD
+#> glue         (1.7.0   -> 1.8.0  ) [CRAN]
+#> cpp11        (0.5.0   -> 0.5.2  ) [CRAN]
+#> rlang        (1.1.4   -> 1.1.6  ) [CRAN]
+#> magrittr     (2.0.3   -> 2.0.4  ) [CRAN]
+#> cli          (3.6.3   -> 3.6.5  ) [CRAN]
+#> Rcpp         (1.0.13  -> 1.1.0  ) [CRAN]
+#> igraph       (2.0.3   -> 2.2.1  ) [CRAN]
+#> generics     (0.1.3   -> 0.1.4  ) [CRAN]
+#> ape          (5.8     -> 5.8-1  ) [CRAN]
+#> R6           (2.5.1   -> 2.6.1  ) [CRAN]
+#> withr        (3.0.1   -> 3.0.2  ) [CRAN]
+#> utf8         (1.2.4   -> 1.2.6  ) [CRAN]
+#> pillar       (1.9.0   -> 1.11.1 ) [CRAN]
+#> bit          (4.5.0   -> 4.6.0  ) [CRAN]
+#> tzdb         (0.4.0   -> 0.5.0  ) [CRAN]
+#> tibble       (3.2.1   -> 3.3.0  ) [CRAN]
+#> hms          (1.1.3   -> 1.1.4  ) [CRAN]
+#> bit64        (4.5.2   -> 4.6.0-1) [CRAN]
+#> stringi      (1.8.4   -> 1.8.7  ) [CRAN]
+#> parallelly   (1.44.0  -> 1.45.1 ) [CRAN]
+#> listenv      (0.9.1   -> 0.10.0 ) [CRAN]
+#> maps         (3.4.2.1 -> 3.4.3  ) [CRAN]
+#> vroom        (1.6.5   -> 1.6.6  ) [CRAN]
+#> stringr      (1.5.1   -> 1.6.0  ) [CRAN]
+#> purrr        (1.0.2   -> 1.2.0  ) [CRAN]
+#> future       (1.49.0  -> 1.67.0 ) [CRAN]
+#> phytools     (2.4-4   -> 2.5-2  ) [CRAN]
+#> data.table   (1.16.0  -> 1.17.8 ) [CRAN]
+#> fitdistrplus (1.2-1   -> 1.2-4  ) [CRAN]
+#> Installing 29 packages: glue, cpp11, rlang, magrittr, cli, Rcpp, igraph, generics, ape, R6, withr, utf8, pillar, bit, tzdb, tibble, hms, bit64, stringi, parallelly, listenv, maps, vroom, stringr, purrr, future, phytools, data.table, fitdistrplus
+#> Installing packages into '/private/var/folders/33/cwjjs_p15050x7snvl3x2w7hcdlk67/T/RtmpFvsL3m/temp_libpath6d3e6cec4720'
+#> (as 'lib' is unspecified)
+#> 
+#> The downloaded binary packages are in
+#>  /var/folders/33/cwjjs_p15050x7snvl3x2w7hcdlk67/T//RtmpIdhke7/downloaded_packages
+#> ── R CMD build ─────────────────────────────────────────────────────────────────
+#> * checking for file ‘/private/var/folders/33/cwjjs_p15050x7snvl3x2w7hcdlk67/T/RtmpIdhke7/remotesa9cc279dc1f/ZunairKhm-mxsure-0273b2d5f292dd87f56798e84754a9bf7889444d/DESCRIPTION’ ... OK
+#> * preparing ‘mxsure’:
+#> * checking DESCRIPTION meta-information ... OK
+#> * checking for LF line-endings in source and make files and shell scripts
+#> * checking for empty or unneeded directories
+#>   NB: this package now depends on R (>= 4.1.0)
+#>   WARNING: Added dependency on R >= 4.1.0 because package code uses the
+#>   pipe |> or function shorthand \(...) syntax added in R 4.1.0.
+#>   File(s) using such syntax:
+#>     ‘mxsure_ci.R’ ‘mxsure_likelihood.R’ ‘mxsure_timerandtest.R’
+#>     ‘snp_over_time.R’ ‘threshold_comparison_plot.R’
+#> * building ‘mxsure_1.0.tar.gz’
+#> Warning: invalid uid value replaced by that for user 'nobody'
+#> Warning: invalid gid value replaced by that for user 'nobody'
+#> Installing package into '/private/var/folders/33/cwjjs_p15050x7snvl3x2w7hcdlk67/T/RtmpFvsL3m/temp_libpath6d3e6cec4720'
+#> (as 'lib' is unspecified)
 library(mxsure)
 ```
 
@@ -332,7 +388,7 @@ future::plan("future::sequential")
 timerand$plot
 ```
 
-<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
 
 ``` r
 timerand$outcome
@@ -386,4 +442,4 @@ snp_over_time(mixed_snp_dist = mixed_data$snp_dist,
 #> (`geom_step()`).
 ```
 
-<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" />

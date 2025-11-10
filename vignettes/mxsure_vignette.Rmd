@@ -13,6 +13,11 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
+
+```{r}
+library(mxsure)
+```
+
 ## Loading in data
 
 MxSure can input data from inStrain compare output, TRACS distance output, or from a distance matrix. Either provide an R object or filepath to the respective function and the output will be an R object ready for inputting into MxSure. These examples only show loading in one dataset for each method however a mixed and distant dataset is required for MxSure.
@@ -20,7 +25,6 @@ MxSure can input data from inStrain compare output, TRACS distance output, or fr
 ### TRACS distance output
 
 ```{r}
-library(mxsure)
 #loading example data provided with package
 tracs_example_path <- system.file("extdata", "example_tracs_output.csv", package = "mxsure")
 sample_dates <- readr::read_csv(system.file("extdata", "example_sampling_dates.csv", package = "mxsure"))

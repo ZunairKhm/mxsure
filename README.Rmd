@@ -29,14 +29,11 @@ This package implements a mixture distribution approach to estimating substituti
 
 You can install the development version of mxsure from [GitHub](https://github.com/) with:
 
-```{r, eval=FALSE}
+```{r}
 install.packages("remotes")
 remotes::install_github("ZunairKhm/mxsure")
-
-```
-
-```{r}
 library(mxsure)
+
 ```
 
 ## Loading in data
@@ -204,4 +201,3 @@ snp_over_time(mixed_snp_dist = mixed_data$snp_dist,
   mixed_time_dist = mixed_data$time_dist
   )
 ```
-
