@@ -18,6 +18,7 @@ Imports:
     stats,
     tidyr,
     data.table,
+    readr,
     scales,
     viridis,
     plyr,
