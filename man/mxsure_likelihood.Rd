@@ -47,3 +47,16 @@ a dataframe with SNP distances, time differences, sites considered and the likey
 \description{
 Reports likelihoods for related and unrelated distributions for each data point provided
 }
+\examples{
+mixed_distances <- simulate_mixsnp_data(lambda=5, k=0.8, n=100)
+distant_distances <- simulate_mixsnp_data(lambda=5, k=0, n=1000)
+result <- mxsure_estimate(mixed_snp_dist = mixed_distances$snp_dist,
+unrelated_snp_dist = distant_distances$snp_dist,
+mixed_time_dist = mixed_distances$time_dist)
+
+mxsure_likelihood(mixed_snp_dist = mixed_distances$snp_dist,
+unrelated_snp_dist = distant_distances$snp_dist,
+mixed_time_dist = mixed_distances$time_dist,
+original_result = result)
+
+}

@@ -68,3 +68,16 @@ Confidence intervals for all estimates produced by mxsure_estimate.
 \description{
 Creates confidence intervals for outputs from mxsure_estimate using bootstrapping. Utilises the furrr package to allow for parallel computation, to enable use the plan() function from the future package.
 }
+\examples{
+mixed_distances <- simulate_mixsnp_data(lambda=5, k=0.8, n=100)
+distant_distances <- simulate_mixsnp_data(lambda=5, k=0, n=1000)
+result <- mxsure_estimate(mixed_snp_dist = mixed_distances$snp_dist,
+unrelated_snp_dist = distant_distances$snp_dist,
+mixed_time_dist = mixed_distances$time_dist)
+
+mxsure_ci(mixed_snp_dist = mixed_distances$snp_dist,
+unrelated_snp_dist = distant_distances$snp_dist,
+mixed_time_dist = mixed_distances$time_dist,
+bootstraps=5) #practical useage would require more bootstraps
+
+}

@@ -28,6 +28,18 @@
 #'
 #' @return Confidence intervals for all estimates produced by mxsure_estimate.
 #'
+#' @examples
+#' mixed_distances <- simulate_mixsnp_data(lambda=5, k=0.8, n=100)
+#' distant_distances <- simulate_mixsnp_data(lambda=5, k=0, n=1000)
+#' result <- mxsure_estimate(mixed_snp_dist = mixed_distances$snp_dist,
+#' unrelated_snp_dist = distant_distances$snp_dist,
+#' mixed_time_dist = mixed_distances$time_dist)
+#'
+#' mxsure_ci(mixed_snp_dist = mixed_distances$snp_dist,
+#' unrelated_snp_dist = distant_distances$snp_dist,
+#' mixed_time_dist = mixed_distances$time_dist,
+#' bootstraps=5) #practical useage would require more bootstraps
+#'
 #' @export
 mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA,
                       sample_size=length(mixed_snp_dist),right_truncation=NA, bootstraps=100, confidence_level=0.95, start_params="Efficient",

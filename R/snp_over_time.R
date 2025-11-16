@@ -33,6 +33,18 @@
 #'
 #' @return a plot of SNP distance over time using ggplot
 #'
+#' @examples
+#' mixed_distances <- simulate_mixsnp_data(lambda=5, k=0.8, n=100)
+#' distant_distances <- simulate_mixsnp_data(lambda=5, k=0, n=1000)
+#' result <- mxsure_estimate(mixed_snp_dist = mixed_distances$snp_dist,
+#' unrelated_snp_dist = distant_distances$snp_dist,
+#' mixed_time_dist = mixed_distances$time_dist)
+#'
+#' snp_over_time(mixed_snp_dist = mixed_distances$snp_dist,
+#' unrelated_snp_dist = distant_distances$snp_dist,
+#' mixed_time_dist = mixed_distances$time_dist,
+#' original_result = result)
+#'
 #' @export
 snp_over_time <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites=NA, right_truncation=2000, original_result=NA, start_params=NA,
                           threshold_time=NA, title="SNP Distance Over Time", jitter=TRUE, failure_perc=NA, ci_data=NA, time_limits=c(0,NA), under_threshold=FALSE,

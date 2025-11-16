@@ -17,7 +17,8 @@
 #' @export
 #'
 #' @examples
-#' simulate_mixsnp_data(1, 0.8)
+#' mixed_distances <- simulate_mixsnp_data(lambda=5, k=0.8, n=100)
+#' distant_distances <- simulate_mixsnp_data(lambda=5, k=0, n=1000)
 #'
 simulate_mixsnp_data <- function(lambda, k, unrel_mean=25, unrel_sd=12.5, error_param=NA, n=100, rel_timemax=1, rel_timemin=0, right_truncation=NA){
 

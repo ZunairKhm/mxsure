@@ -42,6 +42,7 @@ SNP distance dataset with a mixture of related and unrelated pairs with time dif
 Simulate mixed related SNP distance dataset
 }
 \examples{
-simulate_mixsnp_data(1, 0.8)
+mixed_distances <- simulate_mixsnp_data(lambda=5, k=0.8, n=100)
+distant_distances <- simulate_mixsnp_data(lambda=5, k=0, n=1000)
 
 }

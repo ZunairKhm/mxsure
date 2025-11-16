@@ -76,6 +76,26 @@ mxsure_timerandtest(
 }
 \value{
 list of overall outcomes, results from each time randomisation, raw results, and a plot comparing point estimates and confidence levels between original data and time randomised data. Failure bootstraps and failure percentages indicate the number and percentage of bootstrap estimates from time randomised datasets above the original estimate (if prop type is not adjusted)
+
+#' @examples
+mixed_distances <- simulate_mixsnp_data(lambda=5, k=0.8, n=100)
+distant_distances <- simulate_mixsnp_data(lambda=5, k=0, n=1000)
+result <- mxsure_estimate(mixed_snp_dist = mixed_distances$snp_dist,
+unrelated_snp_dist = distant_distances$snp_dist,
+mixed_time_dist = mixed_distances$time_dist)
+
+ci <- mxsure_ci(mixed_snp_dist = mixed_distances$snp_dist,
+unrelated_snp_dist = distant_distances$snp_dist,
+mixed_time_dist = mixed_distances$time_dist,
+bootstraps=5)
+
+mxsure_timerandtest(mixed_snp_dist = mixed_distances$snp_dist,
+unrelated_snp_dist = distant_distances$snp_dist,
+mixed_time_dist = mixed_distances$time_dist,
+permutations=1,
+bootstraps=5,
+original_result= result,
+ci_data = ci) #practical useage would require more bootstraps and permutations
 }
 \description{
 Time Randomisation Test for mixture distribution substituion rate estimation

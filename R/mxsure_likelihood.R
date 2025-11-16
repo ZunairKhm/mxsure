@@ -19,6 +19,19 @@
 #' @importFrom stats dpois dnbinom
 #'
 #' @return a dataframe with SNP distances, time differences, sites considered and the likeyhoods of related and unrelated models fitting for each datapoint
+#'
+#' @examples
+#' mixed_distances <- simulate_mixsnp_data(lambda=5, k=0.8, n=100)
+#' distant_distances <- simulate_mixsnp_data(lambda=5, k=0, n=1000)
+#' result <- mxsure_estimate(mixed_snp_dist = mixed_distances$snp_dist,
+#' unrelated_snp_dist = distant_distances$snp_dist,
+#' mixed_time_dist = mixed_distances$time_dist)
+#'
+#' mxsure_likelihood(mixed_snp_dist = mixed_distances$snp_dist,
+#' unrelated_snp_dist = distant_distances$snp_dist,
+#' mixed_time_dist = mixed_distances$time_dist,
+#' original_result = result)
+#'
 #' @export
 mxsure_likelihood <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist, mixed_sites=NA, right_truncation=2000,original_result=NA,start_params=NA,
                               tree=NA, sampleA=NA, sampleB=NA,  branch_offset=NA){
