@@ -7,6 +7,11 @@
 
 [![R-CMD-check](https://github.com/zunairkhm/mxsure/workflows/R-CMD-check/badge.svg)](https://github.com/zunairkhm/mxsure/actions)
 
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="man/figures/logo_dark.svg">
+<source media="(prefers-color-scheme: light)" srcset="man/figures/logo_light.svg">
+<img alt="MxSure logo" src="man/figures/logo_light.svg"> </picture>
+
 <!-- [![DOI](https://zenodo.org/badge/XXXX.svg)](https://zenodo.org/badge/latestdoi/XXXX) -->
 
 <!-- badges: end -->
@@ -191,7 +196,7 @@ result
 #> # A tibble: 1 × 8
 #>   snp_threshold lambda     k intercept estimated_fp lambda_units   nb_size nb_mu
 #>           <dbl>  <dbl> <dbl>     <dbl>        <dbl> <chr>            <dbl> <dbl>
-#> 1            10   5.71 0.770    -0.146        0.002 SNPs per year…    4.07  125.
+#> 1            10   5.71 0.768    -0.146        0.002 SNPs per year…    4.07  125.
 ```
 
 Here lambda is the estimated substitution rate and k is the estimated
@@ -270,12 +275,12 @@ result$threshold_range
 #> 11   5.5        41        0.058     0.79
 #> 12   6.0        44        0.066     0.79
 #> 13   6.5        47        0.077     0.79
-#> 14   7.0        50        0.090     0.79
+#> 14   7.0        51        0.091     0.79
 #> 15   7.5        54        0.103     0.79
 #> 16   8.0        57        0.121     0.80
 #> 17   8.5        60        0.139     0.81
 #> 18   9.0        63        0.159     0.81
-#> 19   9.5        66        0.178     0.82
+#> 19   9.5        67        0.181     0.82
 #> 20  10.0        70        0.200     0.82
 ```
 
@@ -298,8 +303,8 @@ ci$confidence_intervals
 #> # A tibble: 2 × 5
 #>   snp_threshold lambda     k intercept estimated_fp
 #>           <dbl>  <dbl> <dbl>     <dbl>        <dbl>
-#> 1             9   5.21 0.760    -0.159       0     
-#> 2            10   6.07 0.820    -0.130       0.0041
+#> 1             9   5.37 0.750    -0.159       0     
+#> 2            10   6.07 0.825    -0.130       0.0041
 ```
 
 ## Time Randomisation Test
@@ -356,10 +361,10 @@ head(likelihoods, 5)
 #> # A tibble: 5 × 9
 #>   snp_dist time_dist sites rel_loglh unrel_loglh  logLHR    rel_lh    unrel_lh
 #>      <dbl>     <dbl> <dbl>     <dbl>       <dbl>   <dbl>     <dbl>       <dbl>
-#> 1      181     105.      1  -692.          -5.76 -686.   3.00e-301 0.00315    
+#> 1      181     105.      1  -692.          -5.76 -686.   3.35e-301 0.00315    
 #> 2        0      16.6     1    -0.114      -14.1    13.9  8.92e-  1 0.000000788
-#> 3        8     349.      1    -2.55        -9.12    6.57 7.78e-  2 0.000109   
-#> 4       34      89.9     1   -82.0         -6.02  -76.0  2.46e- 36 0.00242    
+#> 3        8     349.      1    -2.55        -9.12    6.57 7.79e-  2 0.000109   
+#> 4       34      89.9     1   -82.0         -6.02  -76.0  2.50e- 36 0.00242    
 #> 5        3     234.      1    -1.54       -11.1     9.58 2.15e-  1 0.0000149  
 #> # ℹ 1 more variable: LHR <dbl>
 ```
