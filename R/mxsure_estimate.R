@@ -276,7 +276,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
         X1 <- rpois(100000, result$par[[2]]*(threshold_time)+result$par[[3]])
         X2 <- rnbinom(100000, mu= result$par[[4]], size = result$par[[5]])
         Y <- X1 * X2
-        snp_threshold <- stats::quantile(Y, 0.95)
+        snp_threshold <- ifelse(anyNA(Y), NaN, stats::quantile(Y, 0.95))
 
         #snp_threshold <- qpois(upper.tail, result$par[[2]]*(threshold_time)+result$par[[3]]+2*result$par[[4]])
         if(!is.nan(snp_threshold)){
