@@ -195,17 +195,19 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
           k <- params[[1]]
           lambda <- params[[2]]
           intercept <- params[[3]]
-          tree_fulldist_param <- params[[4]]
+          tree_fulldist_mu <- params[[4]]
+          tree_fulldist_size <- params[[5]]
 
           -sum(pmap_dbl(list(x, t, c1, c2, b), ~ {suppressWarnings(log_sum_exp(log(k) + #dpois(x = ..1,
-                                                                                #      lambda =  lambda*(..2) + intercept+ shared_snp_intercept*(..3), #gives rate esimate per day
+                                                                                #      lambda =  lambda*(..2) + intercept+ shared_snp_intercept*(..3), #gives rate estimate per day
                                                                                 #      log = TRUE)
                                                                        skellam::dskellam(x= (..3 - ..4) ,
                                                                                          lambda1 =  lambda*..2 + ..4 + intercept + ..5,
                                                                                          lambda2 = ..4 + ..5,
                                                                                          log=TRUE)
-                                                                       + dpois(x = ..1,
-                                                                               lambda = tree_fulldist_param,
+                                                                       + dnbinom(x = ..1,
+                                                                               mu = tree_fulldist_mu,
+                                                                               size = tree_fulldist_size,
                                                                                log=TRUE)
                                                                        # -
                                                                        #     ppois(right_truncation,
@@ -227,21 +229,21 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
 
         if(anyNA(start_params)){
           # Define parameter grid
-          start_vals <- expand.grid(k = c(0.25, 0.5, 0.75), lambda = c(0.01, 0.1, 1), intercept = c(0), tree_fulldist_param=c(0))
+          start_vals <- expand.grid(k = c(0.25, 0.5, 0.75), lambda = c(0.01, 0.1, 1), intercept = c(0), tree_fulldist_mu=c(0), tree_fulldist_size=c(1))
 
           # Run nlminb for each combination
-          result_attempts <- pmap(list(start_vals$k, start_vals$lambda, start_vals$intercept, start_vals$tree_fulldist_param),
-                                  function(k, lambda, intercept, tree_fulldist_param) {
+          result_attempts <- pmap(list(start_vals$k, start_vals$lambda, start_vals$intercept, start_vals$tree_fulldist_mu, start_vals$tree_fulldist_size),
+                                  function(k, lambda, intercept, tree_fulldist_mu, tree_fulldist_size) {
                                     nlminb(
-                                      start = c(k, lambda, intercept,tree_fulldist_param),
+                                      start = c(k, lambda, intercept,tree_fulldist_mu, tree_fulldist_size),
                                       objective = llk2,
                                       x = mixed_snp_dist,
                                       t = mixed_time_dist,
                                       c1 = branch_lengths$mrca_to_tip1,
                                       c2 = branch_lengths$mrca_to_tip2,
                                       b = branch_lengths$root_to_mrca,
-                                      lower = c(k_bounds[1], lambda_bounds[1], intercept_bounds[1] , tree_fulldist_param_bounds[1]),
-                                      upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2], tree_fulldist_param_bounds[2]),
+                                      lower = c(k_bounds[1], lambda_bounds[1], intercept_bounds[1] , tree_fulldist_param_bounds[1], 0),
+                                      upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2], tree_fulldist_param_bounds[2], Inf),
                                       control = list(trace = trace)
                                     )})
 
@@ -253,16 +255,16 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
           result <- nlminb(start=c(0.5,0.01,0,0),
                            objective=llk2,
                            x = mixed_snp_dist, t = mixed_time_dist, c1 = branch_lengths$mrca_to_tip1, c2 = branch_lengths$mrca_to_tip2, b = branch_lengths$root_to_mrca,
-                           lower = c(k_bounds[1], lambda_bounds[1],intercept_bounds[1]),
-                           upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2]),
+                           lower = c(k_bounds[1], lambda_bounds[1],intercept_bounds[1], tree_fulldist_param_bounds[1], 0),
+                           upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2], tree_fulldist_param_bounds[2], Inf),
                            control = list(trace = trace))
         }else{
           start_params[2] <- start_params[2]/365.25
           result <- nlminb(start=c(start_params),
                            objective=llk2,
                            x = mixed_snp_dist, t = mixed_time_dist, c1 = branch_lengths$mrca_to_tip1, c2 = branch_lengths$mrca_to_tip2,b = branch_lengths$root_to_mrca,
-                           lower = c(k_bounds[1], lambda_bounds[1], max(intercept_bounds[1], 0), tree_fulldist_param_bounds[1]),
-                           upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2], tree_fulldist_param_bounds[2]),
+                           lower = c(k_bounds[1], lambda_bounds[1], max(intercept_bounds[1], 0), tree_fulldist_param_bounds[1], 0),
+                           upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2], tree_fulldist_param_bounds[2], Inf),
                            control = list(trace = trace))
 
         }
@@ -271,7 +273,12 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
           threshold_time <- max(abs(mixed_time_dist))
         }
 
-        snp_threshold <- qpois(upper.tail, result$par[[2]]*(threshold_time)+result$par[[3]]+2*result$par[[4]])
+        X1 <- rpois(100000, result$par[[2]]*(threshold_time)+result$par[[3]])
+        X2 <- rnbinom(100000, mu= result$par[[4]], size = result$par[[5]])
+        Y <- X1 * X2
+        snp_threshold <- stats::quantile(Y, 0.95)
+
+        #snp_threshold <- qpois(upper.tail, result$par[[2]]*(threshold_time)+result$par[[3]]+2*result$par[[4]])
         if(!is.nan(snp_threshold)){
 
         if(threshold_range==TRUE & !is.na(snp_threshold)){
@@ -297,7 +304,8 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
           intercept=result$par[[3]],
           estimated_fp=ifelse(is.nan(snp_threshold), NA, sum(unrelated_snp_dist<=snp_threshold)/length(unrelated_snp_dist)),
           lambda_units="SNPs per year per genome",
-          tree_fulldist_param = result$par[[4]],
+          tree_fulldist_mu = result$par[[4]],
+          tree_fulldist_size = result$par[[5]],
           nb_size=nb_fit$estimate["size"],
           nb_mu=nb_fit$estimate["mu"]
 
@@ -314,7 +322,8 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
             intercept=NA,
             estimated_fp=NA,
             lambda_units=NA,
-            tree_fulldist_param=NA,
+            tree_fulldist_mu=NA,
+            tree_fulldist_size=NA,
             shared_snp_intercept=NA,
             nb_size=NA,
             nb_mu=NA
