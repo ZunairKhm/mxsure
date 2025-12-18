@@ -285,17 +285,25 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
           }else if(all(start_params=="Efficient")){
             result <- nlminb(start=c(0.5,0.01,0,0),
                              objective=llk2,
-                             x = mixed_snp_dist, t = mixed_time_dist, c1 = branch_lengths$mrca_to_tip1, c2 = branch_lengths$mrca_to_tip2, b = branch_lengths$root_to_mrca,
-                             lower = c(k_bounds[1], lambda_bounds[1],intercept_bounds[1], tree_fulldist_param_bounds[1], 0),
-                             upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2], tree_fulldist_param_bounds[2], Inf),
+                             x = mixed_snp_dist,
+                             t = mixed_time_dist,
+                             c1 = branch_lengths$mrca_to_tip1,
+                             c2 = branch_lengths$mrca_to_tip2,
+                             b = branch_lengths$root_to_mrca,
+                             lower = c(k_bounds[1], lambda_bounds[1], intercept_bounds[1] , 1e-10, 1e-10),
+                             upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2], Inf, Inf),
                              control = list(trace = trace))
           }else{
             start_params[2] <- start_params[2]/365.25
             result <- nlminb(start=c(start_params),
                              objective=llk2,
-                             x = mixed_snp_dist, t = mixed_time_dist, c1 = branch_lengths$mrca_to_tip1, c2 = branch_lengths$mrca_to_tip2,b = branch_lengths$root_to_mrca,
-                             lower = c(k_bounds[1], lambda_bounds[1], max(intercept_bounds[1], 0), tree_fulldist_param_bounds[1], 0),
-                             upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2], tree_fulldist_param_bounds[2], Inf),
+                             x = mixed_snp_dist,
+                             t = mixed_time_dist,
+                             c1 = branch_lengths$mrca_to_tip1,
+                             c2 = branch_lengths$mrca_to_tip2,
+                             b = branch_lengths$root_to_mrca,
+                             lower = c(k_bounds[1], lambda_bounds[1], intercept_bounds[1] , 1e-10, 1e-10),
+                             upper = c(k_bounds[2], lambda_bounds[2], intercept_bounds[2], Inf, Inf),
                              control = list(trace = trace))
 
           }

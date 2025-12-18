@@ -137,7 +137,7 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
 
   if(!anyNA(start_params)){
   if (any(start_params=="Efficient")){
-    start_params_timerand <-as.numeric(c(timerand_result[3], timerand_result[2], timerand_result[4], timerand_result[7]))
+    start_params_timerand <-as.numeric(c(timerand_result[3], timerand_result[2], timerand_result[4], timerand_result[7], timerand_result[8]))
   }}
 
   timerand_ci <- mxsure_ci(timerand_data$snp_dist, unrelated_snp_dist, timerand_data$time_dist, timerand_data$sites,
