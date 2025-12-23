@@ -182,11 +182,13 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
         if ((length(mixed_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
 
           #poisson gamma likelyhood
-          dlogpoissongamma <- function(n1, n2, dt, lambda, alpha, beta) {
+          dlogpoissongamma <- function(n1, n2, dt, lambda, intercept, alpha, beta) {
             # Log of the constant term
             log_const <- (n1 + n2) * log(lambda) +
+              2*intercept +
+              (n1 + n2) * log(intercept) +
               alpha * log(beta) -
-              lambda * dt -
+              lambda * dt * -
               lfactorial(n1) -
               lfactorial(n2) -
               lgamma(alpha)
@@ -239,7 +241,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
                                                                                    #         mu = tree_fulldist_mu,
                                                                                    #         size = tree_fulldist_size,
                                                                                    #         log=TRUE)
-                                                                                   dlogpoissongamma(..3, ..4, ..2, lambda, alpha, beta)
+                                                                                   dlogpoissongamma(..3, ..4, ..2, lambda,intercept, alpha, beta)
                                                                                  # -
                                                                                  #     ppois(right_truncation,
                                                                                  #           lambda =  lambda*..2 + intercept,
