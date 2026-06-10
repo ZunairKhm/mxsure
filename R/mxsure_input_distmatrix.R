@@ -1,4 +1,4 @@
-#' Process a TRACS distance matrix for MxSure
+#' Process a distance matrix for MxSure
 #'
 #' Efficiently reads a distance matrix, "melts" it into a long-form pairwise
 #' table, and optionally joins a 'dates' table to calculate time differences.

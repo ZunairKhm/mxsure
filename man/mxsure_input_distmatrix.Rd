@@ -2,7 +2,7 @@
 % Please edit documentation in R/mxsure_input_distmatrix.R
 \name{mxsure_input_distmatrix}
 \alias{mxsure_input_distmatrix}
-\title{Process a TRACS distance matrix for MxSure}
+\title{Process a distance matrix for MxSure}
 \usage{
 mxsure_input_distmatrix(
   input = NULL,

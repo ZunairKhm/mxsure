@@ -177,7 +177,212 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
 
 
     if(return_tree_data){return(tibble(sampleA, sampleB, mixed_snp_dist, mixed_time_dist, branch_lengths[1], branch_lengths[2]#, branch_lengths[3]
-                                       ))}
+    ))}
+
+    #### tree estimates not considering time or sites ####
+    if(anyNA(mixed_time_dist)&(anyNA(mixed_sites))){
+      if ((length(mixed_snp_dist) >= 30) && (length(unrelated_snp_dist) >= 30)){
+        warning("No time data inputted, an average rate for this sampling period will still be estimated but consider whether this is appropriate")
+        #poisson gamma likelyhood
+        dlogpoissongamma <- function(x, y, lambda, alpha, beta) {
+
+          K <- lambda
+
+          # Constants
+          log_denom_base <- log(2 + beta)
+          log_const <- -K + alpha * log(beta) - lfactorial(x) - lfactorial(y) - lgamma(alpha)
+
+          # 1. OPTIMIZATION: If K is effectively 0, the binomial sum collapses
+          # to a single term (where j=y). This avoids vector allocation.
+          if (K <= 1e-9) {
+            return(log_const + lgamma(x + alpha + y) - (x + alpha + y) * log_denom_base)
+          }
+
+          # 2. VECTORIZATION: Calculate all j terms at once
+          j <- 0:y
+
+          # log( binomial(y,j) * K^(y-j) * Gamma(...) / Base^(...) )
+          # We use (y-j) * log(K). Since we handled K~0 above, log(K) is safe.
+          log_terms <- lchoose(y, j) +
+            (y - j) * log(K) +
+            lgamma(x + alpha + j) -
+            (x + alpha + j) * log_denom_base
+
+          # 3. FAST LOG-SUM-EXP
+          max_val <- max(log_terms)
+          log_sum <- max_val + log(sum(exp(log_terms - max_val)))
+
+          return(log_const + log_sum)
+        }
+
+        # distant dataset fitting
+        m <- mean(unrelated_snp_dist)
+        v <- var(unrelated_snp_dist)
+        size <- if (v > m) {
+          m^2/(v - m)
+        }else{100}
+
+        nb_fit <- fitdistrplus::fitdist(unrelated_snp_dist, dist="truncnbinom", start=list(mu=m, size=size), fix.arg = list(right_truncation=right_truncation), discrete = TRUE)
+
+        #mixed data fitting
+        llk2 <- function(params, x, t, c1, c2, b){
+          k <- params[[1]]
+          lambda <- params[[2]]
+          alpha <- params[[3]]
+          beta <- params[[4]]
+
+          -sum(pmap_dbl(list(x, t, c1, c2), ~ {suppressWarnings(log_sum_exp(log(k) + #dpois(x = ..1,
+                                                                              #      lambda =  lambda*(..2) + intercept+ shared_snp_intercept*(..3), #gives rate estimate per day
+                                                                              #      log = TRUE)
+                                                                              # skellam::dskellam(x= (..3 - ..4) ,
+                                                                              #                   lambda1 =  lambda*..2 + ..4 + intercept + ..5,
+                                                                              #                   lambda2 = ..4 + ..5,
+                                                                              #                   log=TRUE)
+                                                                              #  dnbinom(x = ..1,
+                                                                              #         mu = tree_fulldist_mu,
+                                                                              #         size = tree_fulldist_size,
+                                                                              #         log=TRUE)+
+                                                                              dlogpoissongamma(..3, ..4 , lambda, alpha, beta)#+
+                                                                            # dpois(..1, tree_fulldist_param, log=T)
+                                                                            # -
+                                                                            #     ppois(right_truncation,
+                                                                            #           lambda =  lambda*..2 + intercept,
+                                                                            #           log = TRUE )
+                                                                            ,
+                                                                            log((1-k)) + dnbinom(x = ..1,
+                                                                                                 size = nb_fit$estimate["size"],
+                                                                                                 mu = nb_fit$estimate["mu"],
+                                                                                                 log = TRUE)
+                                                                            -
+                                                                              pnbinom(right_truncation,
+                                                                                      size = nb_fit$estimate["size"],
+                                                                                      mu = nb_fit$estimate["mu"],
+                                                                                      log = TRUE)
+          ))
+          }))
+        }
+
+        if(anyNA(start_params)){
+          # Define parameter grid
+          start_vals <- expand.grid(k = c(0.25, 0.5, 0.75), lambda = c(0.01, 0.1, 1),alpha=c(1e-10), beta=c(1e-10))
+
+          # Run nlminb for each combination
+          result_attempts <- pmap(list(start_vals$k, start_vals$lambda, start_vals$alpha, start_vals$beta),
+                                  function(k, lambda,  alpha, beta) {
+                                    nlminb(
+                                      start = c(k, lambda, alpha, beta),
+                                      objective = llk2,
+                                      x = mixed_snp_dist,
+                                      t = mixed_time_dist,
+                                      c1 = branch_lengths$mrca_to_tip1,
+                                      c2 = branch_lengths$mrca_to_tip2,
+                                      b = branch_lengths$root_to_mrca,
+                                      lower = c(k_bounds[1], lambda_bounds[1], alpha_bounds[1] ,beta_bounds[1] ),
+                                      upper = c(k_bounds[2], lambda_bounds[2], alpha_bounds[2] ,beta_bounds[2]   ),
+                                      control = list(trace = trace)
+                                    )})
+
+
+          # Extract the best result
+          result <- result_attempts[[which.min(sapply(result_attempts, `[[`, "objective"))]]
+
+        }else if(all(start_params=="Efficient")){
+          result <- nlminb(start=c(0.5,0.01,0,0),
+                           objective=llk2,
+                           x = mixed_snp_dist,
+                           t = mixed_time_dist,
+                           c1 = branch_lengths$mrca_to_tip1,
+                           c2 = branch_lengths$mrca_to_tip2,
+                           b = branch_lengths$root_to_mrca,
+                           lower = c(k_bounds[1], lambda_bounds[1],alpha_bounds[1] ,beta_bounds[1]),
+                           upper = c(k_bounds[2], lambda_bounds[2],alpha_bounds[2] ,beta_bounds[2]),
+                           control = list(trace = trace))
+        }else{
+          start_params[2] <- start_params[2]/365.25
+          result <- nlminb(start=c(start_params),
+                           objective=llk2,
+                           x = mixed_snp_dist,
+                           t = mixed_time_dist,
+                           c1 = branch_lengths$mrca_to_tip1,
+                           c2 = branch_lengths$mrca_to_tip2,
+                           b = branch_lengths$root_to_mrca,
+                           lower = c(k_bounds[1], lambda_bounds[1], alpha_bounds[1] ,beta_bounds[1]),
+                           upper = c(k_bounds[2], lambda_bounds[2], alpha_bounds[2] ,beta_bounds[2]),
+                           control = list(trace = trace))
+
+        }
+
+        if (is.na(threshold_time)) {
+          threshold_time <- max(abs(mixed_time_dist))
+        }
+
+        snp_threshold <- qpois(upper.tail, lambda = result$par[[2]]*threshold_time)
+
+        #snp_threshold <- qpois(upper.tail, result$par[[2]]*(threshold_time)+result$par[[3]]+2*result$par[[4]])
+        if(!is.nan(snp_threshold)){
+
+          if(threshold_range==TRUE & !is.na(snp_threshold)){
+            threshold_range_df <- data.frame(years=seq(0.5, 10, 0.5), threshold=NA, estimated_fp=NA, prop_pos=NA)
+            threshold_range_df$threshold <- modify(threshold_range_df$years, ~{qpois(upper.tail, lambda=(result$par[[2]]*365.25*.x)+result$par[[3]])})
+            threshold_range_df$estimated_fp <-modify(threshold_range_df$threshold, ~{sum(unrelated_snp_dist<=.x)/length(unrelated_snp_dist)})
+            threshold_range_df$prop_pos <-modify(threshold_range_df$threshold, ~{sum(mixed_snp_dist<=.x)/length(mixed_snp_dist)})
+          }
+
+          if ((sum(unrelated_snp_dist<=snp_threshold)/length(unrelated_snp_dist)) > max_false_positive){
+            warning(paste0("Inferred SNP threshold may have a false positive rate above ",
+                           max_false_positive, "!"))
+          }
+        } else {
+          warning(paste0("No appropriate SNP threshold could be found"))
+          threshold_range_df <- NA
+        }
+        # results
+        results <- tibble(
+          snp_threshold=snp_threshold,
+          lambda=result$par[[2]]*365.25,
+          k=result$par[[1]],
+          estimated_fp=ifelse(is.nan(snp_threshold), NA, sum(unrelated_snp_dist<=snp_threshold)/length(unrelated_snp_dist)),
+          lambda_units="SNPs per average sampling time per genome",
+          alpha = result$par[[3]],
+          beta = result$par[[4]],
+          nb_size=nb_fit$estimate["size"],
+          nb_mu=nb_fit$estimate["mu"],
+
+
+
+        )
+
+      } else {
+        warning("Insufficient data points to fit distributions!")
+        results <-
+          tibble(
+            snp_threshold=NA,
+            lambda=NA,
+            k=NA,
+            intercept=NA,
+            estimated_fp=NA,
+            lambda_units=NA,
+            alpha = NA,
+            beta = NA,
+            nb_size=NA,
+            nb_mu=NA
+          )
+      }
+      #return results
+      if(youden==TRUE & threshold_range==TRUE){
+        return(list("results" = results, "youden" = youden_results, "threshold_range" = threshold_range_df))
+      }
+      if (youden==FALSE & threshold_range==TRUE){
+        return(list("results" =results, "threshold_range" =threshold_range_df))
+      }
+      if(youden==TRUE & threshold_range==FALSE){
+        return(list("results" =results, "youden" =youden_results))
+      }
+      if(youden==FALSE & threshold_range==FALSE){
+        return(results)
+      }
+
+    }
 
     #### tree estimates considering time but not sites ####
     if(!anyNA(mixed_time_dist)&(anyNA(mixed_sites))){
@@ -569,7 +774,7 @@ mxsure_estimate <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=
 
   #### estimates without time or sites considered ####
   if((anyNA(mixed_time_dist) & anyNA(mixed_sites))){
-    warning("No time data inputted, rate will still be estimated but consider whether this is appropriate")
+    warning("No time data inputted, an average rate for this sampling period will still be estimated but consider whether this is appropriate")
 
     if ((length(mixed_snp_dist) >= 20) && (length(unrelated_snp_dist) >= 20)){
       #distant data fitting
