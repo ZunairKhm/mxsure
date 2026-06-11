@@ -8,7 +8,7 @@ mxsure_input_tree(
   tree = NULL,
   file_path = NULL,
   tip_dates = NULL,
-  tip_person_ids = NULL
+  tip_cluster_ids = NULL
 )
 }
 \arguments{
@@ -18,10 +18,10 @@ mxsure_input_tree(
 
 \item{tip_dates}{A vector of dates corresponding to the order of tips in the tree.}
 
-\item{tip_person_ids}{A vector of person/patient IDs corresponding to the order of tips in the tree.}
+\item{tip_cluster_ids}{A vector of related clusters that, if provided, will flag which comparisons are from the same cluster or not. This could be individual IDs for tagging within-host comparisons or specific transmission clusters or sites.}
 }
 \value{
-A data.table with columns: sampleA, sampleB, snp_dist, time_dist (if 'tip_dates' was provided), and same_person (if 'tip_person_ids' provided).
+A data.table with columns: sampleA, sampleB, snp_dist, time_dist (if 'tip_dates' was provided), and same_cluster (if 'tip_cluster_ids' provided).
 }
 \description{
 Efficiently reads a phylogenetic tree, calculates pairwise tip distances,

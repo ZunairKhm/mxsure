@@ -7,9 +7,9 @@
 #' @param tree A 'phylo' object (from the 'ape' package). If NULL, file_path is used.
 #' @param file_path A string path to a tree file (e.g., Newick format) to be read by ape::read.tree().
 #' @param tip_dates A vector of dates corresponding to the order of tips in the tree.
-#' @param tip_person_ids A vector of person/patient IDs corresponding to the order of tips in the tree.
+#' @param tip_cluster_ids A vector of related clusters that, if provided, will flag which comparisons are from the same cluster or not. This could be individual IDs for tagging within-host comparisons or specific transmission clusters or sites.
 #'
-#' @return A data.table with columns: sampleA, sampleB, snp_dist, time_dist (if 'tip_dates' was provided), and same_person (if 'tip_person_ids' provided).
+#' @return A data.table with columns: sampleA, sampleB, snp_dist, time_dist (if 'tip_dates' was provided), and same_cluster (if 'tip_cluster_ids' provided).
 #'
 #' @import data.table
 #' @importFrom ape read.tree cophenetic.phylo
@@ -18,7 +18,7 @@
 mxsure_input_tree <- function(tree = NULL,
                               file_path = NULL,
                               tip_dates = NULL,
-                              tip_person_ids = NULL) {
+                              tip_cluster_ids = NULL) {
 
   library(data.table)
 
@@ -124,23 +124,23 @@ mxsure_input_tree <- function(tree = NULL,
   }
 
   # Person ID Tagging (Within-Host vs Between-Host)
-  if (!is.null(tip_person_ids)) {
-    if (is.data.frame(tip_person_ids)) {
-      if (ncol(tip_person_ids) == 1) {
-        tip_person_ids <- tip_person_ids[[1]]
+  if (!is.null(tip_cluster_ids)) {
+    if (is.data.frame(tip_cluster_ids)) {
+      if (ncol(tip_cluster_ids) == 1) {
+        tip_cluster_ids <- tip_cluster_ids[[1]]
       } else {
-        stop("'tip_person_ids' is a data.frame with multiple columns. Please provide a single vector.")
+        stop("'tip_cluster_ids' is a data.frame with multiple columns. Please provide a single vector.")
       }
     }
 
 
-    if (length(tip_person_ids) != length(local_tree$tip.label)) {
-      stop("The 'tip_person_ids' vector must have the exact same length as the number of tips in the tree.")
+    if (length(tip_cluster_ids) != length(local_tree$tip.label)) {
+      stop("The 'tip_cluster_ids' vector must have the exact same length as the number of tips in the tree.")
     }
 
     person_lookup <- data.table(
       sample_key = local_tree$tip.label,
-      person_val = tip_person_ids
+      person_val = tip_cluster_ids
     )
     setkey(person_lookup, sample_key)
 
@@ -149,7 +149,7 @@ mxsure_input_tree <- function(tree = NULL,
     output_dt[person_lookup, on = .(sampleB = sample_key), personB := i.person_val]
 
     # Evaluate if they are the same person
-    output_dt[, same_person := (personA == personB)]
+    output_dt[, same_cluster := (personA == personB)]
 
     # Clean up temporary columns
     output_dt[, c("personA", "personB") := NULL]
@@ -160,8 +160,8 @@ mxsure_input_tree <- function(tree = NULL,
   if ("time_dist" %in% names(output_dt)) {
     final_cols <- c(final_cols, "time_dist")
   }
-  if ("same_person" %in% names(output_dt)) {
-    final_cols <- c(final_cols, "same_person")
+  if ("same_cluster" %in% names(output_dt)) {
+    final_cols <- c(final_cols, "same_cluster")
   }
 
   return(output_dt[, ..final_cols])
