@@ -39,7 +39,89 @@ output, or from a distance matrix. Either provide an R object or
 filepath to the respective function and the output will be an R object
 ready for inputting into MxSure. These examples only show loading in one
 dataset for each method however a mixed and distant dataset is required
-for MxSure.
+for MxSure. The most practical thing to do is process all of your data
+with these functions and then subset the resulting dataframe into sample
+pairs that would be enriched for related strains (e.g. same person,
+transmission clusters of interest, same site etc.) and another that
+would be enriched for unrelated strains (e.g different people ideally
+geographically separated). This choice is left to the user.
+
+### distance matrix
+
+This function allows for a sampling date table to be added (linking
+sample ID’s to dates) which automates calculation of sampling time
+differences.
+
+note: this function does not allow for ‘sites considered’ or equivalent;
+this will need to be inputed manually if desired
+
+``` r
+distmat_example_path <- system.file("extdata", "example_distance_matrix.csv", package = "mxsure")
+sample_dates <- readr::read_csv(system.file("extdata", "example_sampling_dates.csv", package = "mxsure"))
+#> Rows: 30 Columns: 2
+#> ── Column specification ────────────────────────────────────────────────────────
+#> Delimiter: ","
+#> chr  (1): sample_id
+#> date (1): date
+#> 
+#> ℹ Use `spec()` to retrieve the full column specification for this data.
+#> ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+mxsure_input_distmat <-  mxsure_input_distmatrix(file_path=distmat_example_path, dates=sample_dates, dates_sample_col = "sample_id", dates_date_col = "date")
+head(mxsure_input_distmat)
+#>    sampleA sampleB snp_dist time_dist
+#>     <char>  <char>    <int>     <num>
+#> 1: sample2 sample1      467         6
+#> 2: sample3 sample1      183        12
+#> 3: sample4 sample1       18        18
+#> 4: sample5 sample1      199        24
+#> 5: sample6 sample1      430        30
+#> 6: sample7 sample1      310        36
+```
+
+### Phylogenetic Tree
+
+This function takes a phylogenetic tree and produces the required input
+for MxSure. Optionally a vector of tip dates can be included to automate
+calculation of sampling time differences and a vector of individual ID’s
+for each tip can be provided to identify which comparisons are from the
+same person. This potentially aides the subsetting required for MxSure
+to function.
+
+note: this function does not allow for ‘sites considered’ or equivalent;
+this will need to be inputed manually if desired
+
+``` r
+#loading example data provided with package
+tree_example_path <- system.file("extdata", "example_phylo_tree.tree", package = "mxsure")
+tip_dates <- readr::read_csv(system.file("extdata", "example_tip_dates.csv", package = "mxsure"))
+#> Rows: 200 Columns: 1
+#> ── Column specification ────────────────────────────────────────────────────────
+#> Delimiter: ","
+#> date (1): example_tipdates
+#> 
+#> ℹ Use `spec()` to retrieve the full column specification for this data.
+#> ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+tip_ids <- readr::read_csv(system.file("extdata", "example_tip_ids.csv", package = "mxsure"))
+#> Rows: 200 Columns: 1
+#> ── Column specification ────────────────────────────────────────────────────────
+#> Delimiter: ","
+#> dbl (1): example_tip_labels
+#> 
+#> ℹ Use `spec()` to retrieve the full column specification for this data.
+#> ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+#using function to ready data for input into mxsure
+mxsure_input_tree <-  mxsure_input_tree(file_path=tree_example_path, tip_dates = tip_dates, tip_cluster_ids = tip_ids)
+head(mxsure_input_tree)
+#>    sampleA sampleB snp_dist time_dist same_cluster
+#>     <char>  <char>    <num>     <num>       <lgcl>
+#> 1:    1.t2    1.t1        9        14         TRUE
+#> 2:    2.t2    1.t1      271        76        FALSE
+#> 3:    2.t1    1.t1      270       177        FALSE
+#> 4:    3.t1    1.t1      268        97        FALSE
+#> 5:    3.t2    1.t1      267        83        FALSE
+#> 6:    4.t2    1.t1      275        71        FALSE
+```
 
 ### TRACS distance output
 
@@ -102,35 +184,7 @@ head(mxsure_input_instrain)
 #> 6     6171         6 4138456
 ```
 
-### distance matrix
-
-note: this function does not allow for ‘sites considered’ or equivalent;
-this will need to be inputed manually
-
-``` r
-distmat_example_path <- system.file("extdata", "example_distance_matrix.csv", package = "mxsure")
-sample_dates <- readr::read_csv(system.file("extdata", "example_sampling_dates.csv", package = "mxsure"))
-#> Rows: 30 Columns: 2
-#> ── Column specification ────────────────────────────────────────────────────────
-#> Delimiter: ","
-#> chr  (1): sample_id
-#> date (1): date
-#> 
-#> ℹ Use `spec()` to retrieve the full column specification for this data.
-#> ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-mxsure_input_distmat <-  mxsure_input_distmatrix(file_path=distmat_example_path, dates=sample_dates, dates_sample_col = "sample_id", dates_date_col = "date")
-head(mxsure_input_distmat)
-#>    sampleA sampleB snp_dist time_dist
-#>     <char>  <char>    <int>     <num>
-#> 1: sample2 sample1      467         6
-#> 2: sample3 sample1      183        12
-#> 3: sample4 sample1       18        18
-#> 4: sample5 sample1      199        24
-#> 5: sample6 sample1      430        30
-#> 6: sample7 sample1      310        36
-```
-
-## Basic Operation
+# Basic Operation
 
 MxSure in an R package designed to estimate substitution rates and infer
 SNP thresholds from longitudinally collected pairwise SNP comparison
@@ -196,7 +250,7 @@ result
 #> # A tibble: 1 × 8
 #>   snp_threshold lambda     k intercept estimated_fp lambda_units   nb_size nb_mu
 #>           <dbl>  <dbl> <dbl>     <dbl>        <dbl> <chr>            <dbl> <dbl>
-#> 1            10   5.71 0.768    -0.146        0.002 SNPs per year…    4.07  125.
+#> 1            24   5.71 0.768    -0.146        0.013 SNPs per year…    4.07  125.
 ```
 
 Here lambda is the estimated substitution rate and k is the estimated
@@ -226,12 +280,83 @@ result_sites
 #> # A tibble: 1 × 12
 #>   snp_threshold     lambda     k intercept estimated_fp lambda_units convergence
 #>           <dbl>      <dbl> <dbl>     <dbl>        <dbl> <chr>              <int>
-#> 1            10 0.00000565 0.770   -0.0324        0.002 SNPs per ye…           0
+#> 1            24 0.00000565 0.770   -0.0324        0.013 SNPs per ye…           0
 #> # ℹ 5 more variables: message <chr>, iterations <int>, nb_size <dbl>,
 #> #   nb_mu <dbl>, lambda_per_genome <dbl>
 ```
 
-## Youden and Threshold Range
+# Phylo-aware model
+
+To account for bias from some degree of shared ancestry in related
+strains (not sampling at the evolutionary bottleneck) a phylo tree can
+be provided to use the phylo-aware model.
+
+## Loading in data
+
+This is the same as described in [Phylogenetic
+Tree](#phylogenetic-tree).
+
+``` r
+#loading example data provided with package
+tree_example_path <- system.file("extdata", "example_phylo_tree.tree", package = "mxsure")
+tip_dates <- readr::read_csv(system.file("extdata", "example_tip_dates.csv", package = "mxsure"))
+#> Rows: 200 Columns: 1
+#> ── Column specification ────────────────────────────────────────────────────────
+#> Delimiter: ","
+#> date (1): example_tipdates
+#> 
+#> ℹ Use `spec()` to retrieve the full column specification for this data.
+#> ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+tip_ids <- readr::read_csv(system.file("extdata", "example_tip_ids.csv", package = "mxsure"))
+#> Rows: 200 Columns: 1
+#> ── Column specification ────────────────────────────────────────────────────────
+#> Delimiter: ","
+#> dbl (1): example_tip_labels
+#> 
+#> ℹ Use `spec()` to retrieve the full column specification for this data.
+#> ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+#using function to ready data for input into mxsure
+mxsure_input_tree <-  mxsure_input_tree(file_path=tree_example_path, tip_dates = tip_dates, tip_cluster_ids = tip_ids)
+head(mxsure_input_tree)
+#>    sampleA sampleB snp_dist time_dist same_cluster
+#>     <char>  <char>    <num>     <num>       <lgcl>
+#> 1:    1.t2    1.t1        9        14         TRUE
+#> 2:    2.t2    1.t1      271        76        FALSE
+#> 3:    2.t1    1.t1      270       177        FALSE
+#> 4:    3.t1    1.t1      268        97        FALSE
+#> 5:    3.t2    1.t1      267        83        FALSE
+#> 6:    4.t2    1.t1      275        71        FALSE
+```
+
+## Running MxSure phylo-aware model
+
+We can use the `same_person` column to subset the data. It is required
+to include sample ID labels for each comparison in the mixed dataset to
+locate them on the tree with the inputs `sampleA` and `sampleB`.
+
+``` r
+mixed_dataset <- mxsure_input_tree[mxsure_input_tree$same_cluster]
+distant_dataset <- mxsure_input_tree[!mxsure_input_tree$same_cluster]
+tree <- ape::read.tree(tree_example_path)
+
+result_phylo <- mxsure_estimate(
+  mixed_snp_dist = mixed_dataset$snp_dist,
+  unrelated_snp_dist = distant_dataset$snp_dist ,
+  mixed_time_dist = mixed_dataset$time_dist,
+  tree = tree,
+  sampleA = mixed_dataset$sampleA,
+  sampleB = mixed_dataset$sampleB
+)
+
+result_phylo
+#> # A tibble: 1 × 9
+#>   snp_threshold lambda     k estimated_fp lambda_units alpha  beta nb_size nb_mu
+#>           <dbl>  <dbl> <dbl>        <dbl> <chr>        <dbl> <dbl>   <dbl> <dbl>
+#> 1             8   1.36 0.840      0.00116 SNPs per ye… 0.972 0.267    26.6  241.
+```
+
+# Youden and Threshold Range
 
 For threshold assessment it may be useful to compare the MxSure
 threshold with what would be inferred from the Youden method.
@@ -284,7 +409,7 @@ result$threshold_range
 #> 20  10.0        70        0.200     0.82
 ```
 
-## Confidence Intervals
+# Confidence Intervals
 
 Confidence intervals for substitution rate estimation are produced via
 bootstrapping. This can be computed faster with multi-threading using
@@ -300,14 +425,14 @@ ci <- mxsure_ci( mixed_snp_dist = mixed_data$snp_dist,
   )
 future::plan("future::sequential")
 ci$confidence_intervals
-#> # A tibble: 2 × 5
-#>   snp_threshold lambda     k intercept estimated_fp
-#>           <dbl>  <dbl> <dbl>     <dbl>        <dbl>
-#> 1             9   5.37 0.750    -0.159       0     
-#> 2            10   6.07 0.825    -0.130       0.0041
+#> # A tibble: 2 × 7
+#>   snp_threshold lambda     k intercept estimated_fp nb_size nb_mu
+#>           <dbl>  <dbl> <dbl>     <dbl>        <dbl>   <dbl> <dbl>
+#> 1          23.0   5.37 0.750    -0.159       0.011     3.77  122.
+#> 2          25.0   6.07 0.825    -0.130       0.0210    4.23  128.
 ```
 
-## Time Randomisation Test
+# Time Randomisation Test
 
 This is a test that validates there is temporal signal in the underlying
 data. It achieves this by randomly permuting the time column in the
@@ -334,7 +459,7 @@ future::plan("future::sequential")
 timerand$plot
 ```
 
-<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />
 
 ``` r
 timerand$outcome
@@ -346,7 +471,7 @@ timerand$outcome
 #> #   perc_overlapping_lowci <dbl>, failure_perc <dbl>
 ```
 
-## Likelihood ratios, and SNP over Time plot
+# Likelihood ratios, and SNP over Time plot
 
 For each data point in the mixed dataset, after fitting, we can assess
 the likelihood that any is related or unrelated. This is achieved using
@@ -388,4 +513,4 @@ snp_over_time(mixed_snp_dist = mixed_data$snp_dist,
 #> (`geom_step()`).
 ```
 
-<img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-17-1.png" width="100%" />

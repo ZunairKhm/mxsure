@@ -44,7 +44,51 @@ library(mxsure)
 
 ## Loading in data
 
-MxSure can input data from inStrain compare output, TRACS distance output, or from a distance matrix. Either provide an R object or filepath to the respective function and the output will be an R object ready for inputting into MxSure. These examples only show loading in one dataset for each method however a mixed and distant dataset is required for MxSure.
+MxSure can input data from inStrain compare output, TRACS distance output, or from a distance matrix.
+Either provide an R object or filepath to the respective function and the output will be an R object
+ready for inputting into MxSure. These examples only show loading in one dataset for each method
+however a mixed and distant dataset is required for MxSure. The most practical thing to do is process
+all of your data with these functions and then subset the resulting dataframe into sample pairs that
+would be enriched for related strains (e.g. same person, transmission clusters of interest, same site etc.) and another that would be enriched for
+unrelated strains (e.g different people ideally geographically separated). This choice is left to the
+user.
+
+### distance matrix
+
+This function allows for a sampling date table to be added (linking sample ID's to dates) which
+automates calculation of sampling time differences.
+
+note: this function does not allow for 'sites considered' or equivalent; this will need to be inputed
+manually if desired
+
+```{r}
+distmat_example_path <- system.file("extdata", "example_distance_matrix.csv", package = "mxsure")
+sample_dates <- readr::read_csv(system.file("extdata", "example_sampling_dates.csv", package = "mxsure"))
+mxsure_input_distmat <-  mxsure_input_distmatrix(file_path=distmat_example_path, dates=sample_dates, dates_sample_col = "sample_id", dates_date_col = "date")
+head(mxsure_input_distmat)
+```
+
+### Phylogenetic Tree
+
+This function takes a phylogenetic tree and produces the required input for MxSure. Optionally a vector
+of tip dates can be included to automate calculation of sampling time differences and a vector of
+individual ID's for each tip can be provided to identify which comparisons are from the same person.
+This potentially aides the subsetting required for MxSure to function.
+
+note: this function does not allow for 'sites considered' or equivalent; this will need to be inputed
+manually if desired
+
+```{r}
+#loading example data provided with package
+tree_example_path <- system.file("extdata", "example_phylo_tree.tree", package = "mxsure")
+tip_dates <- readr::read_csv(system.file("extdata", "example_tip_dates.csv", package = "mxsure"))
+tip_ids <- readr::read_csv(system.file("extdata", "example_tip_ids.csv", package = "mxsure"))
+
+#using function to ready data for input into mxsure
+mxsure_input_tree <-  mxsure_input_tree(file_path=tree_example_path, tip_dates = tip_dates, tip_cluster_ids = tip_ids)
+head(mxsure_input_tree)
+
+```
 
 ### TRACS distance output
 
@@ -69,22 +113,18 @@ mxsure_input_instrain <-  mxsure_input_instrain(file_path=instrain_example_path,
 head(mxsure_input_instrain)
 ```
 
-### distance matrix
+# Basic Operation
 
-note: this function does not allow for 'sites considered' or equivalent; this will need to be inputed manually
+MxSure in an R package designed to estimate substitution rates and infer SNP thresholds from
+longitudinally collected pairwise SNP comparison data. This data is likely to contain a mixture of
+related pairs (from longitudinal samples of the same microbe showing evolution over time) and unrelated
+pairs (co-captured samples from the same strain/species).
 
-```{r}
-distmat_example_path <- system.file("extdata", "example_distance_matrix.csv", package = "mxsure")
-sample_dates <- readr::read_csv(system.file("extdata", "example_sampling_dates.csv", package = "mxsure"))
-mxsure_input_distmat <-  mxsure_input_distmatrix(file_path=distmat_example_path, dates=sample_dates, dates_sample_col = "sample_id", dates_date_col = "date")
-head(mxsure_input_distmat)
-```
-
-## Basic Operation
-
-MxSure in an R package designed to estimate substitution rates and infer SNP thresholds from longitudinally collected pairwise SNP comparison data. This data is likely to contain a mixture of related pairs (from longitudinal samples of the same microbe showing evolution over time) and unrelated pairs (co-captured samples from the same strain/species).
-
-To demonstrate its use we can first simulate some example data using the `simulate_mixsnp_data()` command. Here we simulate 100 data points (each representing a pairwise SNP comparison between two sequences) with a true substitution rate of 5 SNPs/year with each data point having an 80% chance to be a related data point. By default sampling time differences for each of these data points are between 0 and 1 year.
+To demonstrate its use we can first simulate some example data using the `simulate_mixsnp_data()`
+command. Here we simulate 100 data points (each representing a pairwise SNP comparison between two
+sequences) with a true substitution rate of 5 SNPs/year with each data point having an 80% chance to be
+a related data point. By default sampling time differences for each of these data points are between 0
+and 1 year.
 
 ```{r setup}
 library(mxsure)
@@ -93,14 +133,20 @@ mixed_data <- simulate_mixsnp_data(lambda=5, k=0.8, n=100)
 head(mixed_data, 5)
 ```
 
-MxSure's methodology is to fit a mixture distribution, which describes the related and unrelated SNP distances in separate models, to this dataset. However, to do this we need to fit the unrelated SNP distance model (a right truncated negative binomial distribution) on another dataset of pairwise SNP comparisons that has no related pairs. This could be comparisons between different individuals and ideally individuals that are geographically separated to exclude transmission events. Here we again simulate the data using the same true substitution rate but with related proportion, k, set to 0.
+MxSure's methodology is to fit a mixture distribution, which describes the related and unrelated SNP
+distances in separate models, to this dataset. However, to do this we need to fit the unrelated SNP
+distance model (a right truncated negative binomial distribution) on another dataset of pairwise SNP
+comparisons that has no related pairs. This could be comparisons between different individuals and
+ideally individuals that are geographically separated to exclude transmission events. Here we again
+simulate the data using the same true substitution rate but with related proportion, k, set to 0.
 
 ```{r}
 distant_data <- simulate_mixsnp_data(lambda=5, k=0, n=1000)
 head(distant_data, 5)
 ```
 
-We can then use `mxsure_estimate()` to estimate the substitution rate, estimate the related proportion, and infer a SNP threshold.
+We can then use `mxsure_estimate()` to estimate the substitution rate, estimate the related proportion,
+and infer a SNP threshold.
 
 ```{r}
 result <- mxsure_estimate(
@@ -111,9 +157,15 @@ result <- mxsure_estimate(
 result
 ```
 
-Here lambda is the estimated substitution rate and k is the estimated related proportion. Intercept is a time independent parameter that describes the expected SNPs at time 0, which can be used to model sequencing error. Estimated fp displayed the proportion of the distant dataset that has a SNP distance below the inferred SNP threshold. nb_size and nb_mu are the parameters of the unrelated SNP distance model.
+Here lambda is the estimated substitution rate and k is the estimated related proportion. Intercept is
+a time independent parameter that describes the expected SNPs at time 0, which can be used to model
+sequencing error. Estimated fp displayed the proportion of the distant dataset that has a SNP distance
+below the inferred SNP threshold. nb_size and nb_mu are the parameters of the unrelated SNP distance
+model.
 
-As in this example, if sites considered are not supplied for each comparison in the mixed dataset the estimated rate will have units SNPs/year/genome. We can display what this by simulating some amount of sites.
+As in this example, if sites considered are not supplied for each comparison in the mixed dataset the
+estimated rate will have units SNPs/year/genome. We can display what this by simulating some amount of
+sites.
 
 ```{r}
 mixed_data_sites <- mixed_data
@@ -128,9 +180,53 @@ result_sites <- mxsure_estimate(
 result_sites
 ```
 
-## Youden and Threshold Range
+# Phylo-aware model
 
-For threshold assessment it may be useful to compare the MxSure threshold with what would be inferred from the Youden method.
+To account for bias from some degree of shared ancestry in related strains (not sampling at the
+evolutionary bottleneck) a phylo tree can be provided to use the phylo-aware model.
+
+## Loading in data
+
+This is the same as described in [Phylogenetic Tree].
+
+```{r}
+#loading example data provided with package
+tree_example_path <- system.file("extdata", "example_phylo_tree.tree", package = "mxsure")
+tip_dates <- readr::read_csv(system.file("extdata", "example_tip_dates.csv", package = "mxsure"))
+tip_ids <- readr::read_csv(system.file("extdata", "example_tip_ids.csv", package = "mxsure"))
+
+#using function to ready data for input into mxsure
+mxsure_input_tree <-  mxsure_input_tree(file_path=tree_example_path, tip_dates = tip_dates, tip_cluster_ids = tip_ids)
+head(mxsure_input_tree)
+```
+
+## Running MxSure phylo-aware model
+
+We can use the `same_person` column to subset the data. It is required to include sample ID labels for
+each comparison in the mixed dataset to locate them on the tree with the inputs `sampleA` and
+`sampleB`.
+
+```{r}
+mixed_dataset <- mxsure_input_tree[mxsure_input_tree$same_cluster]
+distant_dataset <- mxsure_input_tree[!mxsure_input_tree$same_cluster]
+tree <- ape::read.tree(tree_example_path)
+
+result_phylo <- mxsure_estimate(
+  mixed_snp_dist = mixed_dataset$snp_dist,
+  unrelated_snp_dist = distant_dataset$snp_dist ,
+  mixed_time_dist = mixed_dataset$time_dist,
+  tree = tree,
+  sampleA = mixed_dataset$sampleA,
+  sampleB = mixed_dataset$sampleB
+)
+
+result_phylo
+```
+
+# Youden and Threshold Range
+
+For threshold assessment it may be useful to compare the MxSure threshold with what would be inferred
+from the Youden method.
 
 ```{r}
 result <- mxsure_estimate(
@@ -154,9 +250,11 @@ result <- mxsure_estimate(
 result$threshold_range
 ```
 
-## Confidence Intervals
+# Confidence Intervals
 
-Confidence intervals for substitution rate estimation are produced via bootstrapping. This can be computed faster with multi-threading using the future package. 20 bootstraps is very likely too few, you would likely need at least 200 but ideally 500 or 1000.
+Confidence intervals for substitution rate estimation are produced via bootstrapping. This can be
+computed faster with multi-threading using the future package. 20 bootstraps is very likely too few,
+you would likely need at least 200 but ideally 500 or 1000.
 
 ```{r}
 future::plan("future::multisession", workers=2)
@@ -169,9 +267,14 @@ future::plan("future::sequential")
 ci$confidence_intervals
 ```
 
-## Time Randomisation Test
+# Time Randomisation Test
 
-This is a test that validates there is temporal signal in the underlying data. It achieves this by randomly permuting the time column in the mixed dataset and produces estimates and 95% CIs on this time randomised dataset. This is repeated on multiple time randomisation datasets, 10 is recommended, and if more than 5% of these bootstrap samples are above or equal to the original estimate this test is failed. Estimates should not be considered to be valid if this test fails. The output of this function is a graph showing this result and an outcome table.
+This is a test that validates there is temporal signal in the underlying data. It achieves this by
+randomly permuting the time column in the mixed dataset and produces estimates and 95% CIs on this time
+randomised dataset. This is repeated on multiple time randomisation datasets, 10 is recommended, and if
+more than 5% of these bootstrap samples are above or equal to the original estimate this test is
+failed. Estimates should not be considered to be valid if this test fails. The output of this function
+is a graph showing this result and an outcome table.
 
 ```{r}
 future::plan("future::multisession", workers=2)
@@ -188,9 +291,11 @@ timerand$plot
 timerand$outcome
 ```
 
-## Likelihood ratios, and SNP over Time plot
+# Likelihood ratios, and SNP over Time plot
 
-For each data point in the mixed dataset, after fitting, we can assess the likelihood that any is related or unrelated. This is achieved using the `mxsure_likelihood()` function which reports likelihoods, log likelihoods, and likelihood ratios.
+For each data point in the mixed dataset, after fitting, we can assess the likelihood that any is
+related or unrelated. This is achieved using the `mxsure_likelihood()` function which reports
+likelihoods, log likelihoods, and likelihood ratios.
 
 ```{r}
 likelihoods <- mxsure_likelihood(mixed_snp_dist = mixed_data$snp_dist,
@@ -199,7 +304,10 @@ likelihoods <- mxsure_likelihood(mixed_snp_dist = mixed_data$snp_dist,
 head(likelihoods, 5)
 ```
 
-Based on these likelihoods we can plot the original data with SNP distance versus time distance for each comparisons, using the `snp_over_time()` function. We colour the points as their likelihoods. We can also plot the predictive intervals and inferred SNP threshold. `snp_over_time()` calls `mxsure_likelihood()` under the hood.
+Based on these likelihoods we can plot the original data with SNP distance versus time distance for
+each comparisons, using the `snp_over_time()` function. We colour the points as their likelihoods. We
+can also plot the predictive intervals and inferred SNP threshold. `snp_over_time()` calls
+`mxsure_likelihood()` under the hood.
 
 ```{r}
 snp_over_time(mixed_snp_dist = mixed_data$snp_dist,

@@ -61,7 +61,7 @@ tip_dates <- readr::read_csv(system.file("extdata", "example_tip_dates.csv", pac
 tip_ids <- readr::read_csv(system.file("extdata", "example_tip_ids.csv", package = "mxsure"))
 
 #using function to ready data for input into mxsure
-mxsure_input_tree <-  mxsure_input_tree(file_path=tree_example_path, tip_dates = tip_dates, tip_person_ids = tip_ids)
+mxsure_input_tree <-  mxsure_input_tree(file_path=tree_example_path, tip_dates = tip_dates, tip_cluster_ids = tip_ids)
 head(mxsure_input_tree)
 
 ```
@@ -172,7 +172,7 @@ tip_dates <- readr::read_csv(system.file("extdata", "example_tip_dates.csv", pac
 tip_ids <- readr::read_csv(system.file("extdata", "example_tip_ids.csv", package = "mxsure"))
 
 #using function to ready data for input into mxsure
-mxsure_input_tree <-  mxsure_input_tree(file_path=tree_example_path, tip_dates = tip_dates, tip_person_ids = tip_ids)
+mxsure_input_tree <-  mxsure_input_tree(file_path=tree_example_path, tip_dates = tip_dates, tip_cluster_ids = tip_ids)
 head(mxsure_input_tree)
 ```
 
@@ -183,8 +183,8 @@ each comparison in the mixed dataset to locate them on the tree with the inputs 
 `sampleB`.
 
 ```{r}
-mixed_dataset <- mxsure_input_tree[mxsure_input_tree$same_person]
-distant_dataset <- mxsure_input_tree[!mxsure_input_tree$same_person]
+mixed_dataset <- mxsure_input_tree[mxsure_input_tree$same_cluster]
+distant_dataset <- mxsure_input_tree[!mxsure_input_tree$same_cluster]
 tree <- ape::read.tree(tree_example_path)
 
 result_phylo <- mxsure_estimate(
