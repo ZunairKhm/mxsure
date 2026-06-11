@@ -12,9 +12,6 @@ knitr::opts_chunk$set(
   out.width = "100%"
 )
 ```
-
-# MxSure
-
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/zunairkhm/mxsure/workflows/R-CMD-check/badge.svg)](https://github.com/zunairkhm/mxsure/actions)
