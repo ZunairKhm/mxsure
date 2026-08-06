@@ -62,7 +62,7 @@ mxsure_timerandtest <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_d
 
   subject_id<- time_dist<- method<- point_est<- overlapping_est<- lambda<- "5%" <- "95%" <- NULL
 
-  if (bootstraps==0){
+  if (bootstraps==0|permutations==0){
     return(list(
       result=tibble(NA),
       raw_results=tibble(NA),
