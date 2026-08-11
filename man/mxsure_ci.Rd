@@ -17,6 +17,7 @@ mxsure_ci(
   tree = NA,
   sampleA = NA,
   sampleB = NA,
+  cluster_id = NA,
   lambda_bounds = c(0, 1),
   k_bounds = c(0, 1),
   intercept_bounds = c(-Inf, Inf),
@@ -49,6 +50,8 @@ mxsure_ci(
 \item{sampleA}{tip labels for sampleA; must the earlier sampled branch}
 
 \item{sampleB}{tip labels for sampleB; must be the later sample branch}
+
+\item{cluster_id}{either suspected transmission cluster or individual, if provided these will be bootstrapped instead of each individual comparison}
 
 \item{lambda_bounds}{bounds of rate estimation in SNPs/year/site if given time and site data}
 

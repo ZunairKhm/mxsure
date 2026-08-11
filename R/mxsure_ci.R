@@ -20,6 +20,7 @@
 #' @param quiet if true will not display progress bar
 #' @param alpha_bounds bounds for alpha paramter in phylo model
 #' @param beta_bounds bounds for beta paramter in phylo model
+#' @param cluster_id either suspected transmission cluster or individual, if provided these will be bootstrapped instead of each individual comparison
 #'
 #' @importFrom furrr future_map_dfr furrr_options
 #' @importFrom dplyr bind_rows summarise across everything slice_sample select
@@ -43,7 +44,7 @@
 #' @export
 mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mixed_sites=NA,
                       sample_size=length(mixed_snp_dist),right_truncation=NA, bootstraps=100, confidence_level=0.95, start_params="Efficient",
-                      tree=NA, sampleA=NA, sampleB=NA,
+                      tree=NA, sampleA=NA, sampleB=NA, cluster_id=NA,
                       lambda_bounds = c(0, 1), k_bounds=c(0,1), intercept_bounds=c(-Inf, Inf), alpha_bounds=c(1e-10, Inf), beta_bounds=c(1e-10, Inf),
                       quiet=FALSE){
 
@@ -67,6 +68,12 @@ mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mi
   mix_data$sampleA <- sampleA
   mix_data$sampleB <- sampleB
 
+  if (length(cluster_id) == 1 && is.na(cluster_id)) {
+    mix_data$cluster_id <- NA
+  } else {
+    mix_data$cluster_id <- cluster_id
+  }
+
   mix_data <- filter(mix_data, snp_dist<right_truncation)
   unrelated_snp_dist <- unrelated_snp_dist[unrelated_snp_dist<right_truncation]
 
@@ -88,9 +95,30 @@ mxsure_ci <- function(mixed_snp_dist, unrelated_snp_dist, mixed_time_dist=NA, mi
 
 
   raw_data <- list()
+
+  use_clustering <- !all(is.na(mix_data$cluster_id))
+  if (use_clustering) {
+    unique_clusters <- unique(mix_data$cluster_id)
+    num_clusters <- length(unique_clusters)
+  }
+
+
   #bootstrapping both close and distant data sets allowing for parallelisation
   raw_bootstrapresults <- furrr::future_map_dfr(1:bootstraps, ~{
-    x <- slice_sample(mix_data, n= nrow(mix_data), replace = TRUE)
+
+    if (use_clustering) {
+
+      sampled_clusters <- sample(unique_clusters, size = num_clusters, replace = TRUE)
+
+      # Using map_dfr ensures that if a cluster is sampled multiple times, it is duplicated
+      x <- purrr::map_dfr(sampled_clusters, function(cid) {
+        dplyr::filter(mix_data, cluster_id == cid)
+      })
+    } else {
+      # Standard row-level bootstrap
+      x <- slice_sample(mix_data, n= nrow(mix_data), replace = TRUE)
+    }
+
     y <- sample(unrelated_snp_dist, size=length(unrelated_snp_dist), replace=TRUE)
     z <- plyr::try_default(
   suppressWarnings(
